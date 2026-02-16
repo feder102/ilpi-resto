@@ -1,0 +1,8 @@
+{
+  "name": "ILPI - Sistema de Gestión de Personal",
+  "description": "Sistema integral para la gestión de empleados, equipos de rotación, vacaciones, ausencias y control horario mediante QR para el restaurante ILPI en Villa Joyosa, Alicante.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
