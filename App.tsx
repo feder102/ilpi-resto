@@ -9,52 +9,72 @@ import VacationView from './views/VacationView';
 import ReportsView from './views/ReportsView';
 import SettingsView from './views/SettingsView';
 import { Employee, ShiftRecord, VacationRequest } from './types';
-import { db } from './services/db';
+import { ilpiApi } from './services/api';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [shifts, setShifts] = useState<ShiftRecord[]>([]);
   const [vacations, setVacations] = useState<VacationRequest[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Cargar datos al iniciar
+  // Inicialización: Carga desde la API
   useEffect(() => {
-    const data = db.init();
-    setEmployees(data.employees);
-    setShifts(data.shifts);
-    setVacations(data.vacations);
+    const loadData = async () => {
+      try {
+        const data = await ilpiApi.fetchAllData();
+        setEmployees(data.employees);
+        setShifts(data.shifts);
+        setVacations(data.vacations);
+      } catch (error) {
+        console.error("Error cargando datos de ILPI:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
   }, []);
 
-  // Persistir cambios cuando el estado de empleados cambie
-  const handleAddEmployee = (newEmp: Employee) => {
+  const handleAddEmployee = async (newEmp: Employee) => {
     const updated = [...employees, newEmp];
     setEmployees(updated);
-    db.saveAll({ employees: updated });
+    await ilpiApi.syncEmployees(updated);
   };
 
-  const handleUpdateEmployee = (updatedEmp: Employee) => {
+  const handleUpdateEmployee = async (updatedEmp: Employee) => {
     const updated = employees.map(emp => emp.id === updatedEmp.id ? updatedEmp : emp);
     setEmployees(updated);
-    db.saveAll({ employees: updated });
+    await ilpiApi.syncEmployees(updated);
   };
 
-  const handleDeleteEmployee = (id: string) => {
+  const handleDeleteEmployee = async (id: string) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar a este empleado?')) {
       const updated = employees.filter(emp => emp.id !== id);
       setEmployees(updated);
-      db.saveAll({ employees: updated });
+      await ilpiApi.syncEmployees(updated);
     }
   };
 
-  const handleSetShifts = (newShifts: ShiftRecord[]) => {
+  const handleSetShifts = async (newShifts: ShiftRecord[]) => {
     setShifts(newShifts);
-    db.saveAll({ shifts: newShifts });
+    await ilpiApi.syncShifts(newShifts);
   };
 
-  const handleSetVacations = (newVacations: VacationRequest[]) => {
+  const handleSetVacations = async (newVacations: VacationRequest[]) => {
     setVacations(newVacations);
-    db.saveAll({ vacations: newVacations });
+    await ilpiApi.syncVacations(newVacations);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="font-bold text-slate-400 uppercase tracking-widest text-xs">Cargando ILPI Staff...</p>
+        </div>
+      </div>
+    );
+  }
 
   const renderContent = () => {
     switch (activeTab) {
