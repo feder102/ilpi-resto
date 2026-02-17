@@ -19,17 +19,26 @@ export enum StaffStatus {
   INACTIVE = 'Inactivo'
 }
 
+export type MaritalStatus = 'Soltero/a' | 'Casado/a' | 'Divorciado/a' | 'Viudo/a' | 'Pareja de hecho';
+export type Gender = 'Masculino' | 'Femenino' | 'Otro';
+
 export interface Employee {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
+  dni: string;
+  address: string;
+  birthDate: string;
+  maritalStatus: MaritalStatus;
+  gender: Gender;
   role: Role;
   department: Department;
   status: StaffStatus;
   hireDate: string;
   profileImage: string;
+  emergencyContact?: string;
 }
 
 export interface ShiftRecord {
