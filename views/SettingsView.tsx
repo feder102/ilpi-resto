@@ -1,10 +1,92 @@
 
-import React from 'react';
-import { Shield, UserCog, Bell, Globe, Lock } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Shield, UserCog, Bell, Globe, Lock, Database, Download, Upload, RefreshCcw } from 'lucide-react';
+import { db } from '../services/db';
 
 const SettingsView: React.FC = () => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const currentDB = db.getAll();
+
+  const handleExport = () => {
+    db.exportJSON();
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const content = ev.target?.result;
+        if (typeof content === 'string') {
+          db.importJSON(content);
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleReset = () => {
+    if (window.confirm("¿ESTÁS SEGURO? Esto borrará todos los empleados y registros actuales de ILPI y restaurará los valores iniciales.")) {
+      db.reset();
+      window.location.reload();
+    }
+  };
+
   return (
-    <div className="max-w-4xl space-y-8">
+    <div className="max-w-4xl space-y-8 pb-12">
+      {/* DB Management Section */}
+      <div className="bg-indigo-50 rounded-3xl border border-indigo-100 p-8">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
+            <Database size={24} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">Base de Datos Local (Versionable)</h3>
+            <p className="text-slate-500 text-sm">Control de persistencia y backups para ILPI Staff.</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white p-6 rounded-2xl border border-indigo-100 shadow-sm">
+            <p className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-2">Versión Actual</p>
+            <p className="text-3xl font-black text-slate-900">v{currentDB.version}</p>
+            <p className="text-xs text-slate-400 mt-2">Última actualización: {new Date(currentDB.lastUpdate).toLocaleString()}</p>
+          </div>
+          
+          <div className="bg-white p-6 rounded-2xl border border-indigo-100 shadow-sm flex flex-col justify-between gap-4">
+            <p className="text-sm text-slate-600 font-medium">Usa estos botones para versionar tu base de datos externamente o restaurarla.</p>
+            <div className="flex gap-2">
+              <button 
+                onClick={handleExport}
+                className="flex-1 flex items-center justify-center gap-2 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all"
+              >
+                <Download size={16} /> Exportar JSON
+              </button>
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 flex items-center justify-center gap-2 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all"
+              >
+                <Upload size={16} /> Importar
+              </button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleImport} 
+                accept=".json" 
+                className="hidden" 
+              />
+            </div>
+          </div>
+        </div>
+
+        <button 
+          onClick={handleReset}
+          className="mt-6 flex items-center gap-2 text-red-500 text-xs font-bold hover:bg-red-50 px-4 py-2 rounded-lg transition-all"
+        >
+          <RefreshCcw size={14} /> RESTAURAR ESTADO DE FÁBRICA
+        </button>
+      </div>
+
       <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden">
         <div className="p-8 border-b border-slate-100">
           <h3 className="text-2xl font-bold text-slate-900">Configuración del Sistema</h3>
@@ -43,16 +125,6 @@ const SettingsView: React.FC = () => {
             action={<button className="text-sm font-bold text-indigo-600">Ajustes</button>}
           />
         </div>
-      </div>
-
-      <div className="bg-slate-900 text-white rounded-3xl p-8 flex items-center justify-between">
-        <div>
-          <h4 className="text-lg font-bold">Plan Premium ILPI</h4>
-          <p className="text-slate-400 text-sm mt-1">Soporte prioritario y almacenamiento de reportes ilimitado.</p>
-        </div>
-        <button className="px-6 py-2 bg-indigo-500 hover:bg-indigo-400 rounded-xl font-bold transition-colors">
-          Gestionar Plan
-        </button>
       </div>
     </div>
   );
