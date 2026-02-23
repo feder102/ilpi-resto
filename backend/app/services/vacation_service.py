@@ -1,0 +1,265 @@
+"""T055: Vacation service with request management and balance tracking."""
+
+import uuid
+from datetime import date, datetime, timezone
+
+from sqlmodel import Session, func, select
+
+from app.common.exceptions import (
+    BalanceExceededError,
+    ConflictError,
+    ForbiddenError,
+    NotFoundError,
+    ValidationError,
+)
+from app.models.employee import Employee
+from app.models.vacation_balance import VacationBalance
+from app.models.vacation_request import VacationRequest
+from app.schemas.vacation import VacationBalanceResponse, VacationRequestResponse
+
+
+def _to_response(req: VacationRequest, session: Session) -> VacationRequestResponse:
+    emp = session.get(Employee, req.employee_id)
+    return VacationRequestResponse(
+        id=req.id,
+        employee_id=req.employee_id,
+        employee_name=f"{emp.first_name} {emp.last_name}" if emp else None,
+        employee_image=emp.profile_image if emp else None,
+        employee_department=emp.department if emp else None,
+        start_date=req.start_date,
+        end_date=req.end_date,
+        requested_days=req.requested_days,
+        status=req.status,
+        reviewed_by=req.reviewed_by,
+        reviewed_at=req.reviewed_at.isoformat() if req.reviewed_at else None,
+        version=req.version,
+        created_at=req.created_at.isoformat(),
+    )
+
+
+def _get_or_create_balance(
+    employee_id: uuid.UUID, year: int, tenant_id: uuid.UUID, session: Session
+) -> VacationBalance:
+    balance = session.exec(
+        select(VacationBalance).where(
+            VacationBalance.tenant_id == tenant_id,
+            VacationBalance.employee_id == employee_id,
+            VacationBalance.year == year,
+        )
+    ).first()
+    if not balance:
+        balance = VacationBalance(
+            tenant_id=tenant_id,
+            employee_id=employee_id,
+            year=year,
+        )
+        session.add(balance)
+        session.flush()
+    return balance
+
+
+def create_request(
+    employee_id: uuid.UUID,
+    start_date: date,
+    end_date: date,
+    tenant_id: uuid.UUID,
+    session: Session,
+) -> VacationRequestResponse:
+    if start_date > end_date:
+        raise ValidationError("La fecha de inicio debe ser anterior a la de fin")
+
+    requested_days = (end_date - start_date).days + 1
+    year = start_date.year
+
+    balance = _get_or_create_balance(employee_id, year, tenant_id, session)
+    remaining = balance.total_days - balance.used_days
+
+    if requested_days > remaining:
+        raise BalanceExceededError(
+            f"Saldo insuficiente. Días disponibles: {remaining}"
+        )
+
+    req = VacationRequest(
+        tenant_id=tenant_id,
+        employee_id=employee_id,
+        start_date=start_date,
+        end_date=end_date,
+        requested_days=requested_days,
+        status="Pendiente",
+    )
+    session.add(req)
+    session.commit()
+    session.refresh(req)
+    return _to_response(req, session)
+
+
+def approve(
+    request_id: uuid.UUID,
+    version: int,
+    reviewer_user_id: uuid.UUID,
+    tenant_id: uuid.UUID,
+    session: Session,
+) -> VacationRequestResponse:
+    req = session.exec(
+        select(VacationRequest).where(
+            VacationRequest.id == request_id,
+            VacationRequest.tenant_id == tenant_id,
+        )
+    ).first()
+    if not req:
+        raise NotFoundError("Solicitud no encontrada")
+
+    if req.version != version:
+        raise ConflictError("La solicitud fue modificada por otro usuario")
+
+    if req.status != "Pendiente":
+        raise ValidationError("Solo se pueden aprobar solicitudes pendientes")
+
+    balance = _get_or_create_balance(
+        req.employee_id, req.start_date.year, tenant_id, session
+    )
+    remaining = balance.total_days - balance.used_days
+    if req.requested_days > remaining:
+        raise BalanceExceededError(
+            f"Saldo insuficiente. Días disponibles: {remaining}"
+        )
+
+    req.status = "Aprobado"
+    req.reviewed_by = reviewer_user_id
+    req.reviewed_at = datetime.now(timezone.utc)
+    req.version += 1
+    req.updated_at = datetime.now(timezone.utc)
+
+    balance.used_days += req.requested_days
+    balance.updated_at = datetime.now(timezone.utc)
+
+    session.add(req)
+    session.add(balance)
+    session.commit()
+    session.refresh(req)
+    return _to_response(req, session)
+
+
+def reject(
+    request_id: uuid.UUID,
+    version: int,
+    reviewer_user_id: uuid.UUID,
+    tenant_id: uuid.UUID,
+    session: Session,
+) -> VacationRequestResponse:
+    req = session.exec(
+        select(VacationRequest).where(
+            VacationRequest.id == request_id,
+            VacationRequest.tenant_id == tenant_id,
+        )
+    ).first()
+    if not req:
+        raise NotFoundError("Solicitud no encontrada")
+
+    if req.version != version:
+        raise ConflictError("La solicitud fue modificada por otro usuario")
+
+    # If rejecting a previously approved request, restore balance
+    if req.status == "Aprobado":
+        balance = _get_or_create_balance(
+            req.employee_id, req.start_date.year, tenant_id, session
+        )
+        balance.used_days = max(0, balance.used_days - req.requested_days)
+        balance.updated_at = datetime.now(timezone.utc)
+        session.add(balance)
+
+    req.status = "Rechazado"
+    req.reviewed_by = reviewer_user_id
+    req.reviewed_at = datetime.now(timezone.utc)
+    req.version += 1
+    req.updated_at = datetime.now(timezone.utc)
+
+    session.add(req)
+    session.commit()
+    session.refresh(req)
+    return _to_response(req, session)
+
+
+def cancel(
+    request_id: uuid.UUID,
+    version: int,
+    employee_id: uuid.UUID,
+    tenant_id: uuid.UUID,
+    session: Session,
+) -> VacationRequestResponse:
+    req = session.exec(
+        select(VacationRequest).where(
+            VacationRequest.id == request_id,
+            VacationRequest.tenant_id == tenant_id,
+        )
+    ).first()
+    if not req:
+        raise NotFoundError("Solicitud no encontrada")
+
+    if req.version != version:
+        raise ConflictError("La solicitud fue modificada por otro usuario")
+
+    if req.employee_id != employee_id:
+        raise ForbiddenError("Solo puede cancelar sus propias solicitudes")
+
+    if req.status != "Pendiente":
+        raise ValidationError("Solo se pueden cancelar solicitudes pendientes")
+
+    req.status = "Cancelado"
+    req.version += 1
+    req.updated_at = datetime.now(timezone.utc)
+
+    session.add(req)
+    session.commit()
+    session.refresh(req)
+    return _to_response(req, session)
+
+
+def get_balance(
+    employee_id: uuid.UUID,
+    year: int,
+    tenant_id: uuid.UUID,
+    session: Session,
+) -> VacationBalanceResponse:
+    balance = _get_or_create_balance(employee_id, year, tenant_id, session)
+    session.commit()
+    return VacationBalanceResponse(
+        employee_id=balance.employee_id,
+        year=balance.year,
+        total_days=balance.total_days,
+        used_days=balance.used_days,
+        remaining_days=balance.total_days - balance.used_days,
+    )
+
+
+def list_requests(
+    tenant_id: uuid.UUID,
+    session: Session,
+    employee_id: uuid.UUID | None = None,
+    status_filter: str | None = None,
+    page: int = 1,
+    size: int = 20,
+) -> dict:
+    query = select(VacationRequest).where(VacationRequest.tenant_id == tenant_id)
+
+    if employee_id:
+        query = query.where(VacationRequest.employee_id == employee_id)
+    if status_filter:
+        query = query.where(VacationRequest.status == status_filter)
+
+    query = query.order_by(VacationRequest.created_at.desc())  # type: ignore[union-attr]
+
+    count_query = select(func.count()).select_from(query.subquery())
+    total = session.exec(count_query).one()
+
+    offset = (page - 1) * size
+    requests = session.exec(query.offset(offset).limit(size)).all()
+    pages = (total + size - 1) // size if total > 0 else 1
+
+    return {
+        "items": [_to_response(r, session) for r in requests],
+        "total": total,
+        "page": page,
+        "size": size,
+        "pages": pages,
+    }
