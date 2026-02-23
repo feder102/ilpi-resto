@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /c/Users/Fede/ILPI/ilpi-spec && git fetch --all --prune 2>&1)",
+      "Bash(grep:*)",
+      "Bash(cd:*)",
+      "Bash(cd /c/Users/Fede/ILPI/ilpi-spec && powershell.exe -ExecutionPolicy Bypass -File .specify/scripts/powershell/update-agent-context.ps1 -AgentType claude 2>&1)",
+      "Bash(cd /c/Users/Fede/ILPI/ilpi-spec && bash -c 'pwsh -NoProfile -File .specify/scripts/powershell/setup-plan.ps1 -Json' 2>&1)",
+      "Bash(cd /c/Users/Fede/ILPI/ilpi-spec && powershell.exe -NoProfile -File .specify/scripts/powershell/setup-plan.ps1 -Json 2>&1)",
+      "Bash(cd /c/Users/Fede/ILPI/ilpi-spec && powershell.exe -NoProfile -File .specify/scripts/powershell/update-agent-context.ps1 -AgentType claude 2>&1)",
+      "Bash(cd /c/Users/Fede/ILPI/ilpi-spec && powershell.exe -NoProfile -File .specify/scripts/powershell/check-prerequisites.ps1 -Json 2>&1)",
+      "Bash(cd /c/Users/Fede/ILPI/ilpi-spec && powershell.exe -NoProfile -File .specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks 2>&1)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(echo Docker no está disponible:*)",
+      "Bash(head:*)",
+      "Bash(sleep 30 && cd /c/Users/Fede/ILPI/ilpi-spec && docker-compose ps 2>&1)",
+      "Bash(sleep 5:*)",
+      "Bash(sleep 60 && cd /c/Users/Fede/ILPI/ilpi-spec && docker-compose ps 2>&1)"
+    ]
+  }
+}
