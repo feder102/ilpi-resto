@@ -21,7 +21,10 @@
       "Bash(ls -lh /c/Users/Fede/ILPI/ilpi-spec/init-project*)",
       "Bash(ls:*)",
       "Bash(__NEW_LINE_c2b5ae6aec8f5ec2__ echo:*)",
-      "Bash(__NEW_LINE_fdf800ff800e84a1__ echo:*)"
+      "Bash(__NEW_LINE_fdf800ff800e84a1__ echo:*)",
+      "Bash(powershell:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)"
     ]
   }
 }
