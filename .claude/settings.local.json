@@ -30,7 +30,15 @@
       "Bash(cat:*)",
       "Bash(rm:*)",
       "Bash(mypy app:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(echo:*)",
+      "Bash(curl:*)",
+      "Bash(PYTHONPATH=/c/Users/Fede/ILPI/ilpi-spec/backend python:*)",
+      "Bash(/tmp/login.json:*)",
+      "Bash(netstat:*)",
+      "Bash(/tmp/test_frontend.py:*)",
+      "Bash(/tmp/quickstart_validation.py:*)",
+      "Bash(/tmp/phase8_summary.txt:*)"
     ]
   }
 }

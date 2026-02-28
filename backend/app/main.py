@@ -43,6 +43,10 @@ EXCEPTION_STATUS_MAP: dict[type[DomainException], int] = {
 def create_app() -> FastAPI:
     app = FastAPI(title="ILPI Kitchen Staff Management", version="1.0.0")
 
+    @app.get("/health", tags=["health"])
+    async def health_check() -> dict[str, str]:
+        return {"status": "ok"}
+
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 

@@ -15,4 +15,4 @@ COPY . .
 RUN npm run build
 
 # Start dev server
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]

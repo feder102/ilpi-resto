@@ -1,6 +1,6 @@
 // T040: Login view
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { ROUTES } from '../config/constants';
 
@@ -13,8 +13,7 @@ export default function LoginView() {
   const navigate = useNavigate();
 
   if (isAuthenticated) {
-    navigate(ROUTES.DASHBOARD, { replace: true });
-    return null;
+    return <Navigate to={ROUTES.DASHBOARD} replace />;
   }
 
   const handleSubmit = async (e: FormEvent) => {

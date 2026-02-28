@@ -85,9 +85,21 @@ export interface Team {
   id: string;
   name: string;
   department: Department;
-  shift_type: string;
-  shift_start: string;
-  shift_end: string;
+  shift_type_id: string;
+  shift_type: {
+    id: string;
+    name: string;
+    type: string;
+    time_windows: Array<{ start: string; end: string }>;
+    expected_hours: number;
+    total_hours: number;
+    uses_dynamic_close: boolean;
+    description?: string | null;
+  } | null;
+  time_windows?: Array<{ start: string; end: string }> | null;
+  total_hours?: number | null;
+  expected_hours?: number | null;
+  uses_dynamic_close?: boolean | null;
   members: TeamMember[];
 }
 
