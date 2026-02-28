@@ -3,7 +3,7 @@
  */
 
 import axios from 'axios';
-import {
+import type {
   PaginatedShiftTypes,
   ShiftTypeCreate,
   ShiftTypeResponse,

@@ -6,7 +6,6 @@ import { useAuth } from '../hooks/useAuth';
 import { DEPARTMENTS, SHIFT_TYPES } from '../config/constants';
 import { Role, Department } from '../types/models';
 import type { Team, Employee } from '../types/models';
-import type { PaginatedResponse } from '../types/api';
 import { getTeams, createTeam, addMember, removeMember } from '../services/teamService';
 import { getEmployees } from '../services/employeeService';
 
@@ -28,7 +27,7 @@ export default function RotaryView() {
   // Create team modal
   const [showCreate, setShowCreate] = useState(false);
   const [teamName, setTeamName] = useState('');
-  const [shiftType, setShiftType] = useState(SHIFT_TYPES[0]);
+  const [shiftType, setShiftType] = useState<typeof SHIFT_TYPES[number]>(SHIFT_TYPES[0]);
   const [shiftStart, setShiftStart] = useState('09:00');
   const [shiftEnd, setShiftEnd] = useState('17:00');
   const [formError, setFormError] = useState('');
@@ -259,7 +258,7 @@ export default function RotaryView() {
               <input style={inputStyle} value={teamName} onChange={(e) => setTeamName(e.target.value)} placeholder="Ej: Equipo A" />
             </FormField>
             <FormField label="Tipo de turno">
-              <select style={inputStyle} value={shiftType} onChange={(e) => setShiftType(e.target.value)}>
+              <select style={inputStyle} value={shiftType} onChange={(e) => setShiftType(e.target.value as any)}>
                 {SHIFT_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </FormField>

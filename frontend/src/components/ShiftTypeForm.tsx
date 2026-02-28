@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
-import {
+import type {
   ShiftType,
   ShiftTypeCreate,
   ShiftTypeUpdate,

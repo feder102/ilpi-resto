@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { Plus, Edit2, Trash2, Loader } from 'lucide-react';
 import { ShiftTypeForm } from '../components/ShiftTypeForm';
 import { shiftTypesApi } from '../services/shiftTypesApi';
-import {
+import type {
   ShiftType,
   ShiftTypeCreate,
   ShiftTypeUpdate,
@@ -271,7 +271,13 @@ export function ShiftConfiguration() {
       {showForm && (
         <ShiftTypeForm
           shiftType={editingShift || undefined}
-          onSubmit={editingShift ? handleUpdate : handleCreate}
+          onSubmit={async (data) => {
+            if (editingShift) {
+              await handleUpdate(data as ShiftTypeUpdate);
+            } else {
+              await handleCreate(data as ShiftTypeCreate);
+            }
+          }}
           onCancel={() => {
             setShowForm(false);
             setEditingShift(null);

@@ -7,7 +7,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import FormField from '../components/FormField';
 import { useAuth } from '../hooks/useAuth';
 import { DEPARTMENTS } from '../config/constants';
-import { Role, Department, StaffStatus, MaritalStatus, Gender } from '../types/models';
+import { Role, Department, MaritalStatus, Gender } from '../types/models';
 import type { Employee } from '../types/models';
 import type { PaginatedResponse } from '../types/api';
 import {

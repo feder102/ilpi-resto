@@ -2,7 +2,7 @@
  * T058: Team Types with Shift Type Integration
  */
 
-import { ShiftType } from './shift-types';
+import type { ShiftType } from './shift-types';
 
 export interface Team {
   id: string; // UUID
