@@ -1,7 +1,7 @@
 """T051: VacationRequest model."""
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 from sqlmodel import Field, SQLModel
 
@@ -19,5 +19,5 @@ class VacationRequest(SQLModel, table=True):
     reviewed_by: uuid.UUID | None = Field(default=None, foreign_key="user.id")
     reviewed_at: datetime | None = Field(default=None)
     version: int = Field(default=1)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

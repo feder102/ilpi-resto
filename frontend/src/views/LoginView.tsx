@@ -1,6 +1,6 @@
 // T032: Login view - refactored to use UI component library
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Button, Input, Card, Alert } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { ROUTES } from '../config/constants';
@@ -14,8 +14,7 @@ export default function LoginView() {
   const navigate = useNavigate();
 
   if (isAuthenticated) {
-    navigate(ROUTES.DASHBOARD, { replace: true });
-    return null;
+    return <Navigate to={ROUTES.DASHBOARD} replace />;
   }
 
   const handleSubmit = async (e: FormEvent) => {

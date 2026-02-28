@@ -1,7 +1,7 @@
 """T061: ShiftRecord model."""
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 from sqlmodel import Field, SQLModel
 
@@ -18,5 +18,5 @@ class ShiftRecord(SQLModel, table=True):
     location_lat: float | None = Field(default=None)
     location_lng: float | None = Field(default=None)
     task_label: str | None = Field(default=None, max_length=100)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

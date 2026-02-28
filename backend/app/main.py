@@ -15,7 +15,9 @@ from app.common.exceptions import (
     DomainException,
     DuplicateError,
     ForbiddenError,
+    InvalidShiftTypeError,
     NotFoundError,
+    ShiftTypeInUseError,
     UnauthorizedError,
     ValidationError,
 )
@@ -33,11 +35,17 @@ EXCEPTION_STATUS_MAP: dict[type[DomainException], int] = {
     DuplicateError: 409,
     ConflictError: 409,
     BalanceExceededError: 409,
+    ShiftTypeInUseError: 409,
+    InvalidShiftTypeError: 422,
 }
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title="ILPI Kitchen Staff Management", version="1.0.0")
+
+    @app.get("/health", tags=["health"])
+    async def health_check() -> dict[str, str]:
+        return {"status": "ok"}
 
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -144,12 +152,13 @@ def _configure_logging() -> None:
 
 
 def _include_routers(app: FastAPI) -> None:
-    from app.routers import auth, dashboard, employees, shifts, teams, users, vacations
+    from app.routers import auth, dashboard, employees, shift_types, shifts, teams, users, vacations
 
     prefix = "/api/v1"
     app.include_router(auth.router, prefix=prefix)
     app.include_router(users.router, prefix=prefix)
     app.include_router(employees.router, prefix=prefix)
+    app.include_router(shift_types.router, prefix=prefix)
     app.include_router(teams.router, prefix=prefix)
     app.include_router(shifts.router, prefix=prefix)
     app.include_router(vacations.router, prefix=prefix)

@@ -10,6 +10,7 @@ import AttendanceView from './views/AttendanceView';
 import VacationView from './views/VacationView';
 import ReportsView from './views/ReportsView';
 import SettingsView from './views/SettingsView';
+import { ShiftConfiguration } from './views/ShiftConfiguration';
 import { ROUTES } from './config/constants';
 import { Role } from './types';
 
@@ -31,6 +32,7 @@ export default function App() {
         <Route path={ROUTES.DASHBOARD} element={<ProtectedRoute allowedRoles={ADMIN_MOD}><DashboardView /></ProtectedRoute>} />
         <Route path={ROUTES.EMPLOYEES} element={<ProtectedRoute allowedRoles={ALL_ROLES}><EmployeeListView /></ProtectedRoute>} />
         <Route path={ROUTES.TEAMS} element={<ProtectedRoute allowedRoles={ADMIN_MOD}><RotaryView /></ProtectedRoute>} />
+        <Route path={ROUTES.SHIFT_CONFIGURATION} element={<ProtectedRoute allowedRoles={ADMIN_ONLY}><ShiftConfiguration /></ProtectedRoute>} />
         <Route path={ROUTES.ATTENDANCE} element={<ProtectedRoute allowedRoles={ALL_ROLES}><AttendanceView /></ProtectedRoute>} />
         <Route path={ROUTES.VACATIONS} element={<ProtectedRoute allowedRoles={ALL_ROLES}><VacationView /></ProtectedRoute>} />
         <Route path={ROUTES.REPORTS} element={<ProtectedRoute allowedRoles={ADMIN_MOD}><ReportsView /></ProtectedRoute>} />

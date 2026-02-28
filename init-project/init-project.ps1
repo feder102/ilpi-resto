@@ -4,6 +4,7 @@
 #        .\init-project.ps1 -Action status
 
 param(
+    [Parameter(Position = 0)]
     [ValidateSet("start", "stop", "restart", "status")]
     [string]$Action = "start"
 )
@@ -64,16 +65,6 @@ function Start-Project {
     Write-Info "Starting ILPI Project..."
     Write-Info "Project root: $projectRoot`n"
 
-    # Check if already running
-    if (Test-Path $pidFile) {
-        $pids = Get-Content $pidFile -ErrorAction SilentlyContinue
-        if ($pids) {
-            Write-Warning "Project appears to be already running. Use '--stop' to stop it first."
-            Show-Status
-            return
-        }
-    }
-
     # Verify Docker is running
     Write-Info "Checking Docker..."
     try {
@@ -85,92 +76,46 @@ function Start-Project {
         exit 1
     }
 
-    # Create .pids file to track processes
-    New-Item -Path $pidFile -Force | Out-Null
-    $pids = @()
+    # Check if services are already running
+    Write-Info "Checking if services are already running..."
+    $running = docker-compose -f "$projectRoot/docker-compose.yml" ps --services --filter "status=running" 2>$null
+    if ($running) {
+        Write-Warning "Some services are already running:"
+        Write-Host $running
+        Write-Info "Use '.\init-project.ps1 stop' to stop them first, or '.\init-project.ps1 restart' to restart.`n"
+        return
+    }
 
-    # ========== Start PostgreSQL ==========
-    Write-Info "Starting PostgreSQL..."
-    $dbCheck = docker-compose -f "$projectRoot/docker-compose.yml" ps db 2>$null | Select-String "running"
-    if ($dbCheck) {
-        Write-Success "PostgreSQL already running"
+    # ========== Start all services with docker-compose ==========
+    Write-Info "Starting all services (PostgreSQL, Backend, Frontend)...`n"
+
+    Push-Location $projectRoot
+    docker-compose up -d
+
+    if ($?) {
+        Write-Success "All services started successfully`n"
+        Start-Sleep -Seconds 5  # Give services time to start
+
+        Write-Host "`n╔════════════════════════════════════════════════════════╗"
+        Write-Host "║                ✓ Project Started                        ║"
+        Write-Host "╚════════════════════════════════════════════════════════╝`n"
+
+        Write-Success "Frontend: http://localhost:5173"
+        Write-Success "Backend API: http://localhost:8000"
+        Write-Success "API Docs: http://localhost:8000/docs"
+        Write-Info "Database: localhost:5432 (ilpi / ilpi_dev_password)"
+        Write-Info "Admin Login: admin@ilpi.es / Admin123!`n"
+
+        Write-Info "View logs with: docker-compose logs -f"
+        Write-Info "Or run: .\init-project.ps1 stop`n"
     }
     else {
-        docker-compose -f "$projectRoot/docker-compose.yml" up -d db
-        if ($?) {
-            Write-Success "PostgreSQL started"
-            Start-Sleep -Seconds 3
-        }
-        else {
-            Write-Error "Failed to start PostgreSQL"
-            exit 1
-        }
+        Write-Error "Failed to start services"
+        Pop-Location
+        exit 1
     }
-
-    # ========== Start Backend ==========
-    Write-Info "Starting Backend (FastAPI on port 8000)..."
-    Push-Location "$projectRoot/backend"
-
-    # Check if venv exists
-    if (-not (Test-Path "venv")) {
-        Write-Warning "Virtual environment not found. Creating..."
-        python -m venv venv
-        if ($?) {
-            Write-Success "Virtual environment created"
-        }
-        else {
-            Write-Error "Failed to create virtual environment"
-            Pop-Location
-            exit 1
-        }
-    }
-
-    # Activate venv and start backend
-    $backendCmd = ".\venv\Scripts\Activate.ps1; uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
-    $backendProcess = Start-Process powershell -ArgumentList "-NoExit", "-Command", $backendCmd -PassThru
-    $pids += $backendProcess.Id
-    Write-Success "Backend started (PID: $($backendProcess.Id))"
 
     Pop-Location
-    Start-Sleep -Seconds 2
-
-    # ========== Start Frontend ==========
-    Write-Info "Starting Frontend (Vite on port 5173)..."
-    Push-Location "$projectRoot/frontend"
-
-    # Check if node_modules exists
-    if (-not (Test-Path "node_modules")) {
-        Write-Warning "Dependencies not found. Running 'npm install'..."
-        npm install
-        if (-not $?) {
-            Write-Error "Failed to install frontend dependencies"
-            Pop-Location
-            exit 1
-        }
-    }
-
-    # Start frontend dev server
-    $frontendCmd = "npm run dev"
-    $frontendProcess = Start-Process powershell -ArgumentList "-NoExit", "-Command", $frontendCmd -PassThru
-    $pids += $frontendProcess.Id
-    Write-Success "Frontend started (PID: $($frontendProcess.Id))"
-
-    Pop-Location
-
-    # ========== Save PIDs ==========
-    $pids | Out-File -FilePath $pidFile -Encoding UTF8
-
-    Write-Host "`n╔════════════════════════════════════════════════════════╗"
-    Write-Host "║                ✓ Project Started                        ║"
-    Write-Host "╚════════════════════════════════════════════════════════╝`n"
-
-    Write-Success "Frontend: http://localhost:5173"
-    Write-Success "Backend API: http://localhost:8000"
-    Write-Success "API Docs: http://localhost:8000/docs"
-    Write-Info "Database: localhost:5432 (ilpi / ilpi_dev_password)"
-    Write-Info "Admin Login: admin@ilpi.es / Admin123!"
-    Write-Info "`nPress Ctrl+C in each window to stop services"
-    Write-Info "Or run: .\init-project.ps1 -Action stop`n"
 }
 
 # ============================================================================
@@ -179,35 +124,25 @@ function Start-Project {
 function Stop-Project {
     Write-Info "Stopping ILPI Project...`n"
 
-    # Kill saved processes
+    Push-Location $projectRoot
+
+    # Stop all Docker services
+    Write-Info "Stopping Docker services..."
+    docker-compose down
+
+    if ($?) {
+        Write-Success "All services stopped"
+    }
+    else {
+        Write-Warning "Some services may not have stopped cleanly"
+    }
+
+    # Clean up old PID file if exists
     if (Test-Path $pidFile) {
-        $pids = @(Get-Content $pidFile)
-
-        foreach ($pid in $pids) {
-            if ($pid -match '^\d+$') {
-                try {
-                    $process = Get-Process -Id $pid -ErrorAction SilentlyContinue
-                    if ($process) {
-                        Write-Info "Stopping process (PID: $pid)..."
-                        Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
-                        Write-Success "Process stopped"
-                    }
-                }
-                catch {
-                    Write-Warning "Process $pid not found (already stopped)"
-                }
-            }
-        }
-
         Remove-Item -Path $pidFile -Force -ErrorAction SilentlyContinue
     }
 
-    # Stop Docker services (but keep DB for potential reuse)
-    Write-Info "Stopping Docker services..."
-    docker-compose -f "$projectRoot/docker-compose.yml" stop
-    if ($?) {
-        Write-Success "Docker services stopped"
-    }
+    Pop-Location
 
     Write-Host "`n╔════════════════════════════════════════════════════════╗"
     Write-Host "║              ✓ Project Stopped                         ║"
@@ -220,34 +155,21 @@ function Stop-Project {
 function Show-Status {
     Write-Host "`n📊 Project Status:`n"
 
-    # Check frontend
-    $frontend = Get-Process -Name node -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*vite*" }
-    if ($frontend) {
-        Write-Success "Frontend running (PID: $($frontend.Id))"
-    }
-    else {
-        Write-Warning "Frontend not running"
-    }
-
-    # Check backend
-    $backend = Get-Process -Name python -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*uvicorn*" }
-    if ($backend) {
-        Write-Success "Backend running (PID: $($backend.Id))"
-    }
-    else {
-        Write-Warning "Backend not running"
-    }
+    Push-Location $projectRoot
 
     # Check Docker services
-    $dockerStatus = docker-compose -f "$projectRoot/docker-compose.yml" ps --services --filter "status=running" 2>$null
-    if ($dockerStatus) {
-        Write-Success "Docker services running: $dockerStatus"
+    Write-Info "Checking Docker services..."
+    $status = docker-compose ps
+
+    if ($status) {
+        Write-Host $status
+        Write-Host ""
     }
     else {
-        Write-Warning "Docker services not running"
+        Write-Warning "No services running"
     }
 
-    Write-Host ""
+    Pop-Location
 }
 
 # ============================================================================

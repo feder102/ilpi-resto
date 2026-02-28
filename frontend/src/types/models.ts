@@ -5,7 +5,7 @@ export const Role = {
   MODERADOR: 'Moderador',
   EMPLEADO: 'Empleado',
 } as const;
-export type Role = (typeof Role)[keyof typeof Role];
+export type Role = typeof Role[keyof typeof Role];
 
 export const Department = {
   COCINA: 'Cocina',
@@ -13,7 +13,7 @@ export const Department = {
   BARRA: 'Barra',
   DIRECCION: 'Dirección',
 } as const;
-export type Department = (typeof Department)[keyof typeof Department];
+export type Department = typeof Department[keyof typeof Department];
 
 export const StaffStatus = {
   ACTIVO: 'Activo',
@@ -21,7 +21,7 @@ export const StaffStatus = {
   AUSENTE: 'Ausente',
   INACTIVO: 'Inactivo',
 } as const;
-export type StaffStatus = (typeof StaffStatus)[keyof typeof StaffStatus];
+export type StaffStatus = typeof StaffStatus[keyof typeof StaffStatus];
 
 export const MaritalStatus = {
   SOLTERO: 'Soltero/a',
@@ -30,14 +30,14 @@ export const MaritalStatus = {
   VIUDO: 'Viudo/a',
   PAREJA_DE_HECHO: 'Pareja de hecho',
 } as const;
-export type MaritalStatus = (typeof MaritalStatus)[keyof typeof MaritalStatus];
+export type MaritalStatus = typeof MaritalStatus[keyof typeof MaritalStatus];
 
 export const Gender = {
   MASCULINO: 'Masculino',
   FEMENINO: 'Femenino',
   OTRO: 'Otro',
 } as const;
-export type Gender = (typeof Gender)[keyof typeof Gender];
+export type Gender = typeof Gender[keyof typeof Gender];
 
 export const VacationStatus = {
   PENDIENTE: 'Pendiente',
@@ -45,7 +45,7 @@ export const VacationStatus = {
   RECHAZADO: 'Rechazado',
   CANCELADO: 'Cancelado',
 } as const;
-export type VacationStatus = (typeof VacationStatus)[keyof typeof VacationStatus];
+export type VacationStatus = typeof VacationStatus[keyof typeof VacationStatus];
 
 export interface Employee {
   id: string;
@@ -85,9 +85,21 @@ export interface Team {
   id: string;
   name: string;
   department: Department;
-  shift_type: string;
-  shift_start: string;
-  shift_end: string;
+  shift_type_id: string;
+  shift_type: {
+    id: string;
+    name: string;
+    type: string;
+    time_windows: Array<{ start: string; end: string }>;
+    expected_hours: number;
+    total_hours: number;
+    uses_dynamic_close: boolean;
+    description?: string | null;
+  } | null;
+  time_windows?: Array<{ start: string; end: string }> | null;
+  total_hours?: number | null;
+  expected_hours?: number | null;
+  uses_dynamic_close?: boolean | null;
   members: TeamMember[];
 }
 

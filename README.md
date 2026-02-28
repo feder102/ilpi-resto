@@ -34,23 +34,39 @@ Antes de comenzar, asegúrate de tener instalado:
 
 ## 🛠️ Instalación y Configuración
 
-### 1. Clonar el repositorio
+### Paso 0: Clonar el repositorio
 
 ```bash
 git clone https://github.com/feder102/ilpi-resto.git
 cd ilpi-resto
 ```
 
-### 2. Configurar Backend
+---
 
-#### 2.1 Crear entorno virtual de Python
+## 📦 BACKEND - Instalación Completa
+
+### Paso 1: Levantar PostgreSQL (desde la raíz)
+
+**⚠️ PRIMERO:** Asegúrate de que Docker Desktop está corriendo.
+
+```bash
+# Desde la raíz del proyecto
+docker-compose up -d db
+```
+
+Verifica que PostgreSQL esté activo:
+```bash
+docker ps | grep ilpi-spec-db-1
+```
+
+### Paso 2: Crear entorno virtual de Python
 
 ```bash
 cd backend
 python -m venv venv
 ```
 
-#### 2.2 Activar el entorno virtual
+### Paso 3: Activar el entorno virtual
 
 **Windows (PowerShell):**
 ```powershell
@@ -67,15 +83,18 @@ venv\Scripts\activate.bat
 source venv/bin/activate
 ```
 
-#### 2.3 Instalar dependencias
+Deberías ver `(venv)` al inicio de tu terminal.
+
+### Paso 4: Instalar dependencias Python
 
 ```bash
+# Asegúrate de estar en el directorio backend/ con venv activado
 pip install -r requirements.txt
 ```
 
-#### 2.4 Configurar variables de entorno
+### Paso 5: Configurar variables de entorno
 
-Copia el archivo de ejemplo y ajusta si es necesario:
+Copia el archivo `.env.example` a `.env`:
 
 ```bash
 # Windows PowerShell
@@ -85,83 +104,99 @@ Copy-Item .env.example .env
 cp .env.example .env
 ```
 
-El archivo `.env` contiene:
-```env
-DATABASE_URL=postgresql://ilpi:ilpi_dev_password@localhost:5432/ilpi
-SECRET_KEY=change-this-to-a-random-string-at-least-32-characters-long
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-REFRESH_TOKEN_EXPIRE_DAYS=7
-CORS_ORIGINS=http://localhost:5173
-LOG_LEVEL=INFO
-```
+El `.env` ya contiene los valores correctos para desarrollo local. **No hagas cambios** a menos que necesites puertos distintos.
 
-### 3. Levantar PostgreSQL con Docker
-
-Desde la raíz del proyecto:
+### Paso 6: Ejecutar migraciones de base de datos
 
 ```bash
-cd ..  # Si estás en backend, vuelve a la raíz
-docker-compose up -d db
-```
-
-Verifica que PostgreSQL esté corriendo:
-```bash
-docker ps
-```
-
-Deberías ver un contenedor `ilpi-spec-db-1` corriendo en el puerto 5432.
-
-### 4. Ejecutar Migraciones y Seed
-
-Vuelve al directorio backend (y asegúrate de que el entorno virtual esté activado):
-
-```bash
-cd backend
-
-# Aplicar migraciones
+# Asegúrate de estar en backend/ con venv activado
 alembic upgrade head
+```
 
-# Cargar datos iniciales (crea tenant "ILPI" y usuario admin)
+### Paso 7: Cargar datos iniciales (seed)
+
+```bash
+# Aún en backend/ con venv activado
 python -c "from app.seed import seed; seed()"
 ```
 
-### 5. Configurar Frontend
+Esto crea:
+- Tenant "ILPI"
+- Usuario admin con email `admin@ilpi.es` y password `Admin123!`
 
-Abre una **nueva terminal** y:
+### Paso 8: Levantar el servidor FastAPI
 
 ```bash
-cd frontend
-
-# Instalar dependencias
-npm install
-```
-
-## ▶️ Ejecutar el Proyecto
-
-### Opción 1: Desarrollo Manual (Recomendado para desarrollo)
-
-#### Terminal 1 - Backend:
-```bash
-cd backend
-# Activar entorno virtual (si no está activado)
-.\venv\Scripts\Activate.ps1  # Windows
-# source venv/bin/activate    # Linux/Mac
-
-# Levantar servidor FastAPI
+# Aún en backend/ con venv activado
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-#### Terminal 2 - Frontend:
+✅ El backend está listo en **http://localhost:8000**
+- Documentación: **http://localhost:8000/docs**
+- ReDoc: **http://localhost:8000/redoc**
+
+---
+
+## 🎨 FRONTEND - Instalación Completa
+
+### Paso 1: Abrir una **NUEVA TERMINAL**
+
+No cierres la del backend, necesita estar corriendo.
+
+### Paso 2: Navegar a la carpeta frontend
+
 ```bash
 cd frontend
+```
+
+### Paso 3: Instalar dependencias Node
+
+```bash
+npm install
+```
+
+### Paso 4: Configurar variables de entorno
+
+Copia el archivo `.env.example` a `.env`:
+
+```bash
+# Windows PowerShell
+Copy-Item .env.example .env
+
+# Linux/Mac
+cp .env.example .env
+```
+
+El `.env` ya apunta al backend en **http://localhost:8000/api/v1**. No hagas cambios.
+
+### Paso 5: Levantar el servidor de desarrollo
+
+```bash
+# Aún en frontend/
 npm run dev
 ```
 
-### Opción 2: Docker Compose (Todo el stack)
+✅ El frontend está listo en **http://localhost:5173**
 
-Desde la raíz del proyecto:
+---
+
+## ▶️ Verificar que todo funciona
+
+1. Abre **http://localhost:5173** en tu navegador
+2. Deberías ver la página de login
+3. Usa las credenciales por defecto:
+   - **Email:** `admin@ilpi.es`
+   - **Password:** `Admin123!`
+4. Si el login funciona, ¡todo está correctamente conectado! ✅
+
+---
+
+## 🐳 Alternativa: Ejecutar con Docker Compose
+
+Si prefieres no instalar Python ni Node.js localmente:
 
 ```bash
+# Desde la raíz del proyecto
 docker-compose up
 ```
 
@@ -174,6 +209,8 @@ Para detener:
 ```bash
 docker-compose down
 ```
+
+Los servicios estarán disponibles en los mismos puertos (Backend: 8000, Frontend: 5173)
 
 ## 🌐 URLs de Acceso
 
@@ -372,14 +409,35 @@ lsof -ti:8000 | xargs kill -9
 lsof -ti:5173 | xargs kill -9
 ```
 
-### El frontend no se conecta al backend
+### El frontend no se conecta al backend (Error en login: "Invalid credentials")
 
-**Problema:** Error de CORS o conexión rechazada
+**Problema:** Error de CORS, conexión rechazada, o el frontend intenta conectar al puerto incorrecto
+
+**Causa más común:**
+- `frontend/.env` apunta a un puerto incorrecto del backend (ej: 8001 en lugar de 8000)
+- `backend/.env` tiene CORS_ORIGINS configurado para el puerto incorrecto del frontend (ej: 5174 en lugar de 5173)
 
 **Solución:**
-1. Verifica que el backend esté corriendo en http://localhost:8000
-2. Verifica la configuración en `frontend/src/services/apiClient.ts`
-3. Asegúrate de que CORS_ORIGINS en `.env` incluya `http://localhost:5173`
+1. **Verifica `backend/.env`:**
+   ```env
+   CORS_ORIGINS=http://localhost:5173  # ← Debe ser 5173, NO 5174
+   ```
+
+2. **Verifica `frontend/.env`:**
+   ```env
+   VITE_API_URL=http://localhost:8000/api/v1        # ← Debe ser 8000, NO 8001
+   VITE_API_BASE_URL=http://localhost:8000/api/v1   # ← Debe ser 8000, NO 8001
+   ```
+
+3. **Reinicia ambos servidores:**
+   - Detén el backend (Ctrl+C en su terminal)
+   - Detén el frontend (Ctrl+C en su terminal)
+   - Vuelve a levantarlos en orden:
+     - Backend: `cd backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
+     - Frontend: `cd frontend && npm run dev`
+
+4. **Vacía la caché del navegador:**
+   - F12 → Application/Storage → Clear all
 
 ## 🚀 Despliegue
 

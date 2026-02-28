@@ -1,7 +1,7 @@
 """T042: Employee model."""
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, SQLModel
@@ -33,5 +33,5 @@ class Employee(SQLModel, table=True):
     emergency_contact: str | None = Field(default=None, max_length=255)
     is_active: bool = Field(default=True)
     team_id: uuid.UUID | None = Field(default=None, foreign_key="team.id")
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
