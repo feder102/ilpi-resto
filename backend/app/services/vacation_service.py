@@ -1,7 +1,7 @@
 """T055: Vacation service with request management and balance tracking."""
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 from sqlmodel import Session, func, select
 
@@ -126,12 +126,12 @@ def approve(
 
     req.status = "Aprobado"
     req.reviewed_by = reviewer_user_id
-    req.reviewed_at = datetime.now(timezone.utc)
+    req.reviewed_at = datetime.now(UTC)
     req.version += 1
-    req.updated_at = datetime.now(timezone.utc)
+    req.updated_at = datetime.now(UTC)
 
     balance.used_days += req.requested_days
-    balance.updated_at = datetime.now(timezone.utc)
+    balance.updated_at = datetime.now(UTC)
 
     session.add(req)
     session.add(balance)
@@ -165,14 +165,14 @@ def reject(
             req.employee_id, req.start_date.year, tenant_id, session
         )
         balance.used_days = max(0, balance.used_days - req.requested_days)
-        balance.updated_at = datetime.now(timezone.utc)
+        balance.updated_at = datetime.now(UTC)
         session.add(balance)
 
     req.status = "Rechazado"
     req.reviewed_by = reviewer_user_id
-    req.reviewed_at = datetime.now(timezone.utc)
+    req.reviewed_at = datetime.now(UTC)
     req.version += 1
-    req.updated_at = datetime.now(timezone.utc)
+    req.updated_at = datetime.now(UTC)
 
     session.add(req)
     session.commit()
@@ -207,7 +207,7 @@ def cancel(
 
     req.status = "Cancelado"
     req.version += 1
-    req.updated_at = datetime.now(timezone.utc)
+    req.updated_at = datetime.now(UTC)
 
     session.add(req)
     session.commit()

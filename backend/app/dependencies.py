@@ -4,12 +4,11 @@ import uuid
 from typing import Annotated
 
 from fastapi import Cookie, Depends, Header
+from sqlmodel import Session
 
 from app.common.exceptions import ForbiddenError, UnauthorizedError
 from app.common.security import verify_token
 from app.database import get_session
-
-from sqlmodel import Session
 
 
 def get_db() -> Session:

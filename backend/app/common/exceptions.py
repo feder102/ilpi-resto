@@ -43,3 +43,21 @@ class ConflictError(DomainException):
 class BalanceExceededError(DomainException):
     def __init__(self, message: str = "Saldo insuficiente") -> None:
         super().__init__(message, "BALANCE_EXCEEDED")
+
+
+class ShiftTypeInUseError(DomainException):
+    """T004: Raised when trying to delete a shift type with active team assignments."""
+
+    def __init__(
+        self, message: str = "El tipo de turno está asignado a uno o más equipos"
+    ) -> None:
+        super().__init__(message, "SHIFT_TYPE_IN_USE")
+
+
+class InvalidShiftTypeError(DomainException):
+    """T004: Raised when shift type is invalid or doesn't exist."""
+
+    def __init__(
+        self, message: str = "Tipo de turno inválido o no configurado"
+    ) -> None:
+        super().__init__(message, "INVALID_SHIFT_TYPE")

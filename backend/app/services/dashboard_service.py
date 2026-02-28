@@ -1,7 +1,7 @@
 """T073: Dashboard service for aggregated stats."""
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date
 
 from sqlmodel import Session, func, select
 

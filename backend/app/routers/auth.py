@@ -15,16 +15,22 @@ limiter = Limiter(key_func=get_remote_address)
 @router.post("/auth/login", response_model=LoginResponse)
 @limiter.limit("10/minute")
 def login(request: Request, body: LoginRequest, response: Response, session: DbSession):
-    login_response, refresh_token = auth_service.login(body.email, body.password, session)
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=False,  # Set True in production with HTTPS
-        samesite="lax",
-        max_age=7 * 24 * 60 * 60,  # 7 days
-    )
-    return login_response
+    try:
+        login_response, refresh_token = auth_service.login(body.email, body.password, session)
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            httponly=True,
+            secure=False,  # Set True in production with HTTPS
+            samesite="lax",
+            max_age=7 * 24 * 60 * 60,  # 7 days
+        )
+        return login_response
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Login error: {e}", exc_info=True)
+        raise
 
 
 @router.post("/auth/refresh", response_model=LoginResponse)

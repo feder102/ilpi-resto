@@ -1,7 +1,7 @@
 """T047c: User management service."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlmodel import Session, func, select
 
@@ -80,7 +80,7 @@ def update_user(
 
     for key, value in update_data.items():
         setattr(user, key, value)
-    user.updated_at = datetime.now(timezone.utc)
+    user.updated_at = datetime.now(UTC)
 
     session.add(user)
     session.commit()
@@ -98,7 +98,7 @@ def deactivate_user(
         raise NotFoundError("Usuario no encontrado")
 
     user.is_active = False
-    user.updated_at = datetime.now(timezone.utc)
+    user.updated_at = datetime.now(UTC)
     session.add(user)
     session.commit()
     return {"message": "Usuario desactivado"}

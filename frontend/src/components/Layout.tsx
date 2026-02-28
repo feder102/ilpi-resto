@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   X,
+  Zap,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { Role } from '../types';
@@ -31,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Control Horario', path: ROUTES.ATTENDANCE, icon: <Clock size={20} />, roles: [Role.ADMIN, Role.MODERADOR, Role.EMPLEADO] },
   { label: 'Vacaciones', path: ROUTES.VACATIONS, icon: <Palmtree size={20} />, roles: [Role.ADMIN, Role.MODERADOR, Role.EMPLEADO] },
   { label: 'Informes', path: ROUTES.REPORTS, icon: <BarChart3 size={20} />, roles: [Role.ADMIN, Role.MODERADOR] },
+  { label: 'Tipos de Turno', path: ROUTES.SHIFT_CONFIGURATION, icon: <Zap size={20} />, roles: [Role.ADMIN] },
   { label: 'Configuración', path: ROUTES.SETTINGS, icon: <Settings size={20} />, roles: [Role.ADMIN] },
 ];
 

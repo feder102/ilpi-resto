@@ -55,15 +55,28 @@ def employee(session, tenant):
 
 
 @pytest.fixture
-def team_data():
+def team_data(session, tenant):
+    """Create team data with shift_type_id FK."""
     from app.schemas.team import TeamCreate
+    from app.models.shift_type import ShiftType
+
+    # Create a shift type for testing
+    shift_type = ShiftType(
+        tenant_id=tenant.id,
+        name="Mañana Test",
+        type="MAÑANA",
+        time_windows=[{"start": "09:00", "end": "17:00"}],
+        expected_hours=8.0,
+        uses_dynamic_close=False,
+    )
+    session.add(shift_type)
+    session.commit()
+    session.refresh(shift_type)
 
     return TeamCreate(
         name="Equipo A",
         department="Cocina",
-        shift_type="Mañana",
-        shift_start="09:00",
-        shift_end="17:00",
+        shift_type_id=str(shift_type.id),
     )
 
 

@@ -3,11 +3,17 @@ import { useState, useEffect, useCallback } from 'react';
 import { Plus, Users, X, User } from 'lucide-react';
 import FormField from '../components/FormField';
 import { useAuth } from '../hooks/useAuth';
-import { DEPARTMENTS, SHIFT_TYPES } from '../config/constants';
+import { DEPARTMENTS } from '../config/constants';
 import { Role, Department } from '../types/models';
 import type { Team, Employee } from '../types/models';
-import type { PaginatedResponse } from '../types/api';
-import { getTeams, createTeam, addMember, removeMember } from '../services/teamService';
+import type { ShiftTypeResponse } from '../types/shift-types';
+import {
+  getTeams,
+  createTeam,
+  addMember,
+  removeMember,
+  getShiftTypesForTeams,
+} from '../services/teamService';
 import { getEmployees } from '../services/employeeService';
 
 const inputStyle: React.CSSProperties = {
@@ -28,9 +34,8 @@ export default function RotaryView() {
   // Create team modal
   const [showCreate, setShowCreate] = useState(false);
   const [teamName, setTeamName] = useState('');
-  const [shiftType, setShiftType] = useState(SHIFT_TYPES[0]);
-  const [shiftStart, setShiftStart] = useState('09:00');
-  const [shiftEnd, setShiftEnd] = useState('17:00');
+  const [shiftTypes, setShiftTypes] = useState<ShiftTypeResponse[]>([]);
+  const [selectedShiftTypeId, setSelectedShiftTypeId] = useState('');
   const [formError, setFormError] = useState('');
 
   // Add member
@@ -41,11 +46,13 @@ export default function RotaryView() {
     setLoading(true);
     setError('');
     try {
-      const [teamsData, empsData] = await Promise.all([
+      const [teamsData, empsData, shiftTypesData] = await Promise.all([
         getTeams({ department: activeDept, size: 50 }),
         getEmployees({ department: activeDept, size: 100 }),
+        getShiftTypesForTeams(),
       ]);
       setTeams(teamsData.items);
+      setShiftTypes(shiftTypesData);
 
       // Available = employees not in any team (of this dept)
       const assignedIds = new Set(teamsData.items.flatMap((t) => t.members.map((m) => m.id)));
@@ -59,16 +66,21 @@ export default function RotaryView() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  useEffect(() => {
+    if (!selectedShiftTypeId && shiftTypes.length > 0) {
+      setSelectedShiftTypeId(shiftTypes[0].id);
+    }
+  }, [selectedShiftTypeId, shiftTypes]);
+
   const handleCreateTeam = async () => {
     if (!teamName.trim()) { setFormError('Nombre requerido'); return; }
+    if (!selectedShiftTypeId) { setFormError('Selecciona un tipo de turno'); return; }
     setFormError('');
     try {
       await createTeam({
         name: teamName,
         department: activeDept,
-        shift_type: shiftType,
-        shift_start: shiftStart,
-        shift_end: shiftEnd,
+        shift_type_id: selectedShiftTypeId,
       });
       setShowCreate(false);
       setTeamName('');
@@ -153,7 +165,10 @@ export default function RotaryView() {
                           {team.name}
                         </h3>
                         <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#64748b' }}>
-                          {team.shift_type} · {team.shift_start} - {team.shift_end}
+                          {team.shift_type?.name || 'Sin tipo de turno'}
+                          {team.shift_type?.time_windows?.length
+                            ? ` · ${team.shift_type.time_windows.map((window) => `${window.start} - ${window.end}`).join(' / ')}`
+                            : ''}
                         </p>
                       </div>
                       {isAdminOrMod && (
@@ -259,18 +274,10 @@ export default function RotaryView() {
               <input style={inputStyle} value={teamName} onChange={(e) => setTeamName(e.target.value)} placeholder="Ej: Equipo A" />
             </FormField>
             <FormField label="Tipo de turno">
-              <select style={inputStyle} value={shiftType} onChange={(e) => setShiftType(e.target.value)}>
-                {SHIFT_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
+              <select style={inputStyle} value={selectedShiftTypeId} onChange={(e) => setSelectedShiftTypeId(e.target.value)}>
+                {shiftTypes.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </FormField>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <FormField label="Hora inicio">
-                <input style={inputStyle} type="time" value={shiftStart} onChange={(e) => setShiftStart(e.target.value)} />
-              </FormField>
-              <FormField label="Hora fin">
-                <input style={inputStyle} type="time" value={shiftEnd} onChange={(e) => setShiftEnd(e.target.value)} />
-              </FormField>
-            </div>
 
             <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 24 }}>
               <button onClick={() => setShowCreate(false)}

@@ -2,6 +2,7 @@
 import apiClient from './apiClient';
 import type { Team } from '../types/models';
 import type { PaginatedResponse } from '../types/api';
+import type { ShiftTypeResponse } from '../types/shift-types';
 
 export interface TeamListParams {
   department?: string;
@@ -12,12 +13,17 @@ export interface TeamListParams {
 export interface TeamCreateData {
   name: string;
   department: string;
-  shift_type: string;
-  shift_start: string;
-  shift_end: string;
+  shift_type_id: string;
 }
 
 export type TeamUpdateData = Partial<TeamCreateData>;
+
+export async function getShiftTypesForTeams(): Promise<ShiftTypeResponse[]> {
+  const { data } = await apiClient.get('/shift-types', {
+    params: { active_only: true, page: 1, size: 100 },
+  });
+  return data.items;
+}
 
 export async function getTeams(
   params: TeamListParams = {},

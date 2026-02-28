@@ -5,7 +5,7 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:80
 
 export const ROLE_PERMISSIONS: Record<Role, string[]> = {
   [Role.ADMIN]: [
-    'dashboard', 'employees', 'teams', 'attendance', 'vacations', 'reports', 'settings',
+    'dashboard', 'employees', 'teams', 'attendance', 'vacations', 'reports', 'shift-configuration', 'settings',
   ],
   [Role.MODERADOR]: [
     'dashboard', 'employees', 'teams', 'attendance', 'vacations', 'reports',
@@ -29,6 +29,7 @@ export const ROUTES = {
   DASHBOARD: '/dashboard',
   EMPLOYEES: '/employees',
   TEAMS: '/teams',
+  SHIFT_CONFIGURATION: '/shift-configuration',
   ATTENDANCE: '/attendance',
   VACATIONS: '/vacations',
   REPORTS: '/reports',
