@@ -23,7 +23,7 @@ export default function RotaryView() {
   // Create team modal
   const [showCreate, setShowCreate] = useState(false);
   const [teamName, setTeamName] = useState('');
-  const [shiftType, setShiftType] = useState(SHIFT_TYPES[0]);
+  const [shiftType, setShiftType] = useState<string>(SHIFT_TYPES[0]);
   const [shiftStart, setShiftStart] = useState('09:00');
   const [shiftEnd, setShiftEnd] = useState('17:00');
   const [formError, setFormError] = useState('');

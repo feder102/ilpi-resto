@@ -15,12 +15,12 @@ export { default as Alert, type AlertProps } from './Alert';
 export { default as Modal, type ModalProps } from './Modal';
 export { default as Table, type TableProps } from './Table';
 
-// Extended Components (Phase 5) - Coming soon
-// export { default as Spinner } from './Spinner';
-// export { default as Toast } from './Toast';
-// export { default as Breadcrumb } from './Breadcrumb';
-// export { default as Tabs } from './Tabs';
-// export { default as Dropdown } from './Dropdown';
-// export { default as Checkbox } from './Checkbox';
-// export { default as Radio } from './Radio';
-// export { default as Pagination } from './Pagination';
+// Extended Components (Phase 5) ✅ Complete
+export { default as Spinner, type SpinnerProps } from './Spinner';
+export { default as Toast, type ToastProps } from './Toast';
+export { default as Breadcrumb, type BreadcrumbProps } from './Breadcrumb';
+export { default as Tabs, type TabsProps } from './Tabs';
+export { default as Dropdown, type DropdownProps } from './Dropdown';
+export { default as Checkbox, type CheckboxProps } from './Checkbox';
+export { default as RadioGroup, type RadioGroupProps, type RadioOption } from './Radio';
+export { default as Pagination, type PaginationProps } from './Pagination';

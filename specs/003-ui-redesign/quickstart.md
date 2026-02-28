@@ -262,11 +262,203 @@ export function PaginatedList({ items }) {
         {/* render pageItems */}
       </Table>
       <Pagination
-        current={page}
-        total={Math.ceil(total / pageSize)}
-        onChange={setPage}
+        currentPage={page}
+        totalPages={Math.ceil(total / pageSize)}
+        onPageChange={setPage}
+        showArrows={true}
+        siblingCount={2}
       />
     </>
+  );
+}
+```
+
+### Toast Notifications
+
+```tsx
+import { Toast } from '@/components/ui';
+import { useState } from 'react';
+
+export function NotificationExample() {
+  const [toasts, setToasts] = useState([]);
+
+  const showToast = (message, variant) => {
+    const id = Date.now();
+    setToasts([...toasts, { id, message, variant }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 5000);
+  };
+
+  return (
+    <div>
+      <div className="space-y-2">
+        {toasts.map(toast => (
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            variant={toast.variant}
+            onDismiss={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+          />
+        ))}
+      </div>
+      <button onClick={() => showToast('Success!', 'success')}>Show Success</button>
+      <button onClick={() => showToast('Error!', 'error')}>Show Error</button>
+    </div>
+  );
+}
+```
+
+### Breadcrumb Navigation
+
+```tsx
+import { Breadcrumb } from '@/components/ui';
+import { useNavigate } from 'react-router-dom';
+
+export function BreadcrumbExample() {
+  const navigate = useNavigate();
+
+  return (
+    <Breadcrumb
+      items={[
+        { label: 'Home', href: '/' },
+        { label: 'Employees', href: '/employees' },
+        { label: 'John Doe', current: true }
+      ]}
+      onNavigate={(href) => navigate(href)}
+    />
+  );
+}
+```
+
+### Tabs Interface
+
+```tsx
+import { Tabs } from '@/components/ui';
+
+export function TabbedView() {
+  return (
+    <Tabs
+      items={[
+        {
+          id: 'personal',
+          label: 'Personal Info',
+          content: <PersonalInfo />
+        },
+        {
+          id: 'employment',
+          label: 'Employment',
+          content: <EmploymentInfo />
+        },
+        {
+          id: 'vacation',
+          label: 'Vacation',
+          content: <VacationInfo />
+        }
+      ]}
+      defaultTab="personal"
+      onChange={(tabId) => console.log('Selected:', tabId)}
+    />
+  );
+}
+```
+
+### Dropdown Selection
+
+```tsx
+import { Dropdown } from '@/components/ui';
+import { useState } from 'react';
+
+export function DropdownExample() {
+  const [shiftType, setShiftType] = useState('morning');
+
+  return (
+    <div>
+      <Dropdown
+        options={[
+          { value: 'morning', label: 'Morning (6am-2pm)' },
+          { value: 'afternoon', label: 'Afternoon (2pm-10pm)' },
+          { value: 'night', label: 'Night (10pm-6am)' }
+        ]}
+        value={shiftType}
+        onChange={setShiftType}
+        placeholder="Select shift type"
+      />
+    </div>
+  );
+}
+```
+
+### Checkbox Input
+
+```tsx
+import { Checkbox } from '@/components/ui';
+import { useState } from 'react';
+
+export function CheckboxExample() {
+  const [terms, setTerms] = useState(false);
+  const [privacy, setPrivacy] = useState(false);
+
+  return (
+    <div className="space-y-4">
+      <Checkbox
+        id="terms"
+        label="I agree to the Terms of Service"
+        checked={terms}
+        onChange={(e) => setTerms(e.target.checked)}
+      />
+      <Checkbox
+        id="privacy"
+        label="I agree to the Privacy Policy"
+        checked={privacy}
+        onChange={(e) => setPrivacy(e.target.checked)}
+        error={privacy ? '' : 'Must accept to continue'}
+      />
+    </div>
+  );
+}
+```
+
+### Radio Group Selection
+
+```tsx
+import { RadioGroup } from '@/components/ui';
+import { useState } from 'react';
+
+export function RadioExample() {
+  const [department, setDepartment] = useState('cocina');
+
+  return (
+    <RadioGroup
+      legend="Select your department"
+      options={[
+        { value: 'cocina', label: 'Kitchen' },
+        { value: 'atencion', label: 'Customer Service' },
+        { value: 'barra', label: 'Bar' },
+        { value: 'direccion', label: 'Management' }
+      ]}
+      value={department}
+      onChange={setDepartment}
+      orientation="vertical"
+    />
+  );
+}
+```
+
+### Loading State with Spinner
+
+```tsx
+import { Spinner } from '@/components/ui';
+
+export function DataLoading() {
+  return (
+    <div className="flex justify-center items-center h-64">
+      <Spinner
+        size="md"
+        color="indigo"
+        label="Loading employee data..."
+      />
+    </div>
   );
 }
 ```

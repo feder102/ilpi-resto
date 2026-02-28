@@ -1,45 +1,51 @@
 // T005: Domain model types
 
-export enum Role {
-  ADMIN = 'Admin',
-  MODERADOR = 'Moderador',
-  EMPLEADO = 'Empleado',
-}
+export const Role = {
+  ADMIN: 'Admin',
+  MODERADOR: 'Moderador',
+  EMPLEADO: 'Empleado',
+} as const;
+export type Role = (typeof Role)[keyof typeof Role];
 
-export enum Department {
-  COCINA = 'Cocina',
-  ATENCION_AL_PUBLICO = 'Atención al Público',
-  BARRA = 'Barra',
-  DIRECCION = 'Dirección',
-}
+export const Department = {
+  COCINA: 'Cocina',
+  ATENCION_AL_PUBLICO: 'Atención al Público',
+  BARRA: 'Barra',
+  DIRECCION: 'Dirección',
+} as const;
+export type Department = (typeof Department)[keyof typeof Department];
 
-export enum StaffStatus {
-  ACTIVO = 'Activo',
-  VACACIONES = 'Vacaciones',
-  AUSENTE = 'Ausente',
-  INACTIVO = 'Inactivo',
-}
+export const StaffStatus = {
+  ACTIVO: 'Activo',
+  VACACIONES: 'Vacaciones',
+  AUSENTE: 'Ausente',
+  INACTIVO: 'Inactivo',
+} as const;
+export type StaffStatus = (typeof StaffStatus)[keyof typeof StaffStatus];
 
-export enum MaritalStatus {
-  SOLTERO = 'Soltero/a',
-  CASADO = 'Casado/a',
-  DIVORCIADO = 'Divorciado/a',
-  VIUDO = 'Viudo/a',
-  PAREJA_DE_HECHO = 'Pareja de hecho',
-}
+export const MaritalStatus = {
+  SOLTERO: 'Soltero/a',
+  CASADO: 'Casado/a',
+  DIVORCIADO: 'Divorciado/a',
+  VIUDO: 'Viudo/a',
+  PAREJA_DE_HECHO: 'Pareja de hecho',
+} as const;
+export type MaritalStatus = (typeof MaritalStatus)[keyof typeof MaritalStatus];
 
-export enum Gender {
-  MASCULINO = 'Masculino',
-  FEMENINO = 'Femenino',
-  OTRO = 'Otro',
-}
+export const Gender = {
+  MASCULINO: 'Masculino',
+  FEMENINO: 'Femenino',
+  OTRO: 'Otro',
+} as const;
+export type Gender = (typeof Gender)[keyof typeof Gender];
 
-export enum VacationStatus {
-  PENDIENTE = 'Pendiente',
-  APROBADO = 'Aprobado',
-  RECHAZADO = 'Rechazado',
-  CANCELADO = 'Cancelado',
-}
+export const VacationStatus = {
+  PENDIENTE: 'Pendiente',
+  APROBADO: 'Aprobado',
+  RECHAZADO: 'Rechazado',
+  CANCELADO: 'Cancelado',
+} as const;
+export type VacationStatus = (typeof VacationStatus)[keyof typeof VacationStatus];
 
 export interface Employee {
   id: string;
