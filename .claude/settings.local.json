@@ -28,7 +28,8 @@
       "Bash(alembic current:*)",
       "Bash(alembic revision:*)",
       "Bash(cat:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(mypy app:*)"
     ]
   }
 }

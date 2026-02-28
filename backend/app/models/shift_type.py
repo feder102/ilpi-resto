@@ -1,8 +1,7 @@
 """T001: Shift type model for predefined shift configurations."""
 
 import uuid
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
 
 from sqlalchemy import JSON, CheckConstraint, Column, Index, UniqueConstraint
 from sqlmodel import Field, SQLModel
@@ -31,8 +30,8 @@ class ShiftType(SQLModel, table=True):
     expected_hours: float
     description: str | None = Field(None, max_length=500)
     is_active: bool = Field(default=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     @property
     def total_hours(self) -> float:

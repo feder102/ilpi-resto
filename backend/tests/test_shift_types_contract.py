@@ -340,3 +340,111 @@ class TestShiftTypesRBAC:
         )
 
         assert response.status_code == 403
+
+
+class TestErrorMessages:
+    """T069: Test error messages for various validation failures."""
+
+    def test_duplicate_name_error_message(
+        self, client: TestClient, admin_headers: dict, test_tenant: "Tenant", session: Session
+    ):
+        """Should return clear error message for duplicate shift type name."""
+        # Create first shift type
+        client.post(
+            "/api/v1/shift-types",
+            headers=admin_headers,
+            json={
+                "name": "Mañana",
+                "type": "MAÑANA",
+                "time_windows": [{"start": "10:30", "end": "18:00"}],
+                "uses_dynamic_close": False,
+                "expected_hours": 7.5,
+            },
+        )
+
+        # Attempt to create duplicate
+        response = client.post(
+            "/api/v1/shift-types",
+            headers=admin_headers,
+            json={
+                "name": "Mañana",
+                "type": "MAÑANA",
+                "time_windows": [{"start": "10:30", "end": "18:00"}],
+                "uses_dynamic_close": False,
+                "expected_hours": 7.5,
+            },
+        )
+
+        assert response.status_code == 409
+        data = response.json()
+        error_msg = data.get("error", {}).get("message", "").lower() or data.get("detail", "").lower()
+        assert "duplicate" in error_msg or "already exists" in error_msg
+
+    def test_invalid_time_windows_error_message(
+        self, client: TestClient, admin_headers: dict
+    ):
+        """Should return clear error message for invalid time window format."""
+        response = client.post(
+            "/api/v1/shift-types",
+            headers=admin_headers,
+            json={
+                "name": "Invalid Shift",
+                "type": "MAÑANA",
+                "time_windows": [{"start": "25:00", "end": "18:00"}],  # Invalid hour
+                "uses_dynamic_close": False,
+                "expected_hours": 7.5,
+            },
+        )
+
+        assert response.status_code == 422  # Validation error
+        data = response.json()
+        assert "time" in str(data).lower() or "window" in str(data).lower()
+
+    def test_hours_mismatch_error_message(
+        self, client: TestClient, admin_headers: dict
+    ):
+        """Should return error when expected_hours doesn't match calculated total_hours."""
+        response = client.post(
+            "/api/v1/shift-types",
+            headers=admin_headers,
+            json={
+                "name": "Cortado Mismatch",
+                "type": "CORTADO",
+                "time_windows": [
+                    {"start": "12:30", "end": "16:30"},  # 4.0 hours
+                    {"start": "18:30", "end": "22:30"},  # 4.0 hours = 8.0 total
+                ],
+                "uses_dynamic_close": False,
+                "expected_hours": 7.5,  # Doesn't match 8.0
+            },
+        )
+
+        assert response.status_code == 422
+        data = response.json()
+        # Error should mention hours or expected/calculated mismatch
+        error_detail = str(data)
+        assert "hour" in error_detail.lower() or "expect" in error_detail.lower()
+
+    def test_invalid_window_order_error(
+        self, client: TestClient, admin_headers: dict
+    ):
+        """Should return error when time windows are not chronologically ordered."""
+        response = client.post(
+            "/api/v1/shift-types",
+            headers=admin_headers,
+            json={
+                "name": "Out of Order",
+                "type": "CORTADO",
+                "time_windows": [
+                    {"start": "18:30", "end": "22:30"},  # Later window first
+                    {"start": "12:30", "end": "16:30"},  # Earlier window second
+                ],
+                "uses_dynamic_close": False,
+                "expected_hours": 8.0,
+            },
+        )
+
+        assert response.status_code == 422
+        data = response.json()
+        error_detail = str(data).lower()
+        assert "order" in error_detail or "chrono" in error_detail or "earlier" in error_detail

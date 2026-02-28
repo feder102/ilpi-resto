@@ -1,6 +1,6 @@
 """T017: JWT utilities and password hashing."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -22,15 +22,15 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire, "iat": datetime.now(timezone.utc)})
+    expire = datetime.now(UTC) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire, "iat": datetime.now(UTC)})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
 
 
 def create_refresh_token(data: dict) -> str:
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode.update({"exp": expire, "iat": datetime.now(timezone.utc), "type": "refresh"})
+    expire = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode.update({"exp": expire, "iat": datetime.now(UTC), "type": "refresh"})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
 
 

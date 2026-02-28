@@ -1,7 +1,7 @@
 """T046: Employee service with CRUD operations."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlmodel import Session, func, select
 
@@ -164,7 +164,7 @@ def update(
 
     for key, value in update_data.items():
         setattr(employee, key, value)
-    employee.updated_at = datetime.now(timezone.utc)
+    employee.updated_at = datetime.now(UTC)
 
     session.add(employee)
     session.commit()
@@ -192,7 +192,7 @@ def soft_delete(
 
     employee.is_active = False
     employee.status = "Inactivo"
-    employee.updated_at = datetime.now(timezone.utc)
+    employee.updated_at = datetime.now(UTC)
 
     # Auto-reject pending vacation requests
     pending = session.exec(
@@ -205,7 +205,7 @@ def soft_delete(
     rejected_count = 0
     for req in pending:
         req.status = "Rechazado"
-        req.updated_at = datetime.now(timezone.utc)
+        req.updated_at = datetime.now(UTC)
         session.add(req)
         rejected_count += 1
 

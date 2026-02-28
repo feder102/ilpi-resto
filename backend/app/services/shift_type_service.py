@@ -5,22 +5,19 @@ import uuid
 
 from sqlmodel import Session, select
 
-logger = logging.getLogger(__name__)
-
 from app.common.exceptions import (
     DuplicateError,
-    InvalidShiftTypeError,
     NotFoundError,
-    ShiftTypeInUseError,
     ValidationError,
 )
 from app.models.shift_type import ShiftType
-from app.models.team import Team
 from app.schemas.shift_type import (
     ShiftTypeCreate,
     ShiftTypeResponse,
     ShiftTypeUpdate,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _validate_time_windows(time_windows: list[dict[str, str]]) -> None:

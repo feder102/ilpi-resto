@@ -1,7 +1,7 @@
 """T060: Team model with shift type integration."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, SQLModel
@@ -21,8 +21,8 @@ class Team(SQLModel, table=True):
     name: str = Field(max_length=100)
     department: str
     is_active: bool = Field(default=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     @property
     def total_hours(self) -> float:

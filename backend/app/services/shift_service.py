@@ -1,7 +1,7 @@
 """T066: Shift service with clock-in/clock-out management."""
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 from sqlmodel import Session, func, select
 
@@ -59,7 +59,7 @@ def clock_in(
     if not employee:
         raise NotFoundError("Empleado no encontrado")
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     record = ShiftRecord(
         tenant_id=tenant_id,
         employee_id=employee_id,
@@ -94,7 +94,7 @@ def clock_out(
     if record.exit_time:
         raise ValidationError("El turno ya fue cerrado", "SHIFT_ALREADY_CLOSED")
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     record.exit_time = now
     record.updated_at = now
     if location_lat is not None:

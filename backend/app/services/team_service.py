@@ -1,7 +1,7 @@
 """T065: Team service with member management and shift type integration."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlmodel import Session, func, select
 
@@ -189,7 +189,7 @@ def update(
 
     for key, value in update_data.items():
         setattr(team, key, value)
-    team.updated_at = datetime.now(timezone.utc)
+    team.updated_at = datetime.now(UTC)
 
     session.add(team)
     session.commit()
@@ -221,7 +221,7 @@ def delete(
         session.add(m)
 
     team.is_active = False
-    team.updated_at = datetime.now(timezone.utc)
+    team.updated_at = datetime.now(UTC)
     session.add(team)
     session.commit()
     return {"message": "Equipo eliminado"}
@@ -267,7 +267,7 @@ def add_member(
         )
 
     employee.team_id = team_id
-    employee.updated_at = datetime.now(timezone.utc)
+    employee.updated_at = datetime.now(UTC)
     session.add(employee)
     session.commit()
     session.refresh(team)
@@ -302,7 +302,7 @@ def remove_member(
         raise NotFoundError("Empleado no encontrado en el equipo")
 
     employee.team_id = None
-    employee.updated_at = datetime.now(timezone.utc)
+    employee.updated_at = datetime.now(UTC)
     session.add(employee)
     session.commit()
     session.refresh(team)
