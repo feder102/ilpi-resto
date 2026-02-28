@@ -37,8 +37,8 @@ export default function DashboardView() {
   }
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-8 text-slate-900">Dashboard</h1>
+    <div className="max-w-7xl">
+      <h1 className="text-2xl md:text-3xl font-bold mb-8 text-slate-900">Dashboard</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard title="Total Personal" value={stats?.total_employees ?? 0} icon={<Users size={24} />} color="#3b82f6" />
@@ -47,9 +47,9 @@ export default function DashboardView() {
         <StatCard title="Solicitudes Pendientes" value={stats?.pending_requests ?? 0} icon={<Bell size={24} />} color="#ef4444" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <div className="lg:col-span-2">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Turnos de Hoy</h2>
+          <h2 className="text-base md:text-lg font-semibold text-slate-900 mb-4">Turnos de Hoy</h2>
           {todayShifts.length === 0 ? (
             <p className="text-slate-600">No hay turnos registrados hoy</p>
           ) : (

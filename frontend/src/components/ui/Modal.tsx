@@ -54,7 +54,9 @@ const sizeClasses = {
  * </Modal>
  */
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, size = 'md', children, footer }) => {
-  // Handle escape key
+  const modalRef = React.useRef<HTMLDivElement>(null);
+
+  // Handle escape key and focus trap
   useEffect(() => {
     if (!isOpen) return;
 
@@ -64,8 +66,46 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, size = 'md', chil
       }
     };
 
+    // Focus trap: keep focus within modal
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !modalRef.current) return;
+
+      const focusableElements = modalRef.current.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const firstElement = focusableElements[0] as HTMLElement;
+      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+      if (e.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        }
+      } else {
+        // Tab
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
     document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    document.addEventListener('keydown', handleTab);
+
+    // Auto-focus first focusable element
+    setTimeout(() => {
+      const focusableElements = modalRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      (focusableElements?.[0] as HTMLElement)?.focus();
+    }, 0);
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('keydown', handleTab);
+    };
   }, [isOpen, onClose]);
 
   // Prevent scroll when modal open
@@ -91,6 +131,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, size = 'md', chil
 
       {/* Modal */}
       <div
+        ref={modalRef}
         className="fixed inset-0 flex items-center justify-center z-50 p-4"
         role="dialog"
         aria-modal="true"
