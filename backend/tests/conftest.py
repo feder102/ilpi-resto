@@ -4,11 +4,20 @@ import uuid
 
 import pytest
 from fastapi.testclient import TestClient
+from passlib.context import CryptContext
 from sqlmodel import Session, SQLModel, create_engine
 
-from app.common.security import create_access_token, hash_password
+from app.common.security import create_access_token
 from app.dependencies import get_db
 from app.main import app
+
+# Use plaintext context for testing to avoid bcrypt compatibility issues
+test_pwd_context = CryptContext(schemes=["plaintext"], deprecated="auto")
+
+
+def test_hash_password(password: str) -> str:
+    """Hash password for testing using plaintext."""
+    return test_pwd_context.hash(password)
 
 # SQLite in-memory for tests
 TEST_DATABASE_URL = "sqlite:///./test.db"
@@ -47,6 +56,7 @@ def test_tenant(session: Session):
 
 @pytest.fixture
 def test_employee(session: Session, test_tenant):
+    from datetime import date
     from app.models.employee import Employee
 
     employee = Employee(
@@ -58,7 +68,7 @@ def test_employee(session: Session, test_tenant):
         role="Admin",
         department="Dirección",
         status="Activo",
-        hire_date="2024-01-15",
+        hire_date=date(2024, 1, 15),
     )
     session.add(employee)
     session.commit()
@@ -72,7 +82,7 @@ def create_test_user(session: Session, tenant_id: uuid.UUID, role: str, email: s
     user = User(
         tenant_id=tenant_id,
         email=email,
-        hashed_password=hash_password("TestPass123!"),
+        hashed_password=test_hash_password("TestPass123!"),
         role=role,
         employee_id=employee_id,
     )

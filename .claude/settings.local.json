@@ -22,7 +22,13 @@
       "Bash(ls:*)",
       "Bash(__NEW_LINE_c2b5ae6aec8f5ec2__ echo:*)",
       "Bash(__NEW_LINE_fdf800ff800e84a1__ echo:*)",
-      "Bash(pwsh:*)"
+      "Bash(pwsh:*)",
+      "Bash(python:*)",
+      "Bash(alembic upgrade:*)",
+      "Bash(alembic current:*)",
+      "Bash(alembic revision:*)",
+      "Bash(cat:*)",
+      "Bash(rm:*)"
     ]
   }
 }

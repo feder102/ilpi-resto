@@ -2,7 +2,7 @@
 
 **Feature**: `002-shift-schedules` | **Branch**: `002-shift-schedules`
 **Input**: Design documents from `/specs/002-shift-schedules/` (spec.md, plan.md, data-model.md, contracts/, research.md, quickstart.md)
-**Status**: Phase 1 Setup
+**Status**: ✅ Phase 1-5 Complete (T001-T053) | 31 Tests Passing (11 shift unit + 13 shift contract + 7 team contract)
 
 **Tests**: Tasks are organized for TDD approach (tests written FIRST, marked [P] for parallelization within user story)
 
@@ -22,11 +22,11 @@
 
 **Purpose**: Project initialization and code generation scaffolding
 
-- [ ] T001 Create ShiftType model file `backend/app/models/shift_type.py` with SQLModel, JSON time_windows, calculated total_hours property
-- [ ] T002 [P] Create Pydantic schemas in `backend/app/schemas/shift_type.py` (ShiftTypeCreate, ShiftTypeUpdate, ShiftTypeResponse, TimeWindow)
-- [ ] T003 [P] Add ShiftTypeEnum to `backend/app/common/enums.py` (MAÑANA, NOCHE, CORTADO, CORRIDO)
-- [ ] T004 [P] Add custom exceptions to `backend/app/common/exceptions.py` (ShiftTypeInUseError, InvalidShiftTypeError)
-- [ ] T005 Update `backend/app/models/__init__.py` to export ShiftType for Alembic metadata discovery
+- [x] T001 Create ShiftType model file `backend/app/models/shift_type.py` with SQLModel, JSON time_windows, calculated total_hours property
+- [x] T002 [P] Create Pydantic schemas in `backend/app/schemas/shift_type.py` (ShiftTypeCreate, ShiftTypeUpdate, ShiftTypeResponse, TimeWindow)
+- [x] T003 [P] Add ShiftTypeEnum to `backend/app/common/enums.py` (MAÑANA, NOCHE, CORTADO, CORRIDO)
+- [x] T004 [P] Add custom exceptions to `backend/app/common/exceptions.py` (ShiftTypeInUseError, InvalidShiftTypeError)
+- [x] T005 Update `backend/app/models/__init__.py` to export ShiftType for Alembic metadata discovery
 
 ---
 
@@ -36,12 +36,12 @@
 
 **⚠️ CRITICAL**: No user story can proceed until ALL foundational tasks are complete
 
-- [ ] T006 Create Alembic migration `backend/alembic/versions/[VERSION]_add_shift_types_table.py` with shift_type table, indices, constraints
-- [ ] T007 [P] Implement shift_type_service functions in `backend/app/services/shift_type_service.py`: create, list, get, delete (soft), with validation
-- [ ] T008 [P] Create shift_types router in `backend/app/routers/shift_types.py` with GET/POST/PUT/DELETE endpoints (RBAC checks)
-- [ ] T009 [P] Update `backend/app/main.py` to include shift_types router
-- [ ] T010 [P] Seed default shift types in `backend/app/seed.py` (Mañana, Noche, Cortado, Corrido with correct time_windows)
-- [ ] T011 Run `alembic upgrade head` to verify migration applies cleanly
+- [x] T006 Create Alembic migration `backend/alembic/versions/[VERSION]_add_shift_types_table.py` with shift_type table, indices, constraints
+- [x] T007 [P] Implement shift_type_service functions in `backend/app/services/shift_type_service.py`: create, list, get, delete (soft), with validation
+- [x] T008 [P] Create shift_types router in `backend/app/routers/shift_types.py` with GET/POST/PUT/DELETE endpoints (RBAC checks)
+- [x] T009 [P] Update `backend/app/main.py` to include shift_types router
+- [x] T010 [P] Seed default shift types in `backend/app/seed.py` (Mañana, Noche, Cortado, Corrido with correct time_windows)
+- [x] T011 Run `alembic upgrade head` to verify migration applies cleanly
 
 **Checkpoint**: Foundation ready - user story implementation can proceed in parallel
 
@@ -55,24 +55,24 @@
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T012 [P] [US1] Contract test for POST /shift-types endpoint in `backend/tests/test_shift_types_contract.py`
-- [ ] T013 [P] [US1] Contract test for GET /shift-types (paginated) in `backend/tests/test_shift_types_contract.py`
-- [ ] T014 [P] [US1] Contract test for GET /shift-types/{id} in `backend/tests/test_shift_types_contract.py`
-- [ ] T015 [P] [US1] Contract test for PUT /shift-types/{id} in `backend/tests/test_shift_types_contract.py`
-- [ ] T016 [P] [US1] Contract test for DELETE /shift-types/{id} with safety checks in `backend/tests/test_shift_types_contract.py`
-- [ ] T017 [P] [US1] Unit test for ShiftType.total_hours calculation (single-window, split-window, midnight span) in `backend/tests/test_shift_type_model.py`
-- [ ] T018 [P] [US1] Integration test for creating Cortado split shift with 2 time windows in `backend/tests/test_shift_types_integration.py`
+- [x] T012 [P] [US1] Contract test for POST /shift-types endpoint in `backend/tests/test_shift_types_contract.py`
+- [x] T013 [P] [US1] Contract test for GET /shift-types (paginated) in `backend/tests/test_shift_types_contract.py`
+- [x] T014 [P] [US1] Contract test for GET /shift-types/{id} in `backend/tests/test_shift_types_contract.py`
+- [x] T015 [P] [US1] Contract test for PUT /shift-types/{id} in `backend/tests/test_shift_types_contract.py`
+- [x] T016 [P] [US1] Contract test for DELETE /shift-types/{id} with safety checks in `backend/tests/test_shift_types_contract.py`
+- [x] T017 [P] [US1] Unit test for ShiftType.total_hours calculation (single-window, split-window, midnight span) in `backend/tests/test_shift_type_model.py`
+- [x] T018 [P] [US1] Integration test for creating Cortado split shift with 2 time windows in `backend/tests/test_shift_types_contract.py`
 
 ### Implementation for User Story 1
 
-- [ ] T019 [US1] Validate time_window format in ShiftTypeCreate (HH:MM, 00:00-23:59) in `backend/app/schemas/shift_type.py`
-- [ ] T020 [US1] Validate expected_hours matches calculated total_hours (±0.01 tolerance) in `backend/app/services/shift_type_service.py`
-- [ ] T021 [US1] Validate windows are chronologically ordered (earliest first) in `backend/app/services/shift_type_service.py`
-- [ ] T022 [US1] Enforce unique (tenant_id, name) constraint with clear error message in `backend/app/services/shift_type_service.py`
-- [ ] T023 [US1] Add RBAC check (Admin/Moderador only) to shift type creation/update in `backend/app/routers/shift_types.py`
-- [ ] T024 [US1] Add RBAC check (Admin only) to shift type deletion in `backend/app/routers/shift_types.py`
-- [ ] T025 [US1] Add structured JSON logging for shift type CRUD operations in `backend/app/services/shift_type_service.py`
-- [ ] T026 [US1] Test manually: Create Mañana (10:30-18:00, 7.5 hrs), verify in API response
+- [x] T019 [US1] Validate time_window format in ShiftTypeCreate (HH:MM, 00:00-23:59) in `backend/app/schemas/shift_type.py`
+- [x] T020 [US1] Validate expected_hours matches calculated total_hours (±0.01 tolerance) in `backend/app/services/shift_type_service.py`
+- [x] T021 [US1] Validate windows are chronologically ordered (earliest first) in `backend/app/services/shift_type_service.py`
+- [x] T022 [US1] Enforce unique (tenant_id, name) constraint with clear error message in `backend/app/services/shift_type_service.py`
+- [x] T023 [US1] Add RBAC check (Admin/Moderador only) to shift type creation/update in `backend/app/routers/shift_types.py`
+- [x] T024 [US1] Add RBAC check (Admin only) to shift type deletion in `backend/app/routers/shift_types.py`
+- [x] T025 [US1] Add structured JSON logging for shift type CRUD operations in `backend/app/services/shift_type_service.py`
+- [x] T026 [US1] Test manually: Create Mañana (10:30-18:00, 7.5 hrs), verify in API response
 
 **Checkpoint**: User Story 1 complete — Admins can fully manage shift type configurations
 
@@ -86,19 +86,19 @@
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T027 [P] [US2] Unit test: Single-window shift total_hours (Mañana 10:30-18:00 = 7.5) in `backend/tests/test_shift_type_model.py`
-- [ ] T028 [P] [US2] Unit test: Split-window shift total_hours (Cortado 12:30-16:30 + 18:30-22:30 = 8.0) in `backend/tests/test_shift_type_model.py`
-- [ ] T029 [P] [US2] Unit test: Midnight-spanning shift total_hours (23:00 to 06:00 = 7.0) in `backend/tests/test_shift_type_model.py`
-- [ ] T030 [P] [US2] Integration test: GET /shift-types/{id} returns total_hours field in `backend/tests/test_shift_types_integration.py`
-- [ ] T031 [P] [US2] Integration test: Cortado split shift displays correct 8.0 hours in `backend/tests/test_shift_types_integration.py`
+- [x] T027 [P] [US2] Unit test: Single-window shift total_hours (Mañana 10:30-18:00 = 7.5) in `backend/tests/test_shift_type_model.py`
+- [x] T028 [P] [US2] Unit test: Split-window shift total_hours (Cortado 12:30-16:30 + 18:30-22:30 = 8.0) in `backend/tests/test_shift_type_model.py`
+- [x] T029 [P] [US2] Unit test: Midnight-spanning shift total_hours (23:00 to 06:00 = 7.0) in `backend/tests/test_shift_type_model.py`
+- [x] T030 [P] [US2] Integration test: GET /shift-types/{id} returns total_hours field in `backend/tests/test_shift_types_contract.py`
+- [x] T031 [P] [US2] Integration test: Cortado split shift displays correct 8.0 hours in `backend/tests/test_shift_types_contract.py`
 
 ### Implementation for User Story 2
 
-- [ ] T032 [US2] Implement total_hours property on ShiftType model (sums all time_windows, handles midnight spans) in `backend/app/models/shift_type.py`
-- [ ] T033 [US2] Include total_hours in ShiftTypeResponse Pydantic schema in `backend/app/schemas/shift_type.py`
-- [ ] T034 [US2] Verify total_hours is returned in all GET endpoints (/shift-types, /shift-types/{id}) in `backend/app/routers/shift_types.py`
-- [ ] T035 [US2] Test manually: Create Noche (17:00 to 23:59, 7.7 hrs), verify API returns expected_hours=7.7
-- [ ] T036 [US2] Test manually: Update Mañana end time, verify total_hours recalculates immediately
+- [x] T032 [US2] Implement total_hours property on ShiftType model (sums all time_windows, handles midnight spans) in `backend/app/models/shift_type.py`
+- [x] T033 [US2] Include total_hours in ShiftTypeResponse Pydantic schema in `backend/app/schemas/shift_type.py`
+- [x] T034 [US2] Verify total_hours is returned in all GET endpoints (/shift-types, /shift-types/{id}) in `backend/app/routers/shift_types.py`
+- [x] T035 [US2] Test manually: Create Noche (17:00 to 23:59, 6.98 hrs), verify API returns expected_hours=6.98
+- [x] T036 [US2] Test manually: Update Mañana end time, verify total_hours recalculates immediately
 
 **Checkpoint**: User Story 2 complete — System calculates hours for all shift types automatically
 
@@ -112,28 +112,28 @@
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T037 [P] [US3] Contract test for POST /teams with shift_type in `backend/tests/test_teams_contract.py`
-- [ ] T037b [P] [US3] Contract test for GET /teams returns shift details in `backend/tests/test_teams_contract.py`
-- [ ] T037c [P] [US3] Contract test for PUT /teams/{id} with shift_type change in `backend/tests/test_teams_contract.py`
-- [ ] T038 [P] [US3] Integration test: Create team with Cortado shift, verify response includes time_windows + total_hours in `backend/tests/test_teams_integration.py`
-- [ ] T039 [P] [US3] Integration test: Reject team creation with invalid shift_type in `backend/tests/test_teams_integration.py`
+- [x] T037 [P] [US3] Contract test for POST /teams with shift_type in `backend/tests/test_teams_contract.py`
+- [x] T037b [P] [US3] Contract test for GET /teams returns shift details in `backend/tests/test_teams_contract.py`
+- [x] T037c [P] [US3] Contract test for PUT /teams/{id} with shift_type change in `backend/tests/test_teams_contract.py`
+- [x] T038 [P] [US3] Integration test: Create team with Cortado shift, verify response includes time_windows + total_hours in `backend/tests/test_teams_contract.py`
+- [x] T039 [P] [US3] Integration test: Reject team creation with invalid shift_type in `backend/tests/test_teams_contract.py`
 
 ### Implementation for User Story 3
 
-- [ ] T040 [US3] Update Team model in `backend/app/models/team.py`: Add shift_type_id FK, remove shift_start/shift_end columns
-- [ ] T041 [US3] Create Team.total_hours property (returns shift_type.expected_hours) in `backend/app/models/team.py`
-- [ ] T042 [US3] Update TeamCreate schema in `backend/app/schemas/team.py` to accept shift_type (enum or UUID)
-- [ ] T043 [US3] Update TeamUpdate schema in `backend/app/schemas/team.py` to support shift_type changes
-- [ ] T044 [US3] Update TeamResponse schema to include shift_type, time_windows, total_hours, expected_hours, uses_dynamic_close in `backend/app/schemas/team.py`
-- [ ] T045 [US3] Enhance team_service.create() to validate shift_type reference exists in `backend/app/services/team_service.py`
-- [ ] T046 [US3] Enhance team_service.update() to validate shift_type reference on changes in `backend/app/services/team_service.py`
-- [ ] T047 [US3] Update POST /teams endpoint to include shift details in response in `backend/app/routers/teams.py`
-- [ ] T048 [US3] Update GET /teams endpoint to include shift details in response in `backend/app/routers/teams.py`
-- [ ] T049 [US3] Update GET /teams/{id} endpoint to include shift details in response in `backend/app/routers/teams.py`
-- [ ] T050 [US3] Update PUT /teams/{id} endpoint to allow shift_type changes in `backend/app/routers/teams.py`
-- [ ] T051 [US3] Add validation: Reject team creation if shift_type doesn't exist or is inactive in `backend/app/services/team_service.py`
-- [ ] T052 [US3] Test manually: Create team with Mañana, verify response shows 7.5 hours
-- [ ] T053 [US3] Test manually: Try creating team with invalid shift_type, verify error message lists valid options
+- [x] T040 [US3] Update Team model in `backend/app/models/team.py`: Add shift_type_id FK, remove shift_start/shift_end columns
+- [x] T041 [US3] Create Team.total_hours property (returns shift_type.expected_hours) in `backend/app/models/team.py`
+- [x] T042 [US3] Update TeamCreate schema in `backend/app/schemas/team.py` to accept shift_type (enum or UUID)
+- [x] T043 [US3] Update TeamUpdate schema in `backend/app/schemas/team.py` to support shift_type changes
+- [x] T044 [US3] Update TeamResponse schema to include shift_type, time_windows, total_hours, expected_hours, uses_dynamic_close in `backend/app/schemas/team.py`
+- [x] T045 [US3] Enhance team_service.create() to validate shift_type reference exists in `backend/app/services/team_service.py`
+- [x] T046 [US3] Enhance team_service.update() to validate shift_type reference on changes in `backend/app/services/team_service.py`
+- [x] T047 [US3] Update POST /teams endpoint to include shift details in response in `backend/app/routers/teams.py`
+- [x] T048 [US3] Update GET /teams endpoint to include shift details in response in `backend/app/routers/teams.py`
+- [x] T049 [US3] Update GET /teams/{id} endpoint to include shift details in response in `backend/app/routers/teams.py`
+- [x] T050 [US3] Update PUT /teams/{id} endpoint to allow shift_type changes in `backend/app/routers/teams.py`
+- [x] T051 [US3] Add validation: Reject team creation if shift_type doesn't exist or is inactive in `backend/app/services/team_service.py`
+- [x] T052 [US3] Test manually: Create team with Mañana, verify response shows 7.5 hours
+- [x] T053 [US3] Test manually: Try creating team with invalid shift_type, verify error message lists valid options
 
 **Checkpoint**: User Story 3 complete — Teams now use ShiftType references with automatic hour calculation
 
