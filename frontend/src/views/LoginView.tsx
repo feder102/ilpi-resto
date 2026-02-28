@@ -1,6 +1,7 @@
-// T040: Login view
+// T032: Login view - refactored to use UI component library
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Button, Input, Card, Alert } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { ROUTES } from '../config/constants';
 
@@ -32,76 +33,57 @@ export default function LoginView() {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-    }}>
-      <div style={{
-        background: 'white', borderRadius: 16, padding: 40, width: '100%', maxWidth: 400,
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-      }}>
-        <h1 style={{ textAlign: 'center', marginBottom: 8, color: '#1e293b' }}>ILPI Staff</h1>
-        <p style={{ textAlign: 'center', color: '#64748b', marginBottom: 32 }}>
-          Gestión de Personal
-        </p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-700 px-4">
+      <Card className="w-full max-w-md bg-white shadow-2xl">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">ILPI Staff</h1>
+          <p className="text-sm text-slate-600">Gestión de Personal</p>
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, color: '#374151', marginBottom: 6 }}>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
               Correo electrónico
             </label>
-            <input
+            <Input
+              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
-              style={{
-                width: '100%', padding: '10px 14px', borderRadius: 8,
-                border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box',
-              }}
               placeholder="admin@ilpi.es"
+              required
             />
           </div>
 
-          <div style={{ marginBottom: 24 }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, color: '#374151', marginBottom: 6 }}>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
               Contraseña
             </label>
-            <input
+            <Input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{
-                width: '100%', padding: '10px 14px', borderRadius: 8,
-                border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box',
-              }}
               placeholder="••••••••"
+              required
             />
           </div>
 
           {error && (
-            <div style={{
-              background: '#fef2f2', color: '#dc2626', padding: '10px 14px',
-              borderRadius: 8, fontSize: '0.85rem', marginBottom: 16,
-            }}>
-              {error}
-            </div>
+            <Alert variant="error" message={error} />
           )}
 
-          <button
+          <Button
             type="submit"
-            disabled={loading}
-            style={{
-              width: '100%', padding: '12px', borderRadius: 8, border: 'none',
-              background: loading ? '#94a3b8' : '#1e293b', color: 'white',
-              fontSize: '0.95rem', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
-            }}
+            variant="primary"
+            size="md"
+            loading={loading}
+            className="w-full"
           >
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-          </button>
+          </Button>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

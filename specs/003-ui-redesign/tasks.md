@@ -175,28 +175,28 @@ Delivers:
 
 ### Layout Components Refactoring
 
-- [ ] T029 [US1] Refactor frontend/src/components/Layout.tsx to use Button, Card components instead of inline styles
-- [ ] T030 [US1] Refactor frontend/src/components/Header.tsx to use Button component for navigation items
-- [ ] T031 [US1] Refactor frontend/src/components/Sidebar.tsx to use Button, Card components for menu structure
+- [x] T029 [US1] Refactor frontend/src/components/Layout.tsx to use Button, Card components instead of inline styles
+- [x] T030 [US1] Refactor frontend/src/components/Header.tsx to use Button component for navigation items (integrated in Layout)
+- [x] T031 [US1] Refactor frontend/src/components/Sidebar.tsx to use Button, Card components for menu structure (integrated in Layout)
 
 ### View Refactoring - Part 1
 
-- [ ] T032 [P] [US1] Refactor frontend/src/views/LoginView.tsx to use Button, Input, Card components
-- [ ] T033 [P] [US1] Refactor frontend/src/views/DashboardView.tsx to use Button, Card, Badge components
-- [ ] T034 [P] [US1] Refactor frontend/src/views/EmployeeListView.tsx to use Button, Input, Card, Table, Badge components
+- [x] T032 [P] [US1] Refactor frontend/src/views/LoginView.tsx to use Button, Input, Card components
+- [x] T033 [P] [US1] Refactor frontend/src/views/DashboardView.tsx to use Button, Card, Badge components
+- [x] T034 [P] [US1] Refactor frontend/src/views/EmployeeListView.tsx to use Button, Input, Card, Table, Badge components
 - [ ] T035 [P] [US1] Refactor frontend/src/views/ShiftView.tsx to use Button, Input, Card, Table components
 - [ ] T036 [P] [US1] Refactor frontend/src/views/VacationView.tsx to use Button, Input, Card, Table, Badge components
 
 ### View Refactoring - Part 2
 
 - [ ] T037 [P] [US1] Refactor frontend/src/views/ReportsView.tsx to use Button, Card, Table, Badge components
-- [ ] T038 [P] [US1] Refactor frontend/src/views/SettingsView.tsx to use Button, Input, Card components
+- [x] T038 [P] [US1] Refactor frontend/src/views/SettingsView.tsx to use Button, Input, Card components
 - [ ] T039 [P] [US1] Refactor frontend/src/views/ProfileView.tsx to use Button, Input, Card components
 
 ### Verification & Testing
 
-- [ ] T040 [US1] Run `tsc --noEmit` to verify TypeScript strict mode (no errors)
-- [ ] T041 [US1] Run `npm run lint` to verify ESLint passes (no custom style violations)
+- [x] T040 [US1] Run `tsc --noEmit` to verify TypeScript strict mode (no errors)
+- [x] T041 [US1] Run `npm run lint` to verify ESLint passes (no custom style violations)
 - [ ] T042 [US1] Manually verify visual consistency: navigate between Dashboard → Employees → Shifts → Vacations → Reports; confirm no visual jarring
 - [ ] T043 [US1] Remove old custom CSS files that are now obsolete (frontend/src/styles/*.css except globals.css)
 - [ ] T044 [US1] Update frontend/README.md to document component usage (reference quickstart.md)

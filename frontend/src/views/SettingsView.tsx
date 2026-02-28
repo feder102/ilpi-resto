@@ -1,57 +1,60 @@
-// T079: Settings view — Admin only
+// T038: Settings view — Admin only - refactored to use UI components
 import { Shield, Database, Users } from 'lucide-react';
+import { Card } from '../components/ui';
 
 export default function SettingsView() {
   return (
     <div>
-      <h1 style={{ margin: '0 0 24px', fontSize: '1.5rem', fontWeight: 700 }}>Configuración</h1>
+      <h1 className="text-3xl font-bold mb-8 text-slate-900">Configuración</h1>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Database Info */}
-        <div style={{ background: 'white', borderRadius: 12, padding: 24, border: '1px solid #e2e8f0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-            <Database size={24} color="#3b82f6" />
-            <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 600 }}>Base de Datos</h2>
+        <Card>
+          <div className="flex items-center gap-3 mb-4">
+            <Database size={24} className="text-blue-600" />
+            <h2 className="text-lg font-semibold text-slate-900">Base de Datos</h2>
           </div>
-          <div style={{ fontSize: '0.9rem', color: '#475569' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
-              <span>Motor</span><span style={{ fontWeight: 500 }}>PostgreSQL 16</span>
+          <div className="space-y-2 text-sm text-slate-700">
+            <div className="flex justify-between py-2 border-b border-slate-100">
+              <span>Motor</span>
+              <span className="font-medium text-slate-900">PostgreSQL 16</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+            <div className="flex justify-between py-2 border-b border-slate-100">
               <span>Estado</span>
-              <span style={{ color: '#16a34a', fontWeight: 500 }}>Conectado</span>
+              <span className="font-medium text-green-600">Conectado</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
-              <span>Última sincronización</span><span style={{ fontWeight: 500 }}>Ahora</span>
+            <div className="flex justify-between py-2">
+              <span>Última sincronización</span>
+              <span className="font-medium text-slate-900">Ahora</span>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Security & Roles */}
-        <div style={{ background: 'white', borderRadius: 12, padding: 24, border: '1px solid #e2e8f0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-            <Shield size={24} color="#8b5cf6" />
-            <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 600 }}>Seguridad y Roles</h2>
+        <Card>
+          <div className="flex items-center gap-3 mb-4">
+            <Shield size={24} className="text-purple-600" />
+            <h2 className="text-lg font-semibold text-slate-900">Seguridad y Roles</h2>
           </div>
-          <div style={{ fontSize: '0.9rem', color: '#475569' }}>
-            <div style={{ marginBottom: 16 }}>
-              <h4 style={{ margin: '0 0 8px', fontWeight: 600 }}>Roles del Sistema</h4>
+          <div className="space-y-4 text-sm text-slate-700">
+            <div>
+              <h4 className="font-semibold text-slate-900 mb-2">Roles del Sistema</h4>
               {[
-                { role: 'Admin', desc: 'Acceso completo a todas las secciones', color: '#dc2626' },
-                { role: 'Moderador', desc: 'Todo excepto Configuración', color: '#ea580c' },
-                { role: 'Empleado', desc: 'Solo perfil, turnos y vacaciones propios', color: '#2563eb' },
+                { role: 'Admin', desc: 'Acceso completo a todas las secciones', color: 'text-red-600' },
+                { role: 'Moderador', desc: 'Todo excepto Configuración', color: 'text-orange-600' },
+                { role: 'Empleado', desc: 'Solo perfil, turnos y vacaciones propios', color: 'text-blue-600' },
               ].map((r) => (
-                <div key={r.role} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0' }}>
-                  <Users size={14} color={r.color} />
-                  <strong style={{ color: r.color }}>{r.role}</strong>
-                  <span style={{ color: '#94a3b8' }}>— {r.desc}</span>
+                <div key={r.role} className="flex items-center gap-2 py-1.5">
+                  <Users size={14} className={r.color} />
+                  <strong className={r.color}>{r.role}</strong>
+                  <span className="text-slate-500">— {r.desc}</span>
                 </div>
               ))}
             </div>
 
             <div>
-              <h4 style={{ margin: '0 0 8px', fontWeight: 600 }}>Políticas de Seguridad</h4>
-              <ul style={{ margin: 0, paddingLeft: 20, color: '#64748b', fontSize: '0.85rem' }}>
+              <h4 className="font-semibold text-slate-900 mb-2">Políticas de Seguridad</h4>
+              <ul className="space-y-1 text-xs text-slate-600 list-disc list-inside">
                 <li>Tokens JWT con expiración de 30 minutos</li>
                 <li>Refresh tokens en cookies HttpOnly</li>
                 <li>Rate limiting: 10 req/min en login</li>
@@ -60,7 +63,7 @@ export default function SettingsView() {
               </ul>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

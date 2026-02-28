@@ -6,7 +6,6 @@ import { useAuth } from '../hooks/useAuth';
 import { DEPARTMENTS, SHIFT_TYPES } from '../config/constants';
 import { Role, Department } from '../types/models';
 import type { Team, Employee } from '../types/models';
-import type { PaginatedResponse } from '../types/api';
 import { getTeams, createTeam, addMember, removeMember } from '../services/teamService';
 import { getEmployees } from '../services/employeeService';
 

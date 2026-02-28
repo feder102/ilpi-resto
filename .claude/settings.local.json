@@ -24,7 +24,8 @@
       "Bash(__NEW_LINE_fdf800ff800e84a1__ echo:*)",
       "Bash(powershell:*)",
       "Bash(npm install:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

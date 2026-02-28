@@ -1,8 +1,6 @@
 // T072: Attendance view — Clock-in/out with shift history
 import { useState, useEffect, useCallback } from 'react';
 import { Clock, MapPin, User } from 'lucide-react';
-import StatusBadge from '../components/StatusBadge';
-import FormField from '../components/FormField';
 import { useAuth } from '../hooks/useAuth';
 import { Role } from '../types/models';
 import type { ShiftRecord, Employee } from '../types/models';
