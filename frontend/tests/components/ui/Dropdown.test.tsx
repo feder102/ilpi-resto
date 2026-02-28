@@ -28,8 +28,7 @@ describe('Dropdown Component', () => {
     expect(screen.getByText('Option 1')).toBeInTheDocument();
   });
 
-  it('displays selected value', async () => {
-    const user = userEvent.setup();
+  it('displays selected value', () => {
     render(<Dropdown options={options} value="opt2" />);
     expect(screen.getByText('Option 2')).toBeInTheDocument();
   });
