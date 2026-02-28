@@ -220,22 +220,22 @@ Delivers:
 
 ### Color System Implementation
 
-- [ ] T046 [US2] Update frontend/src/config/designTokens.ts with complete Indigo + Slate palette and semantic colors
-- [ ] T047 [US2] Update frontend/src/styles/globals.css with CSS variables for all colors (--color-primary, --color-slate-*, etc.)
-- [ ] T048 [US2] Verify Button.tsx uses correct colors: primary Indigo-600, secondary Slate-100, danger Red-600
-- [ ] T049 [US2] Verify Input.tsx uses correct colors: border Slate-200, focus outline Indigo-600
-- [ ] T050 [US2] Verify Card.tsx uses correct background: white or Slate-50
-- [ ] T051 [US2] Verify Badge.tsx uses semantic colors: green/yellow/red/blue per variant
+- [x] T046 [US2] Update frontend/src/config/designTokens.ts with complete Indigo + Slate palette and semantic colors
+- [x] T047 [US2] Update frontend/src/styles/globals.css with CSS variables for all colors (--color-primary, --color-slate-*, etc.)
+- [x] T048 [US2] Verify Button.tsx uses correct colors: primary Indigo-600, secondary Slate-100, danger Red-600
+- [x] T049 [US2] Verify Input.tsx uses correct colors: border Slate-200, focus outline Indigo-600
+- [x] T050 [US2] Verify Card.tsx uses correct background: white or Slate-50
+- [x] T051 [US2] Verify Badge.tsx uses semantic colors: green/yellow/red/blue per variant
 
 ### Validation & Verification
 
-- [ ] T052 [US2] Run visual color audit: open each view (Dashboard, Employees, Shifts, Vacations, Reports) and verify:
+- [x] T052 [US2] Run visual color audit: open each view (Dashboard, Employees, Shifts, Vacations, Reports) and verify:
   - Only Indigo-600, Slate shades, semantic colors visible
   - No green/teal/blue/pink/orange other than semantic colors
   - Consistent color usage across same component types
-- [ ] T053 [US2] Verify color contrast: use Lighthouse or WebAIM checker to confirm 4.5:1 ratio for all text
-- [ ] T054 [US2] Test semantic color usage: confirm error messages use Red-600, success uses Green-600, warnings use Yellow-600, info uses Blue-600
-- [ ] T055 [US2] Commit: "feat: apply Indigo + Slate color palette across UI (US2)"
+- [x] T053 [US2] Verify color contrast: use Lighthouse or WebAIM checker to confirm 4.5:1 ratio for all text
+- [x] T054 [US2] Test semantic color usage: confirm error messages use Red-600, success uses Green-600, warnings use Yellow-600, info uses Blue-600
+- [x] T055 [US2] Commit: "feat: apply Indigo + Slate color palette across UI (US2)"
 
 ---
 

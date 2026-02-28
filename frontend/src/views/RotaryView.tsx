@@ -268,7 +268,7 @@ export default function RotaryView() {
             <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={teamName} onChange={(e) => setTeamName(e.target.value)} placeholder="Ej: Equipo A" />
           </FormField>
           <FormField label="Tipo de turno">
-            <select className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={shiftType} onChange={(e) => setShiftType(e.target.value)}>
+            <select className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={shiftType} onChange={(e) => setShiftType(e.target.value as string)}>
               {SHIFT_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </FormField>

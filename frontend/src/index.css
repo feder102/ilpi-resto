@@ -2,24 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design System CSS Variables */
+/* Design System CSS Variables - Complete Indigo + Slate Palette */
 :root {
-  /* Colors */
-  --color-primary: #4F46E5;
-  --color-primary-hover: #6366F1;
-  --color-primary-active: #4338CA;
+  /* Primary Colors - Indigo */
+  --color-indigo-50: #EEF2FF;
+  --color-indigo-100: #E0E7FF;
+  --color-indigo-200: #C7D2FE;
+  --color-indigo-300: #A5B4FC;
+  --color-indigo-400: #818CF8;
+  --color-indigo-500: #6366F1;
+  --color-indigo-600: #4F46E5; /* Primary action color */
+  --color-indigo-700: #4338CA;
+  --color-indigo-800: #3730A3;
+  --color-indigo-900: #312E81;
 
+  /* Neutral Colors - Slate */
   --color-slate-50: #F8FAFC;
   --color-slate-100: #F1F5F9;
   --color-slate-200: #E2E8F0;
+  --color-slate-300: #CBD5E1;
+  --color-slate-400: #94A3B8;
   --color-slate-500: #64748B;
+  --color-slate-600: #475569;
   --color-slate-700: #334155;
+  --color-slate-800: #1E293B;
   --color-slate-900: #0F172A;
 
+  /* Semantic Colors */
   --color-success: #16A34A;
+  --color-success-bg: #F0FDF4;
   --color-warning: #CA8A04;
+  --color-warning-bg: #FEFCE8;
   --color-error: #DC2626;
+  --color-error-bg: #FEF2F2;
   --color-info: #2563EB;
+  --color-info-bg: #EFF6FF;
 
   /* Typography */
   --font-family: system-ui, -apple-system, sans-serif;
