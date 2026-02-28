@@ -59,8 +59,21 @@ cd backend && mypy app --strict && ruff check . && pytest
 cd frontend && npm run lint && npm run build
 ```
 
+## ⚡ Quick Start Scripts
+
+Three ways to start the project:
+
+**Windows (PowerShell)**: `.\init-project.ps1 start`
+**Windows (CMD)**: `init-project.bat start`
+**Linux/macOS**: `./init --start`
+
+Scripts handle: Docker + PostgreSQL setup, Python venv, npm dependencies, backend (FastAPI port 8000), frontend (Vite port 5173)
+
 ## 🔗 Key References
 
+- **QUICKSTART.md** - Fastest way to start (2 commands!)
+- **INIT-PROJECT.md** - Full initialization guide
+- **COMMANDS.md** - All command reference
 - Constitution: `specs/001-kitchen-staff-mgmt/constitution.md` (read first!)
 - Spec-Kit skills: `speckit.specify`, `speckit.plan`, `speckit.tasks`, `speckit.analyze`, `speckit.implement`
 - API Docs: http://localhost:8000/docs (when running)
