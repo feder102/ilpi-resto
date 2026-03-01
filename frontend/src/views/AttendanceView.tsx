@@ -1,17 +1,13 @@
 // T072: Attendance view — Clock-in/out with shift history
 import { useState, useEffect, useCallback } from 'react';
 import { Clock, MapPin, User } from 'lucide-react';
+import { Button, Card, Alert, Badge } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { Role } from '../types/models';
 import type { ShiftRecord, Employee } from '../types/models';
 import type { PaginatedResponse } from '../types/api';
 import { getShifts, clockIn, clockOut } from '../services/shiftService';
 import { getEmployees } from '../services/employeeService';
-
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '8px 12px', borderRadius: 8,
-  border: '1px solid #e2e8f0', fontSize: '0.9rem',
-};
 
 export default function AttendanceView() {
   const { user, hasRole } = useAuth();
@@ -94,26 +90,23 @@ export default function AttendanceView() {
 
   return (
     <div>
-      <h1 style={{ margin: '0 0 24px', fontSize: '1.5rem', fontWeight: 700 }}>Control Horario</h1>
+      <h1 className="mb-6 text-3xl font-bold text-slate-900">Control Horario</h1>
 
-      {/* Clock-in Hero */}
-      <div style={{
-        background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
-        borderRadius: 16, padding: 32, color: 'white', marginBottom: 32,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+      {/* Clock-in Card */}
+      <Card variant="elevated" className="mb-8 bg-gradient-to-br from-indigo-600 to-indigo-700 text-white border-0 p-6">
+        <div className="flex items-center gap-3 mb-6">
           <Clock size={28} />
-          <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Fichaje</h2>
+          <h2 className="m-0 text-2xl font-bold">Fichaje</h2>
         </div>
 
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'end' }}>
+        <div className="flex flex-wrap items-end gap-4">
           {isAdminOrMod && (
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <label style={{ fontSize: '0.85rem', display: 'block', marginBottom: 4 }}>Empleado</label>
+            <div className="flex-1 min-w-[200px]">
+              <label className="mb-1 block text-sm font-medium">Empleado</label>
               <select
-                style={{ ...inputStyle, color: '#1e293b' }}
                 value={selectedEmployee}
                 onChange={(e) => setSelectedEmployee(e.target.value)}
+                className="w-full rounded-md border border-indigo-300 bg-indigo-50 px-3 py-2 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600"
               >
                 <option value="">Seleccionar empleado...</option>
                 {employees.map((emp) => (
@@ -122,128 +115,130 @@ export default function AttendanceView() {
               </select>
             </div>
           )}
-          <div style={{ minWidth: 160 }}>
-            <label style={{ fontSize: '0.85rem', display: 'block', marginBottom: 4 }}>Tarea (opcional)</label>
+          <div className="min-w-[160px]">
+            <label className="mb-1 block text-sm font-medium">Tarea (opcional)</label>
             <input
-              style={{ ...inputStyle, color: '#1e293b' }}
               value={taskLabel}
               onChange={(e) => setTaskLabel(e.target.value)}
               placeholder="Ej: Parrilla"
+              className="w-full rounded-md border border-indigo-300 bg-indigo-50 px-3 py-2 text-slate-900 text-sm placeholder-indigo-300 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600"
             />
           </div>
-          <button
+          <Button
             onClick={handleClockIn}
             disabled={submitting}
-            style={{
-              padding: '10px 24px', borderRadius: 8, border: '2px solid white',
-              background: 'rgba(255,255,255,0.15)', color: 'white',
-              fontWeight: 700, cursor: submitting ? 'default' : 'pointer', fontSize: '1rem',
-            }}
+            loading={submitting}
+            className="border-2 border-white bg-transparent text-white hover:bg-white/20"
           >
             {submitting ? 'Fichando...' : 'Confirmar Fichaje'}
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
 
-      {error && <p style={{ color: '#dc2626', marginBottom: 12 }}>{error}</p>}
+      {error && <Alert variant="error" message={error} className="mb-6" />}
 
-      {/* Shift History Table */}
-      <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: 16 }}>
-        Historial de Turnos ({total})
-      </h2>
+      {/* Shift History */}
+      <div>
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">
+          Historial de Turnos ({total})
+        </h2>
 
-      {loading ? (
-        <p style={{ textAlign: 'center', color: '#64748b' }}>Cargando...</p>
-      ) : shifts.length === 0 ? (
-        <p style={{ textAlign: 'center', color: '#64748b' }}>No hay registros de turnos</p>
-      ) : (
-        <>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
-                  <th style={{ padding: '12px 8px', fontWeight: 600, color: '#475569' }}>Empleado</th>
-                  <th style={{ padding: '12px 8px', fontWeight: 600, color: '#475569' }}>Fecha</th>
-                  <th style={{ padding: '12px 8px', fontWeight: 600, color: '#475569' }}>Entrada</th>
-                  <th style={{ padding: '12px 8px', fontWeight: 600, color: '#475569' }}>Salida</th>
-                  <th style={{ padding: '12px 8px', fontWeight: 600, color: '#475569' }}>Tarea</th>
-                  <th style={{ padding: '12px 8px', fontWeight: 600, color: '#475569' }}>GPS</th>
-                  <th style={{ padding: '12px 8px' }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {shifts.map((s) => (
-                  <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '12px 8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{
-                          width: 32, height: 32, borderRadius: '50%', background: '#e2e8f0',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-                        }}>
-                          {s.employee_image
-                            ? <img src={s.employee_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            : <User size={16} color="#94a3b8" />}
-                        </div>
-                        {s.employee_name || 'N/A'}
-                      </div>
-                    </td>
-                    <td style={{ padding: '12px 8px' }}>{s.date}</td>
-                    <td style={{ padding: '12px 8px' }}>
-                      <span style={{ background: '#dcfce7', color: '#16a34a', padding: '2px 8px', borderRadius: 4, fontSize: '0.8rem', fontWeight: 600 }}>
-                        {formatTime(s.entry_time)}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px 8px' }}>
-                      {s.exit_time ? (
-                        <span style={{ background: '#ffedd5', color: '#ea580c', padding: '2px 8px', borderRadius: 4, fontSize: '0.8rem', fontWeight: 600 }}>
-                          {formatTime(s.exit_time)}
-                        </span>
-                      ) : (
-                        <span style={{ color: '#64748b', fontStyle: 'italic', fontSize: '0.85rem' }}>En turno...</span>
-                      )}
-                    </td>
-                    <td style={{ padding: '12px 8px', color: '#64748b' }}>{s.task_label || '-'}</td>
-                    <td style={{ padding: '12px 8px' }}>
-                      {s.location_lat && s.location_lng ? (
-                        <span style={{ color: '#2563eb', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <MapPin size={14} /> Ver GPS
-                        </span>
-                      ) : '-'}
-                    </td>
-                    <td style={{ padding: '12px 8px' }}>
-                      {!s.exit_time && (
-                        <button
-                          onClick={() => handleClockOut(s.id)}
-                          style={{
-                            padding: '4px 12px', borderRadius: 6, border: '1px solid #e2e8f0',
-                            background: 'white', cursor: 'pointer', fontSize: '0.8rem', color: '#ea580c',
-                          }}
-                        >
-                          Fichar salida
-                        </button>
-                      )}
-                    </td>
+        {loading ? (
+          <p className="text-center text-slate-600 mt-10">Cargando...</p>
+        ) : shifts.length === 0 ? (
+          <p className="text-center text-slate-600 mt-10">No hay registros de turnos</p>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b-2 border-slate-200 text-left">
+                    <th className="px-2 py-3 font-semibold text-slate-700">Empleado</th>
+                    <th className="px-2 py-3 font-semibold text-slate-700">Fecha</th>
+                    <th className="px-2 py-3 font-semibold text-slate-700">Entrada</th>
+                    <th className="px-2 py-3 font-semibold text-slate-700">Salida</th>
+                    <th className="px-2 py-3 font-semibold text-slate-700">Tarea</th>
+                    <th className="px-2 py-3 font-semibold text-slate-700">GPS</th>
+                    <th className="px-2 py-3"></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {pages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 24 }}>
-              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}
-                style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: page > 1 ? 'pointer' : 'default' }}>
-                Anterior
-              </button>
-              <span style={{ padding: '8px 16px', fontSize: '0.9rem', color: '#64748b' }}>Página {page} de {pages}</span>
-              <button onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page >= pages}
-                style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: page < pages ? 'pointer' : 'default' }}>
-                Siguiente
-              </button>
+                </thead>
+                <tbody>
+                  {shifts.map((s) => (
+                    <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50">
+                      <td className="px-2 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full bg-slate-200 flex items-center justify-center">
+                            {s.employee_image
+                              ? <img src={s.employee_image} alt="" className="h-full w-full object-cover" />
+                              : <User size={16} className="text-slate-400" />}
+                          </div>
+                          {s.employee_name || 'N/A'}
+                        </div>
+                      </td>
+                      <td className="px-2 py-3">{s.date}</td>
+                      <td className="px-2 py-3">
+                        <Badge variant="success" className="bg-green-100 text-green-700">
+                          {formatTime(s.entry_time)}
+                        </Badge>
+                      </td>
+                      <td className="px-2 py-3">
+                        {s.exit_time ? (
+                          <Badge variant="warning" className="bg-orange-100 text-orange-700">
+                            {formatTime(s.exit_time)}
+                          </Badge>
+                        ) : (
+                          <span className="text-slate-600 italic text-xs">En turno...</span>
+                        )}
+                      </td>
+                      <td className="px-2 py-3 text-slate-600">{s.task_label || '-'}</td>
+                      <td className="px-2 py-3">
+                        {s.location_lat && s.location_lng ? (
+                          <a href={`https://maps.google.com/?q=${s.location_lat},${s.location_lng}`} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-700 text-sm flex items-center gap-1">
+                            <MapPin size={14} /> Ver GPS
+                          </a>
+                        ) : '-'}
+                      </td>
+                      <td className="px-2 py-3">
+                        {!s.exit_time && (
+                          <Button
+                            onClick={() => handleClockOut(s.id)}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            Fichar salida
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          )}
-        </>
-      )}
+
+            {pages > 1 && (
+              <div className="flex justify-center items-center gap-4 mt-8">
+                <Button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  variant="secondary"
+                  size="sm"
+                >
+                  Anterior
+                </Button>
+                <span className="text-sm text-slate-600">Página {page} de {pages}</span>
+                <Button
+                  onClick={() => setPage((p) => Math.min(pages, p + 1))}
+                  disabled={page >= pages}
+                  variant="secondary"
+                  size="sm"
+                >
+                  Siguiente
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

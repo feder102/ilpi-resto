@@ -1,11 +1,8 @@
 // T034: Employee list view with card grid, search/filter, create/edit modal - refactored to use UI components
 import { useState, useEffect, useCallback } from 'react';
 import { UserPlus, Edit2, Trash2, User } from 'lucide-react';
-import { Button, Card, Modal, Alert } from '../components/ui';
+import { Button, Card, Modal, Alert, Badge } from '../components/ui';
 import SearchFilter from '../components/SearchFilter';
-import StatusBadge from '../components/StatusBadge';
-import ConfirmDialog from '../components/ConfirmDialog';
-import FormField from '../components/FormField';
 import { useAuth } from '../hooks/useAuth';
 import { DEPARTMENTS } from '../config/constants';
 import { Role, Department, MaritalStatus, Gender } from '../types/models';
@@ -19,6 +16,22 @@ import {
   type EmployeeCreateData,
   type EmployeeUpdateData,
 } from '../services/employeeService';
+
+// Status to Badge variant mapping
+function getStatusVariant(status: string): 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+  switch (status) {
+    case 'Activo':
+      return 'success';
+    case 'Vacaciones':
+      return 'info';
+    case 'Ausente':
+      return 'warning';
+    case 'Inactivo':
+      return 'neutral';
+    default:
+      return 'neutral';
+  }
+}
 
 const INITIAL_FORM: EmployeeCreateData = {
   first_name: '',
@@ -252,7 +265,7 @@ export default function EmployeeListView() {
                     </h3>
                     <p className="text-xs text-slate-600">{emp.department}</p>
                   </div>
-                  <StatusBadge status={emp.status} />
+                  <Badge variant={getStatusVariant(emp.status)}>{emp.status}</Badge>
                 </div>
 
                 <div className="text-sm text-slate-700 space-y-1 mb-3">
@@ -343,72 +356,138 @@ export default function EmployeeListView() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Personal Info */}
-          <FormField label="Nombre" required error={formErrors.first_name}>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Nombre {formErrors.first_name && <span className="text-red-600">*</span>}
+            </label>
             <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.first_name} onChange={(e) => updateField('first_name', e.target.value)} />
-          </FormField>
-          <FormField label="Apellidos" required error={formErrors.last_name}>
+            {formErrors.first_name && <p className="mt-1 text-xs text-red-600">{formErrors.first_name}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Apellidos {formErrors.last_name && <span className="text-red-600">*</span>}
+            </label>
             <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.last_name} onChange={(e) => updateField('last_name', e.target.value)} />
-          </FormField>
-          <FormField label="Email" required error={formErrors.email}>
+            {formErrors.last_name && <p className="mt-1 text-xs text-red-600">{formErrors.last_name}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Email {formErrors.email && <span className="text-red-600">*</span>}
+            </label>
             <input type="email" className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.email} onChange={(e) => updateField('email', e.target.value)} />
-          </FormField>
-          <FormField label="Teléfono">
+            {formErrors.email && <p className="mt-1 text-xs text-red-600">{formErrors.email}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Teléfono
+            </label>
             <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.phone || ''} onChange={(e) => updateField('phone', e.target.value)} />
-          </FormField>
-          <FormField label="DNI" required error={formErrors.dni}>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              DNI {formErrors.dni && <span className="text-red-600">*</span>}
+            </label>
             <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.dni} onChange={(e) => updateField('dni', e.target.value)} />
-          </FormField>
-          <FormField label="Fecha de nacimiento">
+            {formErrors.dni && <p className="mt-1 text-xs text-red-600">{formErrors.dni}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Fecha de nacimiento
+            </label>
             <input type="date" className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.birth_date || ''} onChange={(e) => updateField('birth_date', e.target.value)} />
-          </FormField>
-          <FormField label="Dirección">
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Dirección
+            </label>
             <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.address || ''} onChange={(e) => updateField('address', e.target.value)} />
-          </FormField>
-          <FormField label="Género">
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Género
+            </label>
             <select className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.gender || ''} onChange={(e) => updateField('gender', e.target.value)}>
               <option value="">Seleccionar...</option>
               {Object.values(Gender).map((g) => <option key={g} value={g}>{g}</option>)}
             </select>
-          </FormField>
-          <FormField label="Estado civil">
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Estado civil
+            </label>
             <select className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.marital_status || ''} onChange={(e) => updateField('marital_status', e.target.value)}>
               <option value="">Seleccionar...</option>
               {Object.values(MaritalStatus).map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
-          </FormField>
+          </div>
 
           {/* Company Info */}
-          <FormField label="Departamento" required error={formErrors.department}>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Departamento {formErrors.department && <span className="text-red-600">*</span>}
+            </label>
             <select className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.department} onChange={(e) => updateField('department', e.target.value)}>
               {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
-          </FormField>
-          <FormField label="Rol" required error={formErrors.role}>
+            {formErrors.department && <p className="mt-1 text-xs text-red-600">{formErrors.department}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Rol {formErrors.role && <span className="text-red-600">*</span>}
+            </label>
             <select className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.role} onChange={(e) => updateField('role', e.target.value)}>
               {Object.values(Role).map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
-          </FormField>
-          <FormField label="Fecha de contratación" required error={formErrors.hire_date}>
+            {formErrors.role && <p className="mt-1 text-xs text-red-600">{formErrors.role}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Fecha de contratación {formErrors.hire_date && <span className="text-red-600">*</span>}
+            </label>
             <input type="date" className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.hire_date} onChange={(e) => updateField('hire_date', e.target.value)} />
-          </FormField>
-          <FormField label="Contacto de emergencia">
+            {formErrors.hire_date && <p className="mt-1 text-xs text-red-600">{formErrors.hire_date}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Contacto de emergencia
+            </label>
             <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.emergency_contact || ''} onChange={(e) => updateField('emergency_contact', e.target.value)} />
-          </FormField>
-          <FormField label="URL imagen de perfil">
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              URL imagen de perfil
+            </label>
             <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.profile_image || ''} onChange={(e) => updateField('profile_image', e.target.value)} />
-          </FormField>
+          </div>
         </div>
       </Modal>
 
       {/* Delete Confirmation */}
-      <ConfirmDialog
-        open={!!deleteId}
+      <Modal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
         title="Eliminar empleado"
-        message={`¿Está seguro de que desea eliminar a ${deleteName}? Esta acción desactivará al empleado y rechazará sus solicitudes de vacaciones pendientes.`}
-        confirmLabel="Eliminar"
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteId(null)}
-      />
+        footer={
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="secondary"
+              onClick={() => setDeleteId(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDelete}
+            >
+              Eliminar
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-slate-700">
+          ¿Está seguro de que desea eliminar a {deleteName}? Esta acción desactivará al empleado y rechazará sus solicitudes de vacaciones pendientes.
+        </p>
+      </Modal>
     </div>
   );
 }

@@ -1,9 +1,7 @@
 // T036: Vacation view with request cards and balance - refactored to use UI components
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Check, X, Ban, User } from 'lucide-react';
-import { Button, Card, Modal, Alert } from '../components/ui';
-import StatusBadge from '../components/StatusBadge';
-import FormField from '../components/FormField';
+import { Button, Card, Modal, Alert, Badge } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { Role, VacationStatus } from '../types/models';
 import type { VacationRequest, VacationBalance } from '../types/models';
@@ -18,6 +16,22 @@ import {
 } from '../services/vacationService';
 import { getEmployees } from '../services/employeeService';
 import type { Employee } from '../types/models';
+
+// Status to Badge variant mapping
+function getVacationStatusVariant(status: string): 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+  switch (status) {
+    case 'Aprobado':
+      return 'success';
+    case 'Pendiente':
+      return 'warning';
+    case 'Rechazado':
+      return 'error';
+    case 'Cancelado':
+      return 'neutral';
+    default:
+      return 'neutral';
+  }
+}
 
 export default function VacationView() {
   const { user, hasRole } = useAuth();
@@ -190,7 +204,7 @@ export default function VacationView() {
                     <h3 className="font-semibold text-slate-900">{req.employee_name || 'Empleado'}</h3>
                     <p className="text-xs text-slate-600">{req.employee_department}</p>
                   </div>
-                  <StatusBadge status={req.status} />
+                  <Badge variant={getVacationStatusVariant(req.status)}>{req.status}</Badge>
                 </div>
 
                 <div className="text-sm text-slate-700 space-y-1 mb-3">
@@ -288,32 +302,41 @@ export default function VacationView() {
 
         <div className="space-y-4">
           {isAdminOrMod && (
-            <FormField label="Empleado" required>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Empleado *
+              </label>
               <select className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={selectedEmployee} onChange={(e) => setSelectedEmployee(e.target.value)}>
                 <option value="">Seleccionar empleado...</option>
                 {employees.map((emp) => (
                   <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
                 ))}
               </select>
-            </FormField>
+            </div>
           )}
 
-          <FormField label="Fecha inicio" required>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Fecha inicio *
+            </label>
             <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-          </FormField>
-          <FormField label="Fecha fin" required>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Fecha fin *
+            </label>
             <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-          </FormField>
+          </div>
 
           {computedDays > 0 && (
-            <div className="bg-slate-50 rounded-md p-3 border border-slate-200 text-sm">
+            <Card className="bg-slate-50 border-slate-200 text-sm">
               <p className="font-semibold text-slate-900 mb-1">Días solicitados: {computedDays}</p>
               {balance && (
                 <p className="text-slate-600">
                   Saldo disponible: {balance.remaining_days} de {balance.total_days} días
                 </p>
               )}
-            </div>
+            </Card>
           )}
         </div>
       </Modal>
