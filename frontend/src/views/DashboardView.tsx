@@ -1,6 +1,7 @@
-// T077: Dashboard view with stat cards and today's shifts
+// T033: Dashboard view with stat cards and today's shifts - refactored to use UI components
 import { useState, useEffect } from 'react';
 import { Users, Clock, Palmtree, Bell } from 'lucide-react';
+import { Card, Badge } from '../components/ui';
 import StatCard from '../components/StatCard';
 import type { DashboardStats } from '../types/api';
 import type { ShiftRecord } from '../types/models';
@@ -32,56 +33,55 @@ export default function DashboardView() {
   }, []);
 
   if (loading) {
-    return <p style={{ textAlign: 'center', color: '#64748b', marginTop: 40 }}>Cargando dashboard...</p>;
+    return <p className="text-center text-slate-600 mt-10">Cargando dashboard...</p>;
   }
 
   return (
-    <div>
-      <h1 style={{ margin: '0 0 24px', fontSize: '1.5rem', fontWeight: 700 }}>Dashboard</h1>
+    <div className="max-w-7xl">
+      <h1 className="text-2xl md:text-3xl font-bold mb-8 text-slate-900">Dashboard</h1>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 32 }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard title="Total Personal" value={stats?.total_employees ?? 0} icon={<Users size={24} />} color="#3b82f6" />
         <StatCard title="En Turno" value={stats?.on_shift ?? 0} icon={<Clock size={24} />} color="#16a34a" />
         <StatCard title="De Vacaciones" value={stats?.on_vacation ?? 0} icon={<Palmtree size={24} />} color="#eab308" />
         <StatCard title="Solicitudes Pendientes" value={stats?.pending_requests ?? 0} icon={<Bell size={24} />} color="#ef4444" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: 24 }}>
-        <div>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: 16 }}>Turnos de Hoy</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+        <div className="lg:col-span-2">
+          <h2 className="text-base md:text-lg font-semibold text-slate-900 mb-4">Turnos de Hoy</h2>
           {todayShifts.length === 0 ? (
-            <p style={{ color: '#64748b' }}>No hay turnos registrados hoy</p>
+            <p className="text-slate-600">No hay turnos registrados hoy</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className="space-y-2">
               {todayShifts.map((s) => (
-                <div key={s.id} style={{
-                  background: 'white', borderRadius: 8, padding: '12px 16px',
-                  border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                }}>
-                  <span style={{ fontWeight: 500 }}>{s.employee_name || 'N/A'}</span>
-                  <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                    {s.entry_time ? new Date(s.entry_time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : ''}
-                    {s.exit_time ? ` - ${new Date(s.exit_time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}` : ' — En turno...'}
-                  </span>
-                  {s.task_label && (
-                    <span style={{ background: '#f1f5f9', padding: '2px 8px', borderRadius: 4, fontSize: '0.75rem' }}>
-                      {s.task_label}
+                <Card key={s.id} className="flex items-center justify-between p-3">
+                  <span className="font-medium text-slate-900">{s.employee_name || 'N/A'}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-slate-600">
+                      {s.entry_time ? new Date(s.entry_time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : ''}
+                      {s.exit_time ? ` - ${new Date(s.exit_time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}` : ' — En turno...'}
                     </span>
-                  )}
-                </div>
+                    {s.task_label && (
+                      <Badge variant="neutral">{s.task_label}</Badge>
+                    )}
+                  </div>
+                </Card>
               ))}
             </div>
           )}
         </div>
 
-        <div style={{ background: 'white', borderRadius: 12, padding: 20, border: '1px solid #e2e8f0', alignSelf: 'start' }}>
-          <h3 style={{ margin: '0 0 12px', fontSize: '0.95rem', fontWeight: 600 }}>Resumen Rápido</h3>
-          <div style={{ fontSize: '0.9rem', color: '#475569' }}>
-            <p>Personal activo: <strong>{stats?.total_employees ?? 0}</strong></p>
-            <p>Turnos en curso: <strong>{stats?.on_shift ?? 0}</strong></p>
-            <p>Vacaciones activas: <strong>{stats?.on_vacation ?? 0}</strong></p>
-            <p>Pendientes de revisión: <strong>{stats?.pending_requests ?? 0}</strong></p>
-          </div>
+        <div>
+          <Card className="sticky top-6">
+            <h3 className="text-sm font-semibold text-slate-900 mb-3">Resumen Rápido</h3>
+            <div className="space-y-2 text-sm text-slate-700">
+              <p>Personal activo: <strong className="text-slate-900">{stats?.total_employees ?? 0}</strong></p>
+              <p>Turnos en curso: <strong className="text-slate-900">{stats?.on_shift ?? 0}</strong></p>
+              <p>Vacaciones activas: <strong className="text-slate-900">{stats?.on_vacation ?? 0}</strong></p>
+              <p>Pendientes de revisión: <strong className="text-slate-900">{stats?.pending_requests ?? 0}</strong></p>
+            </div>
+          </Card>
         </div>
       </div>
     </div>

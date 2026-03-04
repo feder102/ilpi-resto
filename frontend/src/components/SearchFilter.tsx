@@ -14,24 +14,21 @@ export default function SearchFilter({
   search, onSearchChange, department, onDepartmentChange, placeholder = 'Buscar...',
 }: SearchFilterProps) {
   return (
-    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-      <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
-        <Search size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+    <div className="flex gap-3 flex-wrap">
+      <div className="flex-1 min-w-[200px] relative">
+        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           type="text"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={placeholder}
-          style={{
-            width: '100%', padding: '10px 12px 10px 40px', borderRadius: 8,
-            border: '1px solid #e2e8f0', fontSize: '0.9rem',
-          }}
+          className="w-full pl-10 pr-3 py-2 border border-slate-200 rounded-md text-base text-slate-700 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
         />
       </div>
       <select
         value={department}
         onChange={(e) => onDepartmentChange(e.target.value)}
-        style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: '0.9rem' }}
+        className="px-3 py-2 border border-slate-200 rounded-md text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
       >
         <option value="">Todos los departamentos</option>
         {DEPARTMENTS.map((d) => (

@@ -1,0 +1,25 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create venv
+RUN python -m venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install Python dependencies (will be reused via volume)
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy app
+COPY . .
+
+# Start with auto-reload (migrations run on container start)
+CMD ["sh", "-c", "alembic upgrade head && python -m app.seed && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir=/app"]

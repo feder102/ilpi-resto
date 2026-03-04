@@ -1,3 +1,5 @@
+import Card from './ui/Card';
+
 // T029: Reusable stat card
 interface StatCardProps {
   title: string;
@@ -6,19 +8,25 @@ interface StatCardProps {
   color?: string;
 }
 
-export default function StatCard({ title, value, icon, color = '#3b82f6' }: StatCardProps) {
+export default function StatCard({ title, value, icon, color = 'indigo' }: StatCardProps) {
+  const colorClasses: Record<string, string> = {
+    indigo: 'text-indigo-600 bg-indigo-50',
+    green: 'text-green-600 bg-green-50',
+    red: 'text-red-600 bg-red-50',
+    yellow: 'text-yellow-600 bg-yellow-50',
+  };
+
+  const bgColor = colorClasses[color] || colorClasses.indigo;
+
   return (
-    <div style={{
-      background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-      display: 'flex', alignItems: 'center', gap: 16,
-    }}>
-      <div style={{ background: `${color}20`, borderRadius: 12, padding: 12, color }}>
+    <Card variant="elevated" className="flex items-center gap-4">
+      <div className={`${bgColor} rounded-lg p-3`}>
         {icon}
       </div>
       <div>
-        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{title}</div>
-        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e293b' }}>{value}</div>
+        <div className="text-xs text-slate-600">{title}</div>
+        <div className="text-2xl font-bold text-slate-900">{value}</div>
       </div>
-    </div>
+    </Card>
   );
 }

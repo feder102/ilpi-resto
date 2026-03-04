@@ -1,8 +1,7 @@
-// T058: Vacation view with request cards and balance
+// T036: Vacation view with request cards and balance - refactored to use UI components
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Check, X, Ban, User } from 'lucide-react';
-import StatusBadge from '../components/StatusBadge';
-import FormField from '../components/FormField';
+import { Button, Card, Modal, Alert, Badge } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { Role, VacationStatus } from '../types/models';
 import type { VacationRequest, VacationBalance } from '../types/models';
@@ -18,10 +17,21 @@ import {
 import { getEmployees } from '../services/employeeService';
 import type { Employee } from '../types/models';
 
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '8px 12px', borderRadius: 8,
-  border: '1px solid #e2e8f0', fontSize: '0.9rem',
-};
+// Status to Badge variant mapping
+function getVacationStatusVariant(status: string): 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+  switch (status) {
+    case 'Aprobado':
+      return 'success';
+    case 'Pendiente':
+      return 'warning';
+    case 'Rechazado':
+      return 'error';
+    case 'Cancelado':
+      return 'neutral';
+    default:
+      return 'neutral';
+  }
+}
 
 export default function VacationView() {
   const { user, hasRole } = useAuth();
@@ -144,29 +154,27 @@ export default function VacationView() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Vacaciones</h1>
-          <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.9rem' }}>{total} solicitudes</p>
+          <h1 className="text-3xl font-bold text-slate-900 m-0">Vacaciones</h1>
+          <p className="text-sm text-slate-600 mt-1">{total} solicitudes</p>
         </div>
-        <button
+        <Button
           onClick={openCreate}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px',
-            borderRadius: 8, border: 'none', background: '#2563eb', color: 'white',
-            fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem',
-          }}
+          variant="primary"
+          className="flex items-center gap-2"
         >
-          <Plus size={18} /> Nueva Solicitud
-        </button>
+          <Plus size={18} />
+          Nueva Solicitud
+        </Button>
       </div>
 
       {/* Status filter */}
-      <div style={{ marginBottom: 16 }}>
+      <div className="mb-6">
         <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: '0.9rem' }}
+          className="px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
         >
           <option value="">Todos los estados</option>
           {Object.values(VacationStatus).map((s) => (
@@ -175,157 +183,163 @@ export default function VacationView() {
         </select>
       </div>
 
-      {error && <p style={{ color: '#dc2626', marginBottom: 12 }}>{error}</p>}
+      {error && <Alert variant="error" message={error} className="mb-4" />}
 
       {loading ? (
-        <p style={{ textAlign: 'center', color: '#64748b', marginTop: 40 }}>Cargando...</p>
+        <p className="text-center text-slate-600 mt-10">Cargando...</p>
       ) : requests.length === 0 ? (
-        <p style={{ textAlign: 'center', color: '#64748b', marginTop: 40 }}>No hay solicitudes</p>
+        <p className="text-center text-slate-600 mt-10">No hay solicitudes</p>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {requests.map((req) => (
-              <div key={req.id} style={{
-                background: 'white', borderRadius: 12, padding: 20, border: '1px solid #e2e8f0',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: '50%', background: '#e2e8f0',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0,
-                  }}>
+              <Card key={req.id} className="flex flex-col">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {req.employee_image
-                      ? <img src={req.employee_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      : <User size={20} color="#94a3b8" />}
+                      ? <img src={req.employee_image} alt={req.employee_name} className="w-full h-full object-cover" />
+                      : <User size={20} className="text-slate-400" />}
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600 }}>{req.employee_name || 'Empleado'}</h3>
-                    <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>{req.employee_department}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-slate-900">{req.employee_name || 'Empleado'}</h3>
+                    <p className="text-xs text-slate-600">{req.employee_department}</p>
                   </div>
-                  <StatusBadge status={req.status} />
+                  <Badge variant={getVacationStatusVariant(req.status)}>{req.status}</Badge>
                 </div>
 
-                <div style={{ fontSize: '0.85rem', color: '#475569', marginBottom: 12 }}>
-                  <p style={{ margin: '4px 0' }}>
+                <div className="text-sm text-slate-700 space-y-1 mb-3">
+                  <p>
                     {req.start_date} → {req.end_date}
                   </p>
-                  <p style={{ margin: '4px 0', fontWeight: 600 }}>{req.requested_days} días solicitados</p>
+                  <p className="font-semibold">{req.requested_days} días solicitados</p>
                 </div>
 
-                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <div className="flex gap-2 mt-auto pt-3 border-t border-slate-200">
                   {isAdminOrMod && req.status === 'Pendiente' && (
                     <>
-                      <button
+                      <Button
                         onClick={() => handleApprove(req)}
-                        style={{
-                          padding: '6px 12px', borderRadius: 6, border: 'none',
-                          background: '#dcfce7', color: '#16a34a', cursor: 'pointer',
-                          display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.8rem', fontWeight: 600,
-                        }}
+                        variant="primary"
+                        size="sm"
+                        className="flex-1 flex items-center justify-center gap-1"
                       >
                         <Check size={14} /> Aprobar
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={() => handleReject(req)}
-                        style={{
-                          padding: '6px 12px', borderRadius: 6, border: 'none',
-                          background: '#fecaca', color: '#dc2626', cursor: 'pointer',
-                          display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.8rem', fontWeight: 600,
-                        }}
+                        variant="danger"
+                        size="sm"
+                        className="flex-1 flex items-center justify-center gap-1"
                       >
                         <X size={14} /> Rechazar
-                      </button>
+                      </Button>
                     </>
                   )}
                   {req.status === 'Pendiente' && req.employee_id === user?.employee_id && (
-                    <button
+                    <Button
                       onClick={() => handleCancel(req)}
-                      style={{
-                        padding: '6px 12px', borderRadius: 6, border: '1px solid #e2e8f0',
-                        background: 'white', color: '#64748b', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.8rem',
-                      }}
+                      variant="secondary"
+                      size="sm"
+                      className="flex-1 flex items-center justify-center gap-1"
                     >
                       <Ban size={14} /> Cancelar
-                    </button>
+                    </Button>
                   )}
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
 
           {pages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 24 }}>
-              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}
-                style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: page > 1 ? 'pointer' : 'default' }}>
+            <div className="flex justify-center items-center gap-4 mt-8">
+              <Button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+                variant="secondary"
+                size="sm"
+              >
                 Anterior
-              </button>
-              <span style={{ padding: '8px 16px', fontSize: '0.9rem', color: '#64748b' }}>Página {page} de {pages}</span>
-              <button onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page >= pages}
-                style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: page < pages ? 'pointer' : 'default' }}>
+              </Button>
+              <span className="text-sm text-slate-600">Página {page} de {pages}</span>
+              <Button
+                onClick={() => setPage((p) => Math.min(pages, p + 1))}
+                disabled={page >= pages}
+                variant="secondary"
+                size="sm"
+              >
                 Siguiente
-              </button>
+              </Button>
             </div>
           )}
         </>
       )}
 
       {/* Create Modal */}
-      {showCreate && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex',
-          alignItems: 'center', justifyContent: 'center', zIndex: 100,
-        }}>
-          <div style={{ background: 'white', borderRadius: 12, padding: 32, maxWidth: 480, width: '95%' }}>
-            <h2 style={{ margin: '0 0 24px' }}>Nueva Solicitud de Vacaciones</h2>
-
-            {formError && <p style={{ color: '#dc2626', marginBottom: 16 }}>{formError}</p>}
-
-            {isAdminOrMod && (
-              <FormField label="Empleado" required>
-                <select style={inputStyle} value={selectedEmployee} onChange={(e) => setSelectedEmployee(e.target.value)}>
-                  <option value="">Seleccionar empleado...</option>
-                  {employees.map((emp) => (
-                    <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
-                  ))}
-                </select>
-              </FormField>
-            )}
-
-            <FormField label="Fecha inicio" required>
-              <input style={inputStyle} type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-            </FormField>
-            <FormField label="Fecha fin" required>
-              <input style={inputStyle} type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-            </FormField>
-
-            {computedDays > 0 && (
-              <div style={{ background: '#f8fafc', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: '0.9rem' }}>
-                <p style={{ margin: '0 0 4px', fontWeight: 600 }}>Días solicitados: {computedDays}</p>
-                {balance && (
-                  <p style={{ margin: 0, color: '#64748b' }}>
-                    Saldo disponible: {balance.remaining_days} de {balance.total_days} días
-                  </p>
-                )}
-              </div>
-            )}
-
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 24 }}>
-              <button onClick={() => setShowCreate(false)}
-                style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}>
-                Cancelar
-              </button>
-              <button onClick={handleCreate} disabled={submitting}
-                style={{
-                  padding: '10px 20px', borderRadius: 8, border: 'none',
-                  background: submitting ? '#93c5fd' : '#2563eb', color: 'white',
-                  fontWeight: 600, cursor: submitting ? 'default' : 'pointer',
-                }}>
-                {submitting ? 'Enviando...' : 'Enviar solicitud'}
-              </button>
-            </div>
+      <Modal
+        isOpen={showCreate}
+        onClose={() => setShowCreate(false)}
+        title="Nueva Solicitud de Vacaciones"
+        size="md"
+        footer={
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="secondary"
+              onClick={() => setShowCreate(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              loading={submitting}
+              onClick={handleCreate}
+            >
+              {submitting ? 'Enviando...' : 'Enviar solicitud'}
+            </Button>
           </div>
+        }
+      >
+        {formError && <Alert variant="error" message={formError} className="mb-4" />}
+
+        <div className="space-y-4">
+          {isAdminOrMod && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Empleado *
+              </label>
+              <select className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={selectedEmployee} onChange={(e) => setSelectedEmployee(e.target.value)}>
+                <option value="">Seleccionar empleado...</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Fecha inicio *
+            </label>
+            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Fecha fin *
+            </label>
+            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          </div>
+
+          {computedDays > 0 && (
+            <Card className="bg-slate-50 border-slate-200 text-sm">
+              <p className="font-semibold text-slate-900 mb-1">Días solicitados: {computedDays}</p>
+              {balance && (
+                <p className="text-slate-600">
+                  Saldo disponible: {balance.remaining_days} de {balance.total_days} días
+                </p>
+              )}
+            </Card>
+          )}
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

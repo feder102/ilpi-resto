@@ -1,10 +1,8 @@
-// T049+T050: Employee list view with card grid, search/filter, create/edit modal
+// T034: Employee list view with card grid, search/filter, create/edit modal - refactored to use UI components
 import { useState, useEffect, useCallback } from 'react';
 import { UserPlus, Edit2, Trash2, User } from 'lucide-react';
+import { Button, Card, Modal, Alert, Badge } from '../components/ui';
 import SearchFilter from '../components/SearchFilter';
-import StatusBadge from '../components/StatusBadge';
-import ConfirmDialog from '../components/ConfirmDialog';
-import FormField from '../components/FormField';
 import { useAuth } from '../hooks/useAuth';
 import { DEPARTMENTS } from '../config/constants';
 import { Role, Department, MaritalStatus, Gender } from '../types/models';
@@ -19,13 +17,21 @@ import {
   type EmployeeUpdateData,
 } from '../services/employeeService';
 
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '8px 12px',
-  borderRadius: 8,
-  border: '1px solid #e2e8f0',
-  fontSize: '0.9rem',
-};
+// Status to Badge variant mapping
+function getStatusVariant(status: string): 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+  switch (status) {
+    case 'Activo':
+      return 'success';
+    case 'Vacaciones':
+      return 'info';
+    case 'Ausente':
+      return 'warning';
+    case 'Inactivo':
+      return 'neutral';
+    default:
+      return 'neutral';
+  }
+}
 
 const INITIAL_FORM: EmployeeCreateData = {
   first_name: '',
@@ -207,23 +213,20 @@ export default function EmployeeListView() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Empleados</h1>
-          <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.9rem' }}>{total} empleados registrados</p>
+          <h1 className="text-3xl font-bold text-slate-900 m-0">Empleados</h1>
+          <p className="text-sm text-slate-600 mt-1">{total} empleados registrados</p>
         </div>
         {isAdmin && (
-          <button
+          <Button
             onClick={openCreate}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px',
-              borderRadius: 8, border: 'none', background: '#2563eb', color: 'white',
-              fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem',
-            }}
+            variant="primary"
+            className="flex items-center gap-2"
           >
             <UserPlus size={18} />
             Nuevo Empleado
-          </button>
+          </Button>
         )}
       </div>
 
@@ -236,216 +239,255 @@ export default function EmployeeListView() {
       />
 
       {error && (
-        <p style={{ color: '#dc2626', marginTop: 12 }}>{error}</p>
+        <Alert variant="error" message={error} />
       )}
 
       {loading ? (
-        <p style={{ textAlign: 'center', color: '#64748b', marginTop: 40 }}>Cargando...</p>
+        <p className="text-center text-slate-600 mt-10">Cargando...</p>
       ) : employees.length === 0 ? (
-        <p style={{ textAlign: 'center', color: '#64748b', marginTop: 40 }}>No se encontraron empleados</p>
+        <p className="text-center text-slate-600 mt-10">No se encontraron empleados</p>
       ) : (
         <>
-          <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-            gap: 16, marginTop: 20,
-          }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
             {employees.map((emp) => (
-              <div
-                key={emp.id}
-                style={{
-                  background: 'white', borderRadius: 12, padding: 20,
-                  border: '1px solid #e2e8f0', position: 'relative',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                  <div style={{
-                    width: 48, height: 48, borderRadius: '50%', background: '#e2e8f0',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    overflow: 'hidden', flexShrink: 0,
-                  }}>
+              <Card key={emp.id} className="flex flex-col">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {emp.profile_image ? (
-                      <img src={emp.profile_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={emp.profile_image} alt={emp.first_name} className="w-full h-full object-cover" />
                     ) : (
-                      <User size={24} color="#94a3b8" />
+                      <User size={24} className="text-slate-400" />
                     )}
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-slate-900">
                       {emp.first_name} {emp.last_name}
                     </h3>
-                    <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>{emp.department}</p>
+                    <p className="text-xs text-slate-600">{emp.department}</p>
                   </div>
-                  <StatusBadge status={emp.status} />
+                  <Badge variant={getStatusVariant(emp.status)}>{emp.status}</Badge>
                 </div>
 
-                <div style={{ fontSize: '0.85rem', color: '#475569' }}>
-                  <p style={{ margin: '4px 0' }}>DNI: {emp.dni}</p>
-                  <p style={{ margin: '4px 0' }}>{emp.email}</p>
+                <div className="text-sm text-slate-700 space-y-1 mb-3">
+                  <p>DNI: {emp.dni}</p>
+                  <p>{emp.email}</p>
                 </div>
 
                 {isAdminOrMod && (
-                  <div style={{ display: 'flex', gap: 8, marginTop: 12, justifyContent: 'flex-end' }}>
-                    <button
+                  <div className="flex gap-2 mt-auto pt-3 border-t border-slate-200">
+                    <Button
                       onClick={() => openEdit(emp)}
-                      style={{
-                        padding: '6px 12px', borderRadius: 6, border: '1px solid #e2e8f0',
-                        background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-                        fontSize: '0.8rem', color: '#475569',
-                      }}
+                      variant="secondary"
+                      size="sm"
+                      className="flex-1 flex items-center justify-center gap-1"
                     >
                       <Edit2 size={14} /> Editar
-                    </button>
+                    </Button>
                     {isAdmin && (
-                      <button
+                      <Button
                         onClick={() => { setDeleteId(emp.id); setDeleteName(`${emp.first_name} ${emp.last_name}`); }}
-                        style={{
-                          padding: '6px 12px', borderRadius: 6, border: '1px solid #fecaca',
-                          background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-                          fontSize: '0.8rem', color: '#dc2626',
-                        }}
+                        variant="danger"
+                        size="sm"
+                        className="flex-1 flex items-center justify-center gap-1"
                       >
                         <Trash2 size={14} /> Eliminar
-                      </button>
+                      </Button>
                     )}
                   </div>
                 )}
-              </div>
+              </Card>
             ))}
           </div>
 
           {/* Pagination */}
           {pages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 24 }}>
-              <button
+            <div className="flex justify-center items-center gap-4 mt-8">
+              <Button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: page > 1 ? 'pointer' : 'default' }}
+                variant="secondary"
+                size="sm"
               >
                 Anterior
-              </button>
-              <span style={{ padding: '8px 16px', fontSize: '0.9rem', color: '#64748b' }}>
+              </Button>
+              <span className="text-sm text-slate-600">
                 Página {page} de {pages}
               </span>
-              <button
+              <Button
                 onClick={() => setPage((p) => Math.min(pages, p + 1))}
                 disabled={page >= pages}
-                style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: page < pages ? 'pointer' : 'default' }}
+                variant="secondary"
+                size="sm"
               >
                 Siguiente
-              </button>
+              </Button>
             </div>
           )}
         </>
       )}
 
       {/* Create/Edit Modal */}
-      {modalOpen && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex',
-          alignItems: 'center', justifyContent: 'center', zIndex: 100, overflow: 'auto',
-        }}>
-          <div style={{
-            background: 'white', borderRadius: 12, padding: 32, maxWidth: 700, width: '95%',
-            maxHeight: '90vh', overflow: 'auto', margin: '20px 0',
-          }}>
-            <h2 style={{ margin: '0 0 24px 0' }}>
-              {editingId ? 'Editar Empleado' : 'Nuevo Empleado'}
-            </h2>
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editingId ? 'Editar Empleado' : 'Nuevo Empleado'}
+        size="lg"
+        footer={
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="secondary"
+              onClick={() => setModalOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              loading={submitting}
+              onClick={handleSubmit}
+            >
+              {submitting ? 'Guardando...' : editingId ? 'Guardar cambios' : 'Crear empleado'}
+            </Button>
+          </div>
+        }
+      >
+        {formErrors._general && (
+          <Alert variant="error" message={formErrors._general} className="mb-4" />
+        )}
 
-            {formErrors._general && (
-              <p style={{ color: '#dc2626', marginBottom: 16 }}>{formErrors._general}</p>
-            )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Personal Info */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Nombre {formErrors.first_name && <span className="text-red-600">*</span>}
+            </label>
+            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.first_name} onChange={(e) => updateField('first_name', e.target.value)} />
+            {formErrors.first_name && <p className="mt-1 text-xs text-red-600">{formErrors.first_name}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Apellidos {formErrors.last_name && <span className="text-red-600">*</span>}
+            </label>
+            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.last_name} onChange={(e) => updateField('last_name', e.target.value)} />
+            {formErrors.last_name && <p className="mt-1 text-xs text-red-600">{formErrors.last_name}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Email {formErrors.email && <span className="text-red-600">*</span>}
+            </label>
+            <input type="email" className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.email} onChange={(e) => updateField('email', e.target.value)} />
+            {formErrors.email && <p className="mt-1 text-xs text-red-600">{formErrors.email}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Teléfono
+            </label>
+            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.phone || ''} onChange={(e) => updateField('phone', e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              DNI {formErrors.dni && <span className="text-red-600">*</span>}
+            </label>
+            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.dni} onChange={(e) => updateField('dni', e.target.value)} />
+            {formErrors.dni && <p className="mt-1 text-xs text-red-600">{formErrors.dni}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Fecha de nacimiento
+            </label>
+            <input type="date" className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.birth_date || ''} onChange={(e) => updateField('birth_date', e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Dirección
+            </label>
+            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.address || ''} onChange={(e) => updateField('address', e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Género
+            </label>
+            <select className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.gender || ''} onChange={(e) => updateField('gender', e.target.value)}>
+              <option value="">Seleccionar...</option>
+              {Object.values(Gender).map((g) => <option key={g} value={g}>{g}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Estado civil
+            </label>
+            <select className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.marital_status || ''} onChange={(e) => updateField('marital_status', e.target.value)}>
+              <option value="">Seleccionar...</option>
+              {Object.values(MaritalStatus).map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
-              {/* Personal Info */}
-              <FormField label="Nombre" required error={formErrors.first_name}>
-                <input style={inputStyle} value={form.first_name} onChange={(e) => updateField('first_name', e.target.value)} />
-              </FormField>
-              <FormField label="Apellidos" required error={formErrors.last_name}>
-                <input style={inputStyle} value={form.last_name} onChange={(e) => updateField('last_name', e.target.value)} />
-              </FormField>
-              <FormField label="Email" required error={formErrors.email}>
-                <input style={inputStyle} type="email" value={form.email} onChange={(e) => updateField('email', e.target.value)} />
-              </FormField>
-              <FormField label="Teléfono">
-                <input style={inputStyle} value={form.phone || ''} onChange={(e) => updateField('phone', e.target.value)} />
-              </FormField>
-              <FormField label="DNI" required error={formErrors.dni}>
-                <input style={inputStyle} value={form.dni} onChange={(e) => updateField('dni', e.target.value)} />
-              </FormField>
-              <FormField label="Fecha de nacimiento">
-                <input style={inputStyle} type="date" value={form.birth_date || ''} onChange={(e) => updateField('birth_date', e.target.value)} />
-              </FormField>
-              <FormField label="Dirección">
-                <input style={inputStyle} value={form.address || ''} onChange={(e) => updateField('address', e.target.value)} />
-              </FormField>
-              <FormField label="Género">
-                <select style={inputStyle} value={form.gender || ''} onChange={(e) => updateField('gender', e.target.value)}>
-                  <option value="">Seleccionar...</option>
-                  {Object.values(Gender).map((g) => <option key={g} value={g}>{g}</option>)}
-                </select>
-              </FormField>
-              <FormField label="Estado civil">
-                <select style={inputStyle} value={form.marital_status || ''} onChange={(e) => updateField('marital_status', e.target.value)}>
-                  <option value="">Seleccionar...</option>
-                  {Object.values(MaritalStatus).map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </FormField>
-
-              {/* Company Info */}
-              <FormField label="Departamento" required error={formErrors.department}>
-                <select style={inputStyle} value={form.department} onChange={(e) => updateField('department', e.target.value)}>
-                  {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
-                </select>
-              </FormField>
-              <FormField label="Rol" required error={formErrors.role}>
-                <select style={inputStyle} value={form.role} onChange={(e) => updateField('role', e.target.value)}>
-                  {Object.values(Role).map((r) => <option key={r} value={r}>{r}</option>)}
-                </select>
-              </FormField>
-              <FormField label="Fecha de contratación" required error={formErrors.hire_date}>
-                <input style={inputStyle} type="date" value={form.hire_date} onChange={(e) => updateField('hire_date', e.target.value)} />
-              </FormField>
-              <FormField label="Contacto de emergencia">
-                <input style={inputStyle} value={form.emergency_contact || ''} onChange={(e) => updateField('emergency_contact', e.target.value)} />
-              </FormField>
-              <FormField label="URL imagen de perfil">
-                <input style={inputStyle} value={form.profile_image || ''} onChange={(e) => updateField('profile_image', e.target.value)} />
-              </FormField>
-            </div>
-
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 24 }}>
-              <button
-                onClick={() => setModalOpen(false)}
-                style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={submitting}
-                style={{
-                  padding: '10px 20px', borderRadius: 8, border: 'none',
-                  background: submitting ? '#93c5fd' : '#2563eb', color: 'white',
-                  fontWeight: 600, cursor: submitting ? 'default' : 'pointer',
-                }}
-              >
-                {submitting ? 'Guardando...' : editingId ? 'Guardar cambios' : 'Crear empleado'}
-              </button>
-            </div>
+          {/* Company Info */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Departamento {formErrors.department && <span className="text-red-600">*</span>}
+            </label>
+            <select className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.department} onChange={(e) => updateField('department', e.target.value)}>
+              {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
+            </select>
+            {formErrors.department && <p className="mt-1 text-xs text-red-600">{formErrors.department}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Rol {formErrors.role && <span className="text-red-600">*</span>}
+            </label>
+            <select className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.role} onChange={(e) => updateField('role', e.target.value)}>
+              {Object.values(Role).map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+            {formErrors.role && <p className="mt-1 text-xs text-red-600">{formErrors.role}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Fecha de contratación {formErrors.hire_date && <span className="text-red-600">*</span>}
+            </label>
+            <input type="date" className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.hire_date} onChange={(e) => updateField('hire_date', e.target.value)} />
+            {formErrors.hire_date && <p className="mt-1 text-xs text-red-600">{formErrors.hire_date}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Contacto de emergencia
+            </label>
+            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.emergency_contact || ''} onChange={(e) => updateField('emergency_contact', e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              URL imagen de perfil
+            </label>
+            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.profile_image || ''} onChange={(e) => updateField('profile_image', e.target.value)} />
           </div>
         </div>
-      )}
+      </Modal>
 
       {/* Delete Confirmation */}
-      <ConfirmDialog
-        open={!!deleteId}
+      <Modal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
         title="Eliminar empleado"
-        message={`¿Está seguro de que desea eliminar a ${deleteName}? Esta acción desactivará al empleado y rechazará sus solicitudes de vacaciones pendientes.`}
-        confirmLabel="Eliminar"
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteId(null)}
-      />
+        footer={
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="secondary"
+              onClick={() => setDeleteId(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDelete}
+            >
+              Eliminar
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-slate-700">
+          ¿Está seguro de que desea eliminar a {deleteName}? Esta acción desactivará al empleado y rechazará sus solicitudes de vacaciones pendientes.
+        </p>
+      </Modal>
     </div>
   );
 }
