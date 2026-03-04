@@ -3,7 +3,7 @@
 **Feature Branch**: `003-ui-redesign`
 **Created**: 2026-02-28
 **Status**: Draft
-**Input**: User description: "Vamos a mejorar la UI del sistema, estan todas las vistas con formatos dispares, quiero que sigamos la linea que tiene el proyecto C:\Users\Fede\ILPI\diseño"
+**Input**: User description: "Vamos a mejorar la UI del sistema, estan todas las vistas con formatos dispares, quiero que sigamos una linea visual coherente y profesional"
 
 ---
 
@@ -119,7 +119,7 @@ As a user on mobile or tablet, I want the interface to adapt gracefully to my sc
 
 ## Assumptions
 
-1. **Design Reference**: The "diseño" project at `C:\Users\Fede\ILPI\diseño` represents the approved visual direction and will serve as the reference for all UI changes
+1. **Design Reference**: A unified visual design system has been approved and will serve as the reference for all UI changes (indigo & slate color palette, Tailwind CSS components)
 2. **Technology Stack**: UI will continue to use Tailwind CSS v3+ (already in the frontend stack) for styling to maintain consistency with the design system
 3. **Scope**: This redesign focuses on frontend UI only; backend API contracts, business logic, and data models are out of scope
 4. **No New Features**: This is a design consistency pass; no new functionality is added beyond UI improvements

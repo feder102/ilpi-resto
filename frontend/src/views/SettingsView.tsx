@@ -41,8 +41,8 @@ export default function SettingsView() {
               <h4 className="font-semibold text-slate-900 mb-2">Roles del Sistema</h4>
               {[
                 { role: 'Admin', desc: 'Acceso completo a todas las secciones', color: 'text-red-600' },
-                { role: 'Moderador', desc: 'Todo excepto Configuración', color: 'text-orange-600' },
-                { role: 'Empleado', desc: 'Solo perfil, turnos y vacaciones propios', color: 'text-blue-600' },
+                { role: 'Moderador', desc: 'Todo excepto Configuración', color: 'text-yellow-600' },
+                { role: 'Empleado', desc: 'Solo perfil, turnos y vacaciones propios', color: 'text-indigo-600' },
               ].map((r) => (
                 <div key={r.role} className="flex items-center gap-2 py-1.5">
                   <Users size={14} className={r.color} />

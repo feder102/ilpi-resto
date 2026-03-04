@@ -45,7 +45,10 @@
       "Bash(npx tsc:*)",
       "Bash(npx vite:*)",
       "Bash(npm:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(gh pr:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:api.github.com)"
     ]
   }
 }

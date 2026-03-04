@@ -57,9 +57,7 @@ describe('Dropdown Component', () => {
 
   it('disables disabled options', async () => {
     const user = userEvent.setup();
-    const disabledOptions = [
-      ...options,
-    ];
+    const disabledOptions = structuredClone(options);
     disabledOptions[1].disabled = true;
     render(<Dropdown options={disabledOptions} />);
     const button = screen.getByRole('button');

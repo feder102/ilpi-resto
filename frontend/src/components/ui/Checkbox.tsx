@@ -35,8 +35,10 @@ export interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElemen
  * />
  */
 const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ label, error, helperText, indeterminate, className, disabled, ...props }, ref) => {
+  ({ label, error, helperText, indeterminate, className, disabled, id, ...props }, ref) => {
     const checkboxRef = React.useRef<HTMLInputElement>(null);
+    const checkboxId = React.useId();
+    const finalId = id || checkboxId;
 
     React.useImperativeHandle(ref, () => checkboxRef.current as HTMLInputElement);
 
@@ -52,6 +54,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           <div className="relative">
             <input
               ref={checkboxRef}
+              id={finalId}
               type="checkbox"
               className="h-5 w-5 cursor-pointer appearance-none rounded border-2 border-slate-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 hover:border-indigo-400 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
               disabled={disabled}
@@ -66,7 +69,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           </div>
           {label && (
             <label
-              htmlFor={props.id}
+              htmlFor={finalId}
               className={`text-sm font-medium ${
                 disabled ? 'cursor-not-allowed text-slate-400' : 'cursor-pointer text-slate-700'
               }`}

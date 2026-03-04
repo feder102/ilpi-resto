@@ -86,26 +86,31 @@ const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
     },
     ref
   ) => {
+    const groupId = React.useId();
     return (
-      <div ref={ref} className={`flex flex-col ${className || ''}`} {...props}>
+      <fieldset
+        ref={ref}
+        className={`flex flex-col ${className || ''}`}
+        disabled={disabled}
+        {...props}
+      >
         {legend && (
           <legend className="mb-3 text-sm font-medium text-slate-900">{legend}</legend>
         )}
 
-        <fieldset
+        <div
           className={`${
             orientation === 'horizontal'
               ? 'flex flex-wrap items-center gap-6'
               : 'space-y-3'
           }`}
-          disabled={disabled}
         >
           {options.map((option) => (
             <div key={option.value} className="flex items-center gap-2">
               <input
                 type="radio"
-                id={`radio-${option.value}`}
-                name={legend || 'radio-group'}
+                id={`${groupId}-${option.value}`}
+                name={groupId}
                 value={option.value}
                 checked={value === option.value}
                 onChange={(e) => onChange?.(e.target.value)}
@@ -113,7 +118,7 @@ const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
                 className="h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-slate-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 hover:border-indigo-400 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
               />
               <label
-                htmlFor={`radio-${option.value}`}
+                htmlFor={`${groupId}-${option.value}`}
                 className={`text-sm font-medium ${
                   option.disabled || disabled
                     ? 'cursor-not-allowed text-slate-400'
@@ -124,10 +129,10 @@ const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
               </label>
             </div>
           ))}
-        </fieldset>
+        </div>
 
         {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
-      </div>
+      </fieldset>
     );
   }
 );

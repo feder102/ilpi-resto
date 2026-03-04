@@ -54,9 +54,7 @@ describe('RadioGroup Component', () => {
   });
 
   it('disables individual options when marked', () => {
-    const optionsWithDisabled = [
-      ...options,
-    ];
+    const optionsWithDisabled = structuredClone(options);
     optionsWithDisabled[1].disabled = true;
     render(<RadioGroup options={optionsWithDisabled} />);
     const afternoonRadio = screen.getByLabelText('Afternoon') as HTMLInputElement;

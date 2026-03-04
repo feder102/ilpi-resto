@@ -50,9 +50,7 @@ describe('Tabs Component', () => {
   });
 
   it('disables disabled tabs', () => {
-    const itemsWithDisabled = [
-      ...items,
-    ];
+    const itemsWithDisabled = structuredClone(items);
     itemsWithDisabled[1].disabled = true;
     render(<Tabs items={itemsWithDisabled} />);
     const disabledTab = screen.getByRole('tab', { name: 'Tab 2' });

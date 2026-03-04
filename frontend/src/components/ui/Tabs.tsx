@@ -67,7 +67,7 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
     return (
       <div ref={ref} className={`w-full ${className || ''}`} {...props}>
         {/* Tab buttons */}
-        <div className="flex border-b border-slate-200">
+        <div className="flex border-b border-slate-200" role="tablist">
           {items.map((item) => (
             <button
               key={item.id}
