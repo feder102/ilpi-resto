@@ -55,6 +55,12 @@ const sizeClasses = {
  */
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, size = 'md', children, footer }) => {
   const modalRef = React.useRef<HTMLDivElement>(null);
+  const onCloseRef = React.useRef(onClose);
+
+  // Keep ref updated with latest onClose function
+  React.useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   // Handle escape key and focus trap
   useEffect(() => {
@@ -62,7 +68,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, size = 'md', chil
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        onCloseRef.current();
       }
     };
 
@@ -106,7 +112,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, size = 'md', chil
       document.removeEventListener('keydown', handleEscape);
       document.removeEventListener('keydown', handleTab);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   // Prevent scroll when modal open
   useEffect(() => {
