@@ -1,4 +1,11 @@
-"""T068: Shifts router."""
+"""T068: Shifts router.
+
+New endpoints for shift roster calendar (Feature 004):
+- GET /rosters/shifts?month=YYYY-MM — List shifts for month
+- POST /rosters/shifts — Create shift assignment
+- PUT /rosters/shifts/{shift_id} — Update shift
+- DELETE /rosters/shifts/{shift_id} — Delete shift
+"""
 
 import uuid
 from datetime import date
@@ -6,7 +13,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, Query
 
 from app.dependencies import CurrentUser, DbSession, TenantId, require_role
-from app.schemas.shift import ClockInRequest, ClockOutRequest
+from app.schemas.shift import ClockInRequest, ClockOutRequest, ShiftCreate, ShiftUpdate
 from app.services import shift_service
 
 router = APIRouter(tags=["shifts"])
@@ -66,3 +73,77 @@ def clock_out(
     return shift_service.clock_out(
         shift_id, tenant_id, session, body.location_lat, body.location_lng
     )
+
+
+# ============================================================================
+# NEW ENDPOINTS FOR SHIFT ROSTER CALENDAR (Feature 004: Shift Roster Calendar)
+# ============================================================================
+
+
+@router.get("/rosters/shifts")
+def list_roster_shifts(
+    month: str = Query(..., description="Month in YYYY-MM format"),
+    employee_id: uuid.UUID | None = Query(None),
+    session: DbSession = Depends(),
+    tenant_id: TenantId = Depends(),
+    current_user: CurrentUser = Depends(),
+):
+    """
+    List shifts for a given month (for roster calendar view).
+
+    - Moderador/Admin: see all shifts for the month
+    - Empleado: see only own shifts
+    """
+    return shift_service.get_shifts_for_month(
+        tenant_id, session, month, employee_id, current_user
+    )
+
+
+@router.post("/rosters/shifts", status_code=201)
+def create_roster_shift(
+    body: ShiftCreate,
+    session: DbSession = Depends(),
+    tenant_id: TenantId = Depends(),
+    current_user: CurrentUser = Depends(AdminOrMod),
+):
+    """
+    Create a new shift assignment (roster planning).
+
+    Only Moderador/Admin can create shifts.
+    """
+    return shift_service.create_shift(
+        tenant_id, session, body.employee_id, body.date, body.shift_type, current_user["id"]
+    )
+
+
+@router.put("/rosters/shifts/{shift_id}")
+def update_roster_shift(
+    shift_id: uuid.UUID,
+    body: ShiftUpdate,
+    session: DbSession = Depends(),
+    tenant_id: TenantId = Depends(),
+    current_user: CurrentUser = Depends(AdminOrMod),
+):
+    """
+    Update a shift assignment.
+
+    Only Moderador/Admin can update shifts.
+    """
+    return shift_service.update_shift(
+        tenant_id, session, shift_id, body.shift_type, current_user["id"]
+    )
+
+
+@router.delete("/rosters/shifts/{shift_id}", status_code=204)
+def delete_roster_shift(
+    shift_id: uuid.UUID,
+    session: DbSession = Depends(),
+    tenant_id: TenantId = Depends(),
+    current_user: CurrentUser = Depends(AdminOrMod),
+):
+    """
+    Delete a shift assignment.
+
+    Only Moderador/Admin can delete shifts.
+    """
+    return shift_service.delete_shift(tenant_id, session, shift_id, current_user["id"])
