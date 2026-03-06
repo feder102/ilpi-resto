@@ -216,7 +216,7 @@ def get_shifts_for_month(
     if employee_id:
         query = query.where(ShiftRecord.employee_id == employee_id)
 
-    query = query.order_by(ShiftRecord.date, ShiftRecord.shift_type)  # type: ignore[union-attr]
+    query = query.order_by(ShiftRecord.date, ShiftRecord.shift_type_id)  # type: ignore[union-attr]
 
     shifts = session.exec(query).all()
     total = len(shifts)
