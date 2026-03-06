@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import CalendarGrid from '../components/CalendarGrid';
 import ShiftAssignmentDialog from '../components/ShiftAssignmentDialog';
 import { useShiftCalendar } from '../hooks/useShiftCalendar';
@@ -38,7 +38,7 @@ export const ShiftRosterCalendar: React.FC<ShiftRosterCalendarProps> = ({ employ
     user?.role === 'Empleado' ? user?.employee_id || employeeId : employeeId;
 
   // Fetch shifts for the selected month
-  const { shifts, loading, error } = useShiftCalendar(monthStr, filterEmployeeId);
+  const { shifts, loading, error, refresh } = useShiftCalendar(monthStr, filterEmployeeId);
 
   // Month navigation handlers
   const handlePrevMonth = () => {
@@ -67,7 +67,11 @@ export const ShiftRosterCalendar: React.FC<ShiftRosterCalendarProps> = ({ employ
       return; // Empleado users can't edit shifts
     }
     setSelectedShift(shift);
-    setSelectedDate(shift.date instanceof Date ? shift.date : new Date(shift.date));
+    // Parse date string in local time (not UTC) to avoid day offset
+    const dateStr = shift.date instanceof Date ? shift.date.toISOString().split('T')[0] : shift.date;
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day);
+    setSelectedDate(localDate);
     setIsDialogOpen(true);
   };
 
@@ -79,10 +83,10 @@ export const ShiftRosterCalendar: React.FC<ShiftRosterCalendarProps> = ({ employ
   };
 
   // Dialog submit handler (will refresh shifts automatically)
-  const handleDialogSubmit = () => {
+  const handleDialogSubmit = async () => {
     handleDialogClose();
-    // Note: useShiftCalendar hook will automatically refetch on monthStr/filterEmployeeId change
-    // For now, trigger a refresh by toggling the component
+    // Refresh the shifts list after creation/update/delete
+    await refresh();
   };
 
   // Format month header

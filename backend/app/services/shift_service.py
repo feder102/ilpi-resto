@@ -13,10 +13,10 @@ from calendar import monthrange
 
 from sqlmodel import Session, func, select
 
-from app.common.exceptions import NotFoundError, ValidationError
+from app.common.exceptions import NotFoundError, ValidationError, ShiftConflictError
 from app.models.employee import Employee
 from app.models.shift_record import ShiftRecord
-from app.schemas.shift import ShiftRecordResponse, ShiftResponse
+from app.schemas.shift import ShiftRecordResponse
 
 
 def _to_response(rec: ShiftRecord, session: Session) -> ShiftRecordResponse:
@@ -27,7 +27,7 @@ def _to_response(rec: ShiftRecord, session: Session) -> ShiftRecordResponse:
         employee_name=f"{emp.first_name} {emp.last_name}" if emp else None,
         employee_image=emp.profile_image if emp else None,
         date=rec.date,
-        entry_time=rec.entry_time.isoformat(),
+        entry_time=rec.entry_time.isoformat() if rec.entry_time else None,
         exit_time=rec.exit_time.isoformat() if rec.exit_time else None,
         location_lat=rec.location_lat,
         location_lng=rec.location_lng,
@@ -225,15 +225,15 @@ def get_shifts_for_month(
     for shift in shifts:
         emp = session.get(Employee, shift.employee_id)
         response_data = {
-            "id": shift.id,
-            "employee_id": shift.employee_id,
+            "id": str(shift.id),
+            "employee_id": str(shift.employee_id),
             "employee_name": f"{emp.first_name} {emp.last_name}" if emp else None,
-            "date": shift.date,
+            "date": shift.date.isoformat(),
             "shift_type": shift.shift_type,
             "created_at": shift.created_at.isoformat() if shift.created_at else None,
             "updated_at": shift.updated_at.isoformat() if shift.updated_at else None,
         }
-        shift_responses.append(ShiftResponse(**response_data))
+        shift_responses.append(response_data)
 
     return {
         "shifts": shift_responses,
@@ -294,9 +294,8 @@ def create_shift(
         )
     ).first()
     if existing:
-        raise ValidationError(
-            f"Employee {employee.first_name} {employee.last_name} already has a shift on {shift_date}",
-            "SHIFT_CONFLICT",
+        raise ShiftConflictError(
+            f"El empleado {employee.first_name} {employee.last_name} ya tiene un turno el {shift_date}"
         )
 
     # Create shift record
@@ -319,17 +318,17 @@ def create_shift(
     # TODO: Check VacationRequest for approved vacations on this date
 
     response_data = {
-        "id": shift.id,
-        "employee_id": shift.employee_id,
+        "id": str(shift.id),
+        "employee_id": str(shift.employee_id),
         "employee_name": f"{employee.first_name} {employee.last_name}",
-        "date": shift.date,
+        "date": shift.date.isoformat(),
         "shift_type": shift.shift_type,
         "created_at": shift.created_at.isoformat(),
         "updated_at": shift.updated_at.isoformat(),
     }
 
     return {
-        "shift": ShiftResponse(**response_data),
+        "shift": response_data,
         "warning": warning,
     }
 
@@ -340,7 +339,7 @@ def update_shift(
     shift_id: uuid.UUID,
     shift_type: str,
     updated_by: uuid.UUID,
-) -> ShiftResponse:
+) -> dict:
     """
     Update an existing shift's type.
 
@@ -374,15 +373,15 @@ def update_shift(
 
     emp = session.get(Employee, shift.employee_id)
     response_data = {
-        "id": shift.id,
-        "employee_id": shift.employee_id,
+        "id": str(shift.id),
+        "employee_id": str(shift.employee_id),
         "employee_name": f"{emp.first_name} {emp.last_name}" if emp else None,
-        "date": shift.date,
+        "date": shift.date.isoformat(),
         "shift_type": shift.shift_type,
         "created_at": shift.created_at.isoformat(),
         "updated_at": shift.updated_at.isoformat(),
     }
-    return ShiftResponse(**response_data)
+    return response_data
 
 
 def delete_shift(

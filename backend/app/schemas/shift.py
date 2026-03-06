@@ -6,7 +6,7 @@ Updated for Feature 004: Shift Roster Calendar
 """
 
 import uuid
-from datetime import date
+from datetime import date as date_type
 
 from pydantic import BaseModel, Field
 
@@ -28,8 +28,8 @@ class ShiftRecordResponse(BaseModel):
     employee_id: uuid.UUID
     employee_name: str | None = None
     employee_image: str | None = None
-    date: date
-    entry_time: str
+    date: date_type
+    entry_time: str | None
     exit_time: str | None
     location_lat: float | None
     location_lng: float | None
@@ -45,7 +45,7 @@ class ShiftCreate(BaseModel):
     """Request to create a shift assignment for roster planning."""
 
     employee_id: uuid.UUID = Field(..., description="UUID of employee")
-    date: date = Field(..., description="Date of shift (YYYY-MM-DD)")
+    date: date_type = Field(..., description="Date of shift (YYYY-MM-DD)")
     shift_type: str = Field(
         ...,
         description="Shift type (morning, afternoon, night)",
@@ -69,7 +69,7 @@ class ShiftResponse(BaseModel):
     id: uuid.UUID
     employee_id: uuid.UUID
     employee_name: str | None = None
-    date: date
+    date: date_type
     shift_type: str
     created_at: str
     updated_at: str
