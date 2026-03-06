@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Zap,
+  Calendar,
 } from 'lucide-react';
 import { Button, Card } from './ui';
 import { useAuth } from '../hooks/useAuth';
@@ -30,6 +31,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', path: ROUTES.DASHBOARD, icon: <LayoutDashboard size={20} />, roles: [Role.ADMIN, Role.MODERADOR] },
   { label: 'Personal', path: ROUTES.EMPLOYEES, icon: <Users size={20} />, roles: [Role.ADMIN, Role.MODERADOR, Role.EMPLEADO] },
   { label: 'Rotación', path: ROUTES.TEAMS, icon: <UsersRound size={20} />, roles: [Role.ADMIN, Role.MODERADOR] },
+  { label: 'Calendario de Turnos', path: ROUTES.SHIFT_ROSTER, icon: <Calendar size={20} />, roles: [Role.ADMIN, Role.MODERADOR] },
   { label: 'Control Horario', path: ROUTES.ATTENDANCE, icon: <Clock size={20} />, roles: [Role.ADMIN, Role.MODERADOR, Role.EMPLEADO] },
   { label: 'Vacaciones', path: ROUTES.VACATIONS, icon: <Palmtree size={20} />, roles: [Role.ADMIN, Role.MODERADOR, Role.EMPLEADO] },
   { label: 'Informes', path: ROUTES.REPORTS, icon: <BarChart3 size={20} />, roles: [Role.ADMIN, Role.MODERADOR] },

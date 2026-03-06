@@ -36,8 +36,8 @@ export function useShiftCalendar(
       setLoading(true);
       setError(null);
 
-      const data = await shiftService.getShifts(monthStr, employeeId);
-      setShifts(data);
+      const data = await shiftService.getRosterShifts(monthStr, employeeId);
+      setShifts(data.shifts || []);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error loading shifts';
       setError(errorMessage);

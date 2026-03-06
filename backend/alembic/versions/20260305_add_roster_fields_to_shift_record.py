@@ -82,7 +82,6 @@ def upgrade() -> None:
         "uq_shift_record_roster",
         "shift_record",
         ["tenant_id", "employee_id", "date"],
-        sqlite_ignore_check=True,
     )
 
 
