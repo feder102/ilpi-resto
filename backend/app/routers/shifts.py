@@ -18,8 +18,6 @@ from app.services import shift_service
 
 router = APIRouter(tags=["shifts"])
 
-AdminOrMod = Depends(require_role("Admin", "Moderador"))
-
 
 @router.get("/shifts")
 def list_shifts(
@@ -82,11 +80,11 @@ def clock_out(
 
 @router.get("/rosters/shifts")
 def list_roster_shifts(
+    session: DbSession,
+    tenant_id: TenantId,
+    current_user: CurrentUser,
     month: str = Query(..., description="Month in YYYY-MM format"),
     employee_id: uuid.UUID | None = Query(None),
-    session: DbSession = Depends(),
-    tenant_id: TenantId = Depends(),
-    current_user: CurrentUser = Depends(),
 ):
     """
     List shifts for a given month (for roster calendar view).
@@ -102,9 +100,9 @@ def list_roster_shifts(
 @router.post("/rosters/shifts", status_code=201)
 def create_roster_shift(
     body: ShiftCreate,
-    session: DbSession = Depends(),
-    tenant_id: TenantId = Depends(),
-    current_user: CurrentUser = Depends(AdminOrMod),
+    session: DbSession,
+    tenant_id: TenantId,
+    current_user: dict = Depends(require_role("Admin", "Moderador")),
 ):
     """
     Create a new shift assignment (roster planning).
@@ -112,7 +110,7 @@ def create_roster_shift(
     Only Moderador/Admin can create shifts.
     """
     return shift_service.create_shift(
-        tenant_id, session, body.employee_id, body.date, body.shift_type, current_user["id"]
+        tenant_id, session, body.employee_id, body.date, body.shift_type, uuid.UUID(current_user.get("sub", ""))
     )
 
 
@@ -120,9 +118,9 @@ def create_roster_shift(
 def update_roster_shift(
     shift_id: uuid.UUID,
     body: ShiftUpdate,
-    session: DbSession = Depends(),
-    tenant_id: TenantId = Depends(),
-    current_user: CurrentUser = Depends(AdminOrMod),
+    session: DbSession,
+    tenant_id: TenantId,
+    current_user: dict = Depends(require_role("Admin", "Moderador")),
 ):
     """
     Update a shift assignment.
@@ -130,20 +128,20 @@ def update_roster_shift(
     Only Moderador/Admin can update shifts.
     """
     return shift_service.update_shift(
-        tenant_id, session, shift_id, body.shift_type, current_user["id"]
+        tenant_id, session, shift_id, body.shift_type, uuid.UUID(current_user.get("sub", ""))
     )
 
 
 @router.delete("/rosters/shifts/{shift_id}", status_code=204)
 def delete_roster_shift(
     shift_id: uuid.UUID,
-    session: DbSession = Depends(),
-    tenant_id: TenantId = Depends(),
-    current_user: CurrentUser = Depends(AdminOrMod),
+    session: DbSession,
+    tenant_id: TenantId,
+    current_user: dict = Depends(require_role("Admin", "Moderador")),
 ):
     """
     Delete a shift assignment.
 
     Only Moderador/Admin can delete shifts.
     """
-    return shift_service.delete_shift(tenant_id, session, shift_id, current_user["id"])
+    return shift_service.delete_shift(tenant_id, session, shift_id, uuid.UUID(current_user.get("sub", "")))
