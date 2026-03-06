@@ -46,21 +46,13 @@ class ShiftCreate(BaseModel):
 
     employee_id: uuid.UUID = Field(..., description="UUID of employee")
     date: date_type = Field(..., description="Date of shift (YYYY-MM-DD)")
-    shift_type: str = Field(
-        ...,
-        description="Shift type (morning, afternoon, night)",
-        pattern="^(morning|afternoon|night)$",
-    )
+    shift_type_id: uuid.UUID = Field(..., description="UUID of shift type")
 
 
 class ShiftUpdate(BaseModel):
     """Request to update a shift assignment."""
 
-    shift_type: str = Field(
-        ...,
-        description="New shift type (morning, afternoon, night)",
-        pattern="^(morning|afternoon|night)$",
-    )
+    shift_type_id: uuid.UUID = Field(..., description="UUID of new shift type")
 
 
 class ShiftResponse(BaseModel):
@@ -70,7 +62,8 @@ class ShiftResponse(BaseModel):
     employee_id: uuid.UUID
     employee_name: str | None = None
     date: date_type
-    shift_type: str
+    shift_type_id: uuid.UUID
+    shift_type_name: str | None = None  # Name of the shift type (Mañana, Noche, etc)
     created_at: str
     updated_at: str
 

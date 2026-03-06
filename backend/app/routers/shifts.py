@@ -110,7 +110,7 @@ def create_roster_shift(
     Only Moderador/Admin can create shifts.
     """
     return shift_service.create_shift(
-        tenant_id, session, body.employee_id, body.date, body.shift_type, uuid.UUID(current_user.get("sub", ""))
+        tenant_id, session, body.employee_id, body.date, body.shift_type_id, uuid.UUID(current_user.get("sub", ""))
     )
 
 
@@ -128,7 +128,7 @@ def update_roster_shift(
     Only Moderador/Admin can update shifts.
     """
     return shift_service.update_shift(
-        tenant_id, session, shift_id, body.shift_type, uuid.UUID(current_user.get("sub", ""))
+        tenant_id, session, shift_id, body.shift_type_id, uuid.UUID(current_user.get("sub", ""))
     )
 
 

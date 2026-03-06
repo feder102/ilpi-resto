@@ -51,11 +51,11 @@ export async function clockOut(
 export interface RosterShiftCreateData {
   employee_id: string;
   date: string; // YYYY-MM-DD format
-  shift_type: 'morning' | 'afternoon' | 'night';
+  shift_type_id: string;
 }
 
 export interface RosterShiftUpdateData {
-  shift_type: 'morning' | 'afternoon' | 'night';
+  shift_type_id: string;
 }
 
 export async function getRosterShifts(
@@ -86,3 +86,14 @@ export async function updateRosterShift(
 export async function deleteRosterShift(shiftId: string): Promise<void> {
   await apiClient.delete(`/rosters/shifts/${shiftId}`);
 }
+
+// Service object export for convenience
+export const shiftService = {
+  getShifts,
+  clockIn,
+  clockOut,
+  getRosterShifts,
+  createRosterShift,
+  updateRosterShift,
+  deleteRosterShift,
+};

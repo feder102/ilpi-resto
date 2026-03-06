@@ -7,8 +7,7 @@ Updated for Feature 004: Shift Roster Calendar
 """
 
 import uuid
-from datetime import UTC, date, datetime
-from typing import Optional
+from datetime import UTC, datetime, date as date_type
 
 from sqlmodel import Field, SQLModel
 
@@ -19,13 +18,13 @@ class ShiftRecord(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     tenant_id: uuid.UUID = Field(foreign_key="tenant.id", index=True)
     employee_id: uuid.UUID = Field(foreign_key="employee.id", index=True)
-    date: date = Field(index=True)  # Added index for roster queries
-    shift_type: Optional[str] = Field(default=None, max_length=20)  # morning, afternoon, night
-    entry_time: Optional[datetime] = Field(default=None)  # Optional for roster assignments
-    exit_time: Optional[datetime] = Field(default=None)
-    location_lat: Optional[float] = Field(default=None)
-    location_lng: Optional[float] = Field(default=None)
-    task_label: Optional[str] = Field(default=None, max_length=100)
-    created_by: Optional[uuid.UUID] = Field(default=None, foreign_key="user.id")  # Who assigned the shift
+    date: date_type = Field(index=True)  # Added index for roster queries
+    shift_type_id: uuid.UUID | None = Field(default=None, foreign_key="shift_type.id", index=True)  # FK to shift_type
+    entry_time: datetime | None = Field(default=None)  # Optional for roster assignments
+    exit_time: datetime | None = Field(default=None)
+    location_lat: float | None = Field(default=None)
+    location_lng: float | None = Field(default=None)
+    task_label: str | None = Field(default=None)
+    created_by: uuid.UUID | None = Field(default=None, foreign_key="user.id")  # Who assigned the shift
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC), index=True)
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

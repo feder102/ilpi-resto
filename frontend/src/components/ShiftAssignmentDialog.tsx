@@ -2,13 +2,15 @@
  * Shift Assignment Dialog
  *
  * Modal for creating/editing shift assignments.
- * Allows users to select an employee, shift type, and submit the assignment.
+ * Allows users to select an employee, shift type (from API), and submit the assignment.
  */
 
 import React, { useState, useEffect } from 'react';
 import { shiftService, createRosterShift, updateRosterShift } from '../services/shiftService';
+import { getEmployees } from '../services/employeeService';
 import { Modal, Button, Spinner } from '../components/ui';
-import type { ShiftRecord } from '../types/shift';
+import type { ShiftRecord, ShiftType } from '../types/shift';
+import apiClient from '../services/apiClient';
 
 interface ShiftAssignmentDialogProps {
   isOpen: boolean;
@@ -26,8 +28,9 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
   onSubmit,
 }) => {
   const [employees, setEmployees] = useState<Array<{ id: string; name: string }>>([]);
+  const [shiftTypes, setShiftTypes] = useState<ShiftType[]>([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
-  const [selectedShiftType, setSelectedShiftType] = useState<'morning' | 'afternoon' | 'night'>('morning');
+  const [selectedShiftTypeId, setSelectedShiftTypeId] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasVacation, setHasVacation] = useState(false);
@@ -36,40 +39,64 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
   useEffect(() => {
     if (selectedShift) {
       setSelectedEmployeeId(selectedShift.employee_id);
-      setSelectedShiftType(selectedShift.shift_type);
+      setSelectedShiftTypeId(selectedShift.shift_type_id);
     } else {
       setSelectedEmployeeId('');
-      setSelectedShiftType('morning');
+      setSelectedShiftTypeId('');
     }
     setError(null);
     setHasVacation(false);
   }, [selectedShift, isOpen]);
 
-  // Load employees on dialog open
+  // Load employees and shift types on dialog open
   useEffect(() => {
     if (isOpen) {
       loadEmployees();
+      loadShiftTypes();
     }
   }, [isOpen]);
 
   const loadEmployees = async () => {
     try {
-      // TODO: Call employee API to get list of active employees
-      // For now, use placeholder - implement when employee service ready
-      setEmployees([]);
+      const response = await getEmployees({
+        include_inactive: false,
+        size: 100, // Get up to 100 active employees
+      });
+      const employeeList = response.items.map((emp) => ({
+        id: emp.id,
+        name: `${emp.first_name} ${emp.last_name}`,
+      }));
+      setEmployees(employeeList);
     } catch (err) {
       console.error('Failed to load employees:', err);
+      setEmployees([]);
+    }
+  };
+
+  const loadShiftTypes = async () => {
+    try {
+      const { data } = await apiClient.get('/shift-types', {
+        params: { is_active: true, size: 100 },
+      });
+      setShiftTypes(data.items || []);
+      // Set default to first active shift type if not editing
+      if (!selectedShift && data.items && data.items.length > 0) {
+        setSelectedShiftTypeId(data.items[0].id);
+      }
+    } catch (err) {
+      console.error('Failed to load shift types:', err);
+      setShiftTypes([]);
     }
   };
 
   const handleSubmit = async () => {
-    if (!selectedEmployeeId || !selectedShiftType) {
-      setError('Please select an employee and shift type');
+    if (!selectedEmployeeId || !selectedShiftTypeId) {
+      setError('Por favor selecciona un empleado y tipo de turno');
       return;
     }
 
     if (!selectedDate) {
-      setError('No date selected');
+      setError('No se seleccionó una fecha');
       return;
     }
 
@@ -77,19 +104,23 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
       setLoading(true);
       setError(null);
 
-      const dateStr = selectedDate.toISOString().split('T')[0];
+      // Format date as YYYY-MM-DD in local timezone (not UTC)
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
 
       if (selectedShift) {
         // Update existing shift
         await updateRosterShift(selectedShift.id, {
-          shift_type: selectedShiftType,
+          shift_type_id: selectedShiftTypeId,
         });
       } else {
         // Create new shift
         const response = await createRosterShift({
           employee_id: selectedEmployeeId,
           date: dateStr,
-          shift_type: selectedShiftType,
+          shift_type_id: selectedShiftTypeId,
         });
 
         if (response.warning) {
@@ -101,9 +132,9 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
       // Success - close dialog and trigger parent refresh
       onSubmit();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to assign shift';
+      const errorMessage = err instanceof Error ? err.message : 'No se pudo asignar el turno';
       if (errorMessage.includes('already has')) {
-        setError('This employee already has a shift on that date');
+        setError('Este empleado ya tiene un turno en esa fecha');
       } else {
         setError(errorMessage);
       }
@@ -115,7 +146,7 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
   const handleDelete = async () => {
     if (!selectedShift) return;
 
-    if (!confirm('Are you sure you want to delete this shift?')) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este turno?')) {
       return;
     }
 
@@ -128,7 +159,7 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
       // Close and refresh
       onSubmit();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete shift';
+      const errorMessage = err instanceof Error ? err.message : 'No se pudo eliminar el turno';
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -136,13 +167,13 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={selectedShift ? 'Edit Shift' : 'Assign Shift'}>
+    <Modal isOpen={isOpen} onClose={onClose} title={selectedShift ? 'Editar Turno' : 'Asignar Turno'}>
       <div className="space-y-4">
         {/* Date Display */}
         {selectedDate && (
           <div className="rounded-lg bg-gray-50 p-4">
             <p className="text-sm text-gray-600">
-              Date: <span className="font-bold text-gray-900">{selectedDate.toLocaleDateString('es-ES')}</span>
+              Fecha: <span className="font-bold text-gray-900">{selectedDate.toLocaleDateString('es-ES')}</span>
             </p>
           </div>
         )}
@@ -151,7 +182,7 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
         {hasVacation && (
           <div className="rounded-lg border border-yellow-300 bg-yellow-50 p-4">
             <p className="text-sm text-yellow-900">
-              ⚠️ This employee has approved vacation on this date. Proceeding anyway.
+              ⚠️ Este empleado tiene vacaciones aprobadas en esta fecha. Continuando de todas formas.
             </p>
           </div>
         )}
@@ -159,7 +190,7 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
         {/* Employee Selection */}
         <div>
           <label htmlFor="employee" className="block text-sm font-medium text-gray-900">
-            Employee
+            Empleado
           </label>
           <select
             id="employee"
@@ -168,37 +199,36 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
             disabled={loading || employees.length === 0}
             className="mt-2 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 disabled:bg-gray-100"
           >
-            <option value="">-- Select an employee --</option>
+            <option value="">-- Seleccionar un empleado --</option>
             {employees.map((emp) => (
               <option key={emp.id} value={emp.id}>
                 {emp.name}
               </option>
             ))}
           </select>
-          {employees.length === 0 && <p className="mt-1 text-xs text-gray-500">Loading employees...</p>}
+          {employees.length === 0 && <p className="mt-1 text-xs text-gray-500">Cargando empleados...</p>}
         </div>
 
         {/* Shift Type Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-900">Shift Type</label>
-          <div className="mt-2 space-y-2">
-            {(['morning', 'afternoon', 'night'] as const).map((type) => (
-              <label key={type} className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="shift_type"
-                  value={type}
-                  checked={selectedShiftType === type}
-                  onChange={() => setSelectedShiftType(type)}
-                  disabled={loading}
-                  className="rounded-full"
-                />
-                <span className="text-gray-900 capitalize">
-                  {type === 'morning' ? 'Mañana' : type === 'afternoon' ? 'Tarde' : 'Noche'}
-                </span>
-              </label>
+          <label htmlFor="shift_type" className="block text-sm font-medium text-gray-900">
+            Tipo de Turno
+          </label>
+          <select
+            id="shift_type"
+            value={selectedShiftTypeId}
+            onChange={(e) => setSelectedShiftTypeId(e.target.value)}
+            disabled={loading || shiftTypes.length === 0}
+            className="mt-2 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 disabled:bg-gray-100"
+          >
+            <option value="">-- Seleccionar tipo de turno --</option>
+            {shiftTypes.map((st) => (
+              <option key={st.id} value={st.id}>
+                {st.name} ({st.expected_hours}h)
+              </option>
             ))}
-          </div>
+          </select>
+          {shiftTypes.length === 0 && <p className="mt-1 text-xs text-gray-500">Cargando tipos de turno...</p>}
         </div>
 
         {/* Error Message */}
@@ -213,7 +243,7 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
               disabled={loading}
               className="flex-1"
             >
-              {loading ? <Spinner size="sm" /> : 'Delete'}
+              {loading ? <Spinner size="sm" /> : 'Eliminar'}
             </Button>
           )}
           <Button
@@ -222,15 +252,15 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
             disabled={loading}
             className="flex-1"
           >
-            Cancel
+            Cancelar
           </Button>
           <Button
             variant="primary"
             onClick={handleSubmit}
-            disabled={loading || !selectedEmployeeId}
+            disabled={loading || !selectedEmployeeId || !selectedShiftTypeId}
             className="flex-1"
           >
-            {loading ? <Spinner size="sm" /> : selectedShift ? 'Update' : 'Assign'}
+            {loading ? <Spinner size="sm" /> : selectedShift ? 'Actualizar' : 'Asignar'}
           </Button>
         </div>
       </div>

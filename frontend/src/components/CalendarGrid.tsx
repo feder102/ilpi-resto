@@ -36,7 +36,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   const shiftsByDate = useMemo(() => {
     const grouped: Record<string, ShiftRecord[]> = {};
     shifts.forEach((shift) => {
-      const dateKey = format(new Date(shift.date), 'yyyy-MM-dd');
+      // shift.date is already a string in YYYY-MM-DD format from API
+      const dateKey = typeof shift.date === 'string' ? shift.date : format(new Date(shift.date), 'yyyy-MM-dd');
       if (!grouped[dateKey]) {
         grouped[dateKey] = [];
       }
@@ -53,31 +54,17 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   const startDay = getDay(monthStart);
   const adjustedStartDay = startDay === 0 ? 6 : startDay - 1;
 
-  // Get shift color by type
-  const getShiftColor = (shiftType: string) => {
-    switch (shiftType?.toLowerCase()) {
-      case 'morning':
-        return 'bg-blue-100 text-blue-900';
-      case 'afternoon':
-        return 'bg-yellow-100 text-yellow-900';
-      case 'night':
-        return 'bg-purple-100 text-purple-900';
-      default:
-        return 'bg-gray-100 text-gray-900';
-    }
+  // Get shift color by type name
+  const getShiftColor = (shiftTypeName: string | undefined) => {
+    const name = shiftTypeName?.toLowerCase() || '';
+    if (name.includes('mañana')) return 'bg-blue-100 text-blue-900';
+    if (name.includes('tarde')) return 'bg-yellow-100 text-yellow-900';
+    if (name.includes('noche')) return 'bg-purple-100 text-purple-900';
+    return 'bg-gray-100 text-gray-900';
   };
 
-  const getShiftLabel = (shiftType: string) => {
-    switch (shiftType?.toLowerCase()) {
-      case 'morning':
-        return 'Mañana';
-      case 'afternoon':
-        return 'Tarde';
-      case 'night':
-        return 'Noche';
-      default:
-        return shiftType;
-    }
+  const getShiftLabel = (shiftTypeName: string | undefined) => {
+    return shiftTypeName || 'Turno';
   };
 
   // Check if date is today
@@ -152,10 +139,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                       e.stopPropagation();
                       onShiftClick(shift);
                     }}
-                    className={`rounded px-1 py-0.5 text-xs font-medium cursor-pointer hover:shadow-sm ${getShiftColor(shift.shift_type)}`}
+                    className={`rounded px-1 py-0.5 text-xs font-medium cursor-pointer hover:shadow-sm ${getShiftColor(shift.shift_type_name)}`}
                   >
                     <div className="font-bold truncate">{shift.employee_name?.split(' ')[0]}</div>
-                    <div className="text-xs">{getShiftLabel(shift.shift_type)}</div>
+                    <div className="text-xs">{getShiftLabel(shift.shift_type_name)}</div>
                   </div>
                 ))}
                 {dayShifts.length > 2 && (
