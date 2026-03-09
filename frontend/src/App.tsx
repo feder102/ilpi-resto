@@ -33,7 +33,7 @@ export default function App() {
         <Route path={ROUTES.DASHBOARD} element={<ProtectedRoute allowedRoles={ADMIN_MOD}><DashboardView /></ProtectedRoute>} />
         <Route path={ROUTES.EMPLOYEES} element={<ProtectedRoute allowedRoles={ALL_ROLES}><EmployeeListView /></ProtectedRoute>} />
         <Route path={ROUTES.TEAMS} element={<ProtectedRoute allowedRoles={ADMIN_MOD}><RotaryView /></ProtectedRoute>} />
-        <Route path={ROUTES.SHIFT_ROSTER} element={<ProtectedRoute allowedRoles={ADMIN_MOD}><ShiftRosterCalendar /></ProtectedRoute>} />
+        <Route path={ROUTES.SHIFT_ROSTER} element={<ProtectedRoute allowedRoles={ALL_ROLES}><ShiftRosterCalendar /></ProtectedRoute>} />
         <Route path={ROUTES.SHIFT_CONFIGURATION} element={<ProtectedRoute allowedRoles={ADMIN_ONLY}><ShiftConfiguration /></ProtectedRoute>} />
         <Route path={ROUTES.ATTENDANCE} element={<ProtectedRoute allowedRoles={ALL_ROLES}><AttendanceView /></ProtectedRoute>} />
         <Route path={ROUTES.VACATIONS} element={<ProtectedRoute allowedRoles={ALL_ROLES}><VacationView /></ProtectedRoute>} />

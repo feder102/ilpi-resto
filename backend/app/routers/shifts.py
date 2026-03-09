@@ -89,8 +89,8 @@ def list_roster_shifts(
     """
     List shifts for a given month (for roster calendar view).
 
-    - Moderador/Admin: see all shifts for the month
-    - Empleado: see only own shifts
+    - Admin/Moderador: see all shifts for the month
+    - Empleado: see only own shifts (read-only)
     """
     return shift_service.get_shifts_for_month(
         tenant_id, session, month, employee_id, current_user

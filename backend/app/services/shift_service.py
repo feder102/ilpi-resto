@@ -238,7 +238,13 @@ def get_shifts_for_month(
 
     # Apply RBAC: Empleado can only see own shifts
     if current_user and current_user.get("role") == "Empleado":
-        employee_id = uuid.UUID(current_user.get("employee_id", ""))
+        emp_id_str = current_user.get("employee_id")
+        if not emp_id_str:
+            raise ValidationError("Employee ID not found in token")
+        try:
+            employee_id = uuid.UUID(emp_id_str)
+        except ValueError:
+            raise ValidationError("Invalid employee ID format in token")
 
     # Get first and last day of month
     first_day = date(year, month_num, 1)
