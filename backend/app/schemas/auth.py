@@ -16,6 +16,7 @@ class UserResponse(BaseModel):
     role: str
     tenant_id: uuid.UUID
     employee_id: uuid.UUID | None
+    is_active: bool  # Feature 005: Flag for password setup requirement
 
 
 class LoginResponse(BaseModel):

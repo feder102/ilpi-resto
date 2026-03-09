@@ -46,6 +46,7 @@ def login(email: str, password: str, session: Session) -> tuple[LoginResponse, s
         role=user.role,
         tenant_id=user.tenant_id,
         employee_id=user.employee_id,
+        is_active=user.is_active,
     )
 
     return (
@@ -85,6 +86,7 @@ def refresh(refresh_token_str: str, session: Session) -> tuple[LoginResponse, st
         role=user.role,
         tenant_id=user.tenant_id,
         employee_id=user.employee_id,
+        is_active=user.is_active,
     )
 
     return (

@@ -1,5 +1,5 @@
 // T032: Login view - refactored to use UI component library
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Button, Input, Card, Alert } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
@@ -10,11 +10,31 @@ export default function LoginView() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
+  // Feature 005: Monitor user login and redirect based on is_active status
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+
+    // User just logged in - check if password setup is needed
+    if (user.is_active === false) {
+      console.log('[LoginView] User is_active=false, redirecting to password setup');
+      navigate('/auth/password-setup', { replace: true });
+    } else if (user.role === 'Empleado') {
+      // Empleado with is_active=true goes to employee dashboard
+      console.log('[LoginView] Empleado logged in, redirecting to employee dashboard');
+      navigate('/employee/dashboard', { replace: true });
+    } else {
+      // Admin/Moderador goes to admin dashboard
+      console.log('[LoginView] Admin/Moderador logged in, redirecting to dashboard');
+      navigate(ROUTES.DASHBOARD, { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  // If already authenticated, let useEffect handle the redirect
   if (isAuthenticated) {
-    return <Navigate to={ROUTES.DASHBOARD} replace />;
+    return <div className="flex items-center justify-center min-h-screen">Redirigiendo...</div>;
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -23,9 +43,10 @@ export default function LoginView() {
     setLoading(true);
     try {
       await login(email, password);
-      navigate(ROUTES.DASHBOARD, { replace: true });
-    } catch {
-      setError('Credenciales inválidas');
+      // useEffect will handle the redirect based on user.is_active
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error?.message || 'Credenciales inválidas';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
