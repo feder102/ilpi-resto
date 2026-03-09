@@ -40,3 +40,4 @@ htmlcov/
 .coverage
 .pids
 init
+.claude/settings.local.json
