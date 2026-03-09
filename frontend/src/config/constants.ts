@@ -29,6 +29,7 @@ export const ROUTES = {
   DASHBOARD: '/dashboard',
   EMPLOYEES: '/employees',
   TEAMS: '/teams',
+  SHIFT_ROSTER: '/shift-roster',
   SHIFT_CONFIGURATION: '/shift-configuration',
   ATTENDANCE: '/attendance',
   VACATIONS: '/vacations',

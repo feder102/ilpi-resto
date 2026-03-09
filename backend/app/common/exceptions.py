@@ -61,3 +61,24 @@ class InvalidShiftTypeError(DomainException):
         self, message: str = "Tipo de turno inválido o no configurado"
     ) -> None:
         super().__init__(message, "INVALID_SHIFT_TYPE")
+
+
+# ============================================================================
+# NEW EXCEPTIONS FOR SHIFT ROSTER CALENDAR (Feature 004)
+# ============================================================================
+
+
+class ShiftConflictError(DomainException):
+    """Raised when trying to assign a shift to an employee who already has a shift on that date."""
+
+    def __init__(self, message: str = "El empleado ya tiene un turno asignado en esa fecha") -> None:
+        super().__init__(message, "SHIFT_CONFLICT_001")
+
+
+class VacationOverlapWarning(DomainException):
+    """Warning raised when assigning a shift to an employee with approved vacation on that date."""
+
+    def __init__(
+        self, message: str = "El empleado tiene vacaciones aprobadas en esa fecha"
+    ) -> None:
+        super().__init__(message, "VACATION_OVERLAP_WARNING_001")
