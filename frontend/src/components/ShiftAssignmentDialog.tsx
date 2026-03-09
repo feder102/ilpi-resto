@@ -9,6 +9,7 @@ import React, { useState, useEffect } from 'react';
 import { shiftService, createRosterShift, updateRosterShift } from '../services/shiftService';
 import { getEmployees } from '../services/employeeService';
 import { Modal, Button, Spinner } from '../components/ui';
+import { extractErrorMessage, getErrorSeverity } from '../utils/errorHandler';
 import type { ShiftRecord, ShiftType } from '../types/shift';
 import apiClient from '../services/apiClient';
 
@@ -132,12 +133,14 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
       // Success - close dialog and trigger parent refresh
       onSubmit();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'No se pudo asignar el turno';
-      if (errorMessage.includes('already has')) {
-        setError('Este empleado ya tiene un turno en esa fecha');
-      } else {
-        setError(errorMessage);
-      }
+      const errorMessage = extractErrorMessage(
+        err,
+        selectedShift
+          ? 'No se pudo actualizar el turno. Por favor, intenta de nuevo.'
+          : 'No se pudo asignar el turno. Por favor, intenta de nuevo.',
+      );
+      setError(errorMessage);
+      console.error('Error assigning shift:', err);
     } finally {
       setLoading(false);
     }
@@ -159,8 +162,9 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
       // Close and refresh
       onSubmit();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'No se pudo eliminar el turno';
+      const errorMessage = extractErrorMessage(err, 'No se pudo eliminar el turno. Por favor, intenta de nuevo.');
       setError(errorMessage);
+      console.error('Error deleting shift:', err);
     } finally {
       setLoading(false);
     }
@@ -232,7 +236,17 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
         </div>
 
         {/* Error Message */}
-        {error && <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-900">{error}</div>}
+        {error && (
+          <div className="rounded-lg border-l-4 border-red-500 bg-red-50 p-4 text-sm text-red-900">
+            <div className="flex items-start gap-3">
+              <span className="text-lg">⚠️</span>
+              <div>
+                <p className="font-semibold">Error al procesar la solicitud</p>
+                <p className="mt-1 text-red-800">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex gap-2 pt-4">

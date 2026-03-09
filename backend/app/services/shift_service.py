@@ -336,7 +336,9 @@ def create_shift(
     ).first()
     if existing:
         raise ShiftConflictError(
-            f"El empleado {employee.first_name} {employee.last_name} ya tiene un turno el {shift_date}"
+            f"No se puede asignar el turno: {employee.first_name} {employee.last_name} "
+            f"ya tiene un turno asignado el {shift_date.isoformat()}. "
+            f"Por favor, elige otro día o modifica el turno existente."
         )
 
     # Check for vacation conflict: employee cannot have approved vacation on shift date
