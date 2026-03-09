@@ -28,5 +28,18 @@ class TokenPayload(BaseModel):
     sub: str
     tenant_id: str
     role: str
+    emp_id: str | None
     exp: int
     iat: int
+
+
+# Feature 005: Password Setup Schemas
+class PasswordSetupRequest(BaseModel):
+    token: str
+    password: str
+    password_confirm: str
+
+
+class PasswordSetupResponse(BaseModel):
+    message: str
+    redirect_url: str

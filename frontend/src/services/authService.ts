@@ -36,3 +36,29 @@ export async function logout(): Promise<void> {
     throw error;
   }
 }
+
+// Feature 005: Password Setup
+export interface PasswordSetupResponse {
+  message: string;
+  redirect_url: string;
+}
+
+export async function setupPassword(
+  token: string,
+  password: string,
+  passwordConfirm: string
+): Promise<PasswordSetupResponse> {
+  console.log('[AuthService] Attempting password setup');
+  try {
+    const { data } = await apiClient.post<PasswordSetupResponse>('/auth/password-setup', {
+      token,
+      password,
+      password_confirm: passwordConfirm,
+    });
+    console.log('[AuthService] Password setup successful');
+    return data;
+  } catch (error) {
+    console.error('[AuthService] Password setup failed:', error);
+    throw error;
+  }
+}

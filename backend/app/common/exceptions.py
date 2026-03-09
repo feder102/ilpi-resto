@@ -21,8 +21,8 @@ class DuplicateError(DomainException):
 
 
 class ValidationError(DomainException):
-    def __init__(self, message: str = "Error de validación") -> None:
-        super().__init__(message, "VALIDATION_ERROR")
+    def __init__(self, message: str = "Error de validación", code: str = "VALIDATION_ERROR") -> None:
+        super().__init__(message, code)
 
 
 class UnauthorizedError(DomainException):
