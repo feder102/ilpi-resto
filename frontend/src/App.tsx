@@ -17,6 +17,7 @@ import ShiftRosterCalendar from './views/ShiftRosterCalendar';
 // Feature 005: Employee Workspace Portal
 import PasswordSetup from './views/PasswordSetup';
 import EmployeeDashboard from './views/EmployeeDashboard';
+import EmployeeShiftCalendar from './views/EmployeeShiftCalendar';
 import { ROUTES } from './config/constants';
 import { Role } from './types';
 
@@ -70,15 +71,21 @@ export default function App() {
         }
       />
 
-      {/* Future employee routes (Shifts, Vacations, Time Tracking) will go here */}
-      {/* <Route
+      {/* Feature 005: US2 - Employee Shift Calendar */}
+      {/* SECURITY: EmployeeRoute enforces (authenticated + Empleado role + is_active=true) */}
+      {/* Backend enforces RLS: only current employee's shifts returned */}
+      <Route
         path="/employee/shifts"
         element={
           <EmployeeRoute>
-            <EmployeeShiftRoster />
+            <EmployeeShiftCalendar />
           </EmployeeRoute>
         }
-      /> */}
+      />
+
+      {/* Future employee routes (Vacations, Time Tracking) will go here */}
+      {/* <Route path="/employee/vacations" element={<EmployeeRoute><EmployeeVacations /></EmployeeRoute>} />
+          <Route path="/employee/time-tracking" element={<EmployeeRoute><EmployeeTimeTracking /></EmployeeRoute>} /> */}
 
       {/* Catch-all: redirect to appropriate dashboard based on user role */}
       <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />

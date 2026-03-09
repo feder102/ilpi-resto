@@ -487,3 +487,267 @@ def delete_shift(
 
     session.delete(shift)
     session.commit()
+
+
+# ============================================================================
+# EMPLOYEE WORKSPACE PORTAL ENDPOINTS (Feature 005: Employee Workspace)
+# ============================================================================
+# SECURITY: RLS enforcement - All methods filter to current employee's shifts
+# using employee_id from JWT. No external employee_id parameter accepted.
+
+
+def get_employee_month_shifts(
+    tenant_id: uuid.UUID,
+    employee_id: uuid.UUID,
+    year: int,
+    month: int,
+    session: Session,
+) -> dict:
+    """
+    Get employee's shifts for a specific month.
+
+    SECURITY:
+    - RLS: Only returns shifts for the specified employee_id (from JWT)
+    - No employee_id parameter accepted from user
+
+    Args:
+        tenant_id: Tenant UUID (from JWT)
+        employee_id: Employee UUID (from JWT - not user input)
+        year: Year (YYYY)
+        month: Month (1-12)
+        session: Database session
+
+    Returns:
+        {
+            "shifts": [ShiftRecord],
+            "month": int,
+            "year": int
+        }
+
+    Raises:
+        ValidationError: If year/month invalid
+    """
+    try:
+        first_day = date(year, month, 1)
+        last_day = date(year, month, monthrange(year, month)[1])
+    except (ValueError, IndexError) as e:
+        raise ValidationError(f"Invalid year/month: {e}")
+
+    # RLS: Only filter by current employee_id (from JWT, not user input)
+    query = select(ShiftRecord).where(
+        ShiftRecord.tenant_id == tenant_id,
+        ShiftRecord.employee_id == employee_id,
+        ShiftRecord.date >= first_day,
+        ShiftRecord.date <= last_day,
+    )
+    query = query.order_by(ShiftRecord.date, ShiftRecord.shift_type_id)  # type: ignore[union-attr]
+
+    shifts = session.exec(query).all()
+
+    # Convert to response format (simplified for Employee Workspace)
+    shift_responses = []
+    for shift in shifts:
+        shift_type = session.get(ShiftType, shift.shift_type_id) if shift.shift_type_id else None
+        shift_responses.append({
+            "id": str(shift.id),
+            "employee_id": str(shift.employee_id),
+            "date": shift.date.isoformat(),
+            "shift_type_id": str(shift.shift_type_id) if shift.shift_type_id else None,
+            "shift_type_name": shift_type.name if shift_type else None,
+            "entry_time": shift.entry_time.isoformat() if shift.entry_time else None,
+            "exit_time": shift.exit_time.isoformat() if shift.exit_time else None,
+        })
+
+    return {
+        "shifts": shift_responses,
+        "month": month,
+        "year": year,
+    }
+
+
+def get_employee_shifts(
+    tenant_id: uuid.UUID,
+    employee_id: uuid.UUID,
+    date_from: date | None = None,
+    date_to: date | None = None,
+    page: int = 1,
+    size: int = 50,
+    session: Session | None = None,
+) -> dict:
+    """
+    Get employee's shifts for a date range (paginated).
+
+    SECURITY:
+    - RLS: Only returns shifts for the specified employee_id (from JWT)
+    - No employee_id parameter accepted from user
+
+    Args:
+        tenant_id: Tenant UUID (from JWT)
+        employee_id: Employee UUID (from JWT - not user input)
+        date_from: Start date (optional)
+        date_to: End date (optional)
+        page: Page number (1-indexed)
+        size: Items per page
+        session: Database session
+
+    Returns:
+        {
+            "shifts": [ShiftRecord],
+            "total": int,
+            "page": int,
+            "size": int,
+            "pages": int
+        }
+    """
+    if session is None:
+        raise ValidationError("Database session required")
+
+    # RLS: Only filter by current employee_id (from JWT, not user input)
+    query = select(ShiftRecord).where(
+        ShiftRecord.tenant_id == tenant_id,
+        ShiftRecord.employee_id == employee_id,
+    )
+
+    if date_from:
+        query = query.where(ShiftRecord.date >= date_from)
+    if date_to:
+        query = query.where(ShiftRecord.date <= date_to)
+
+    query = query.order_by(ShiftRecord.date.desc())  # type: ignore[union-attr]
+
+    # Count total
+    count_query = select(func.count()).select_from(query.subquery())
+    total = session.exec(count_query).one()
+
+    # Pagination
+    offset = (page - 1) * size
+    shifts = session.exec(query.offset(offset).limit(size)).all()
+    pages = (total + size - 1) // size if total > 0 else 1
+
+    # Convert to response format
+    shift_responses = []
+    for shift in shifts:
+        shift_type = session.get(ShiftType, shift.shift_type_id) if shift.shift_type_id else None
+        shift_responses.append({
+            "id": str(shift.id),
+            "employee_id": str(shift.employee_id),
+            "date": shift.date.isoformat(),
+            "shift_type_id": str(shift.shift_type_id) if shift.shift_type_id else None,
+            "shift_type_name": shift_type.name if shift_type else None,
+            "entry_time": shift.entry_time.isoformat() if shift.entry_time else None,
+            "exit_time": shift.exit_time.isoformat() if shift.exit_time else None,
+        })
+
+    return {
+        "shifts": shift_responses,
+        "total": total,
+        "page": page,
+        "size": size,
+        "pages": pages,
+    }
+
+
+def get_employee_today_shift(
+    tenant_id: uuid.UUID,
+    employee_id: uuid.UUID,
+    session: Session,
+) -> dict | None:
+    """
+    Get employee's shift for today.
+
+    SECURITY:
+    - RLS: Only returns current employee's shift
+
+    Args:
+        tenant_id: Tenant UUID (from JWT)
+        employee_id: Employee UUID (from JWT - not user input)
+        session: Database session
+
+    Returns:
+        ShiftRecord dict or None if no shift today
+    """
+    today = date.today()
+
+    shift = session.exec(
+        select(ShiftRecord).where(
+            ShiftRecord.tenant_id == tenant_id,
+            ShiftRecord.employee_id == employee_id,
+            ShiftRecord.date == today,
+        )
+    ).first()
+
+    if not shift:
+        return None
+
+    shift_type = session.get(ShiftType, shift.shift_type_id) if shift.shift_type_id else None
+
+    return {
+        "id": str(shift.id),
+        "employee_id": str(shift.employee_id),
+        "date": shift.date.isoformat(),
+        "shift_type_id": str(shift.shift_type_id) if shift.shift_type_id else None,
+        "shift_type_name": shift_type.name if shift_type else None,
+        "entry_time": shift.entry_time.isoformat() if shift.entry_time else None,
+        "exit_time": shift.exit_time.isoformat() if shift.exit_time else None,
+    }
+
+
+def get_employee_upcoming_shifts(
+    tenant_id: uuid.UUID,
+    employee_id: uuid.UUID,
+    days: int = 7,
+    session: Session | None = None,
+) -> dict:
+    """
+    Get employee's upcoming shifts (next N days).
+
+    SECURITY:
+    - RLS: Only returns current employee's shifts
+
+    Args:
+        tenant_id: Tenant UUID (from JWT)
+        employee_id: Employee UUID (from JWT - not user input)
+        days: Number of days to look ahead (default: 7)
+        session: Database session
+
+    Returns:
+        {
+            "shifts": [ShiftRecord],
+            "count": int
+        }
+    """
+    if session is None:
+        raise ValidationError("Database session required")
+
+    today = date.today()
+    future_date = date.fromordinal(today.toordinal() + days)
+
+    # RLS: Only filter by current employee_id
+    query = select(ShiftRecord).where(
+        ShiftRecord.tenant_id == tenant_id,
+        ShiftRecord.employee_id == employee_id,
+        ShiftRecord.date >= today,
+        ShiftRecord.date <= future_date,
+    )
+    query = query.order_by(ShiftRecord.date)
+
+    shifts = session.exec(query).all()
+
+    # Convert to response format
+    shift_responses = []
+    for shift in shifts:
+        shift_type = session.get(ShiftType, shift.shift_type_id) if shift.shift_type_id else None
+        shift_responses.append({
+            "id": str(shift.id),
+            "employee_id": str(shift.employee_id),
+            "date": shift.date.isoformat(),
+            "shift_type_id": str(shift.shift_type_id) if shift.shift_type_id else None,
+            "shift_type_name": shift_type.name if shift_type else None,
+            "entry_time": shift.entry_time.isoformat() if shift.entry_time else None,
+            "exit_time": shift.exit_time.isoformat() if shift.exit_time else None,
+        })
+
+    return {
+        "shifts": shift_responses,
+        "count": len(shift_responses),
+    }
