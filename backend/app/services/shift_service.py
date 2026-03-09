@@ -8,15 +8,16 @@ Updated for Feature 004: Shift Roster Calendar
 """
 
 import uuid
-from datetime import UTC, date, datetime
 from calendar import monthrange
+from datetime import UTC, date, datetime
 
 from sqlmodel import Session, func, select
 
-from app.common.exceptions import NotFoundError, ValidationError, ShiftConflictError
+from app.common.exceptions import NotFoundError, ShiftConflictError, ValidationError
 from app.models.employee import Employee
 from app.models.shift_record import ShiftRecord
 from app.models.shift_type import ShiftType
+from app.models.vacation_request import VacationRequest
 from app.schemas.shift import ShiftRecordResponse
 
 
@@ -156,6 +157,45 @@ def list_shifts(
 # ============================================================================
 # NEW METHODS FOR SHIFT ROSTER CALENDAR (Feature 004)
 # ============================================================================
+
+
+def _check_vacation_conflict(
+    employee_id: uuid.UUID,
+    shift_date: date,
+    tenant_id: uuid.UUID,
+    session: Session,
+) -> bool:
+    """
+    Check if employee has approved vacation on the shift date.
+
+    Args:
+        employee_id: Employee UUID
+        shift_date: Date of shift assignment
+        tenant_id: Tenant UUID
+        session: Database session
+
+    Returns:
+        True if vacation exists on this date, False otherwise
+
+    Raises:
+        ShiftConflictError: If approved vacation overlaps with shift date
+    """
+    vacation = session.exec(
+        select(VacationRequest).where(
+            VacationRequest.tenant_id == tenant_id,
+            VacationRequest.employee_id == employee_id,
+            VacationRequest.status == "Aprobado",
+            VacationRequest.start_date <= shift_date,
+            VacationRequest.end_date >= shift_date,
+        )
+    ).first()
+
+    if vacation:
+        raise ShiftConflictError(
+            f"El empleado tiene vacaciones aprobadas del {vacation.start_date.isoformat()} "
+            f"al {vacation.end_date.isoformat()}. No se puede asignar un turno para {shift_date.isoformat()}."
+        )
+    return False
 
 
 def _check_access(user_role: str, requesting_employee_id: uuid.UUID | None, target_employee_id: uuid.UUID) -> bool:
@@ -301,6 +341,9 @@ def create_shift(
             f"El empleado {employee.first_name} {employee.last_name} ya tiene un turno el {shift_date}"
         )
 
+    # Check for vacation conflict: employee cannot have approved vacation on shift date
+    _check_vacation_conflict(employee_id, shift_date, tenant_id, session)
+
     # Verify shift type exists and is active
     shift_type = session.exec(
         select(ShiftType).where(
@@ -327,9 +370,7 @@ def create_shift(
     session.commit()
     session.refresh(shift)
 
-    # Check for vacation warning (informational, doesn't block)
     warning = None
-    # TODO: Check VacationRequest for approved vacations on this date
 
     response_data = {
         "id": str(shift.id),
