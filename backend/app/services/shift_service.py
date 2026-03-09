@@ -54,9 +54,7 @@ def clock_in(
         )
     ).first()
     if active:
-        raise ValidationError(
-            "El empleado ya tiene un turno activo", "ACTIVE_SHIFT_EXISTS"
-        )
+        raise ValidationError("El empleado ya tiene un turno activo")
 
     # Verify employee exists
     employee = session.exec(
@@ -102,7 +100,7 @@ def clock_out(
         raise NotFoundError("Registro de turno no encontrado")
 
     if record.exit_time:
-        raise ValidationError("El turno ya fue cerrado", "SHIFT_ALREADY_CLOSED")
+        raise ValidationError("El turno ya fue cerrado")
 
     now = datetime.now(UTC)
     record.exit_time = now
@@ -236,7 +234,7 @@ def get_shifts_for_month(
     try:
         year, month_num = map(int, month.split("-"))
     except (ValueError, IndexError):
-        raise ValidationError("Invalid month format. Use YYYY-MM", "INVALID_MONTH_FORMAT")
+        raise ValidationError("Invalid month format. Use YYYY-MM")
 
     # Apply RBAC: Empleado can only see own shifts
     if current_user and current_user.get("role") == "Empleado":
@@ -315,7 +313,7 @@ def create_shift(
     # Validate date not in past
     today = date.today()
     if shift_date < today:
-        raise ValidationError("Cannot assign shifts in the past", "PAST_DATE_INVALID")
+        raise ValidationError("Cannot assign shifts in the past")
 
     # Verify employee exists and is active
     employee = session.exec(
@@ -326,7 +324,7 @@ def create_shift(
         )
     ).first()
     if not employee:
-        raise ValidationError("Employee not found or inactive", "EMPLOYEE_NOT_FOUND")
+        raise ValidationError("Employee not found or inactive")
 
     # Check for conflict: no duplicate shifts per employee per day
     existing = session.exec(
@@ -353,7 +351,7 @@ def create_shift(
         )
     ).first()
     if not shift_type:
-        raise ValidationError("Shift type not found or inactive", "SHIFT_TYPE_NOT_FOUND")
+        raise ValidationError("Shift type not found or inactive")
 
     # Create shift record
     now = datetime.now(UTC)
