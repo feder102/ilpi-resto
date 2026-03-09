@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
 
 from app.common.exceptions import handle_exceptions
-from app.dependencies import DbSession, CurrentUser, require_role_and_active
+from app.dependencies import DbSession, require_role_and_active
 from app.services import time_tracking_service
 from app.schemas.time_tracking import ClockInResponse, ClockOutResponse, TimeRecordListResponse
 
@@ -22,7 +22,7 @@ router = APIRouter(prefix="/employee/time-tracking", tags=["time-tracking"])
 @handle_exceptions
 def clock_in(
     session: DbSession,
-    current_user: CurrentUser = Depends(require_role_and_active("Empleado"))
+    current_user: dict = Depends(require_role_and_active("Empleado"))
 ):
     """Clock in employee for their shift.
 
@@ -52,7 +52,7 @@ def clock_in(
 @handle_exceptions
 def clock_out(
     session: DbSession,
-    current_user: CurrentUser = Depends(require_role_and_active("Empleado"))
+    current_user: dict = Depends(require_role_and_active("Empleado"))
 ):
     """Clock out employee from their shift.
 
@@ -81,7 +81,7 @@ def clock_out(
 @handle_exceptions
 def get_time_records(
     session: DbSession,
-    current_user: CurrentUser = Depends(require_role_and_active("Empleado")),
+    current_user: dict = Depends(require_role_and_active("Empleado")),
     date_from: Optional[date_type] = Query(None, description="Start date (YYYY-MM-DD)"),
     date_to: Optional[date_type] = Query(None, description="End date (YYYY-MM-DD)"),
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
