@@ -13,7 +13,7 @@
  * - Has role Empleado and is_active=true → Allow access to employee modules
  */
 
-import { Navigate, useSearchParams } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { ROUTES } from '../config/constants';
 
@@ -23,7 +23,6 @@ interface EmployeeRouteProps {
 
 export function EmployeeRoute({ children }: EmployeeRouteProps) {
   const { isAuthenticated, isLoading, user, hasRole } = useAuth();
-  const [searchParams] = useSearchParams();
 
   // Loading state
   if (isLoading) {
@@ -51,15 +50,10 @@ export function EmployeeRoute({ children }: EmployeeRouteProps) {
 
   // CRITICAL SECURITY CHECK: Must have is_active = true (password setup complete)
   if (!user.is_active) {
-    console.warn('[EmployeeRoute] User is_active=false, redirecting to password setup');
-    // Pass current location as return URL so they come back after setup
-    const returnTo = window.location.pathname + window.location.search;
-    return (
-      <Navigate
-        to={`/auth/password-setup?token=${searchParams.get('token') || ''}&return=${encodeURIComponent(returnTo)}`}
-        replace
-      />
-    );
+    console.warn('[EmployeeRoute] User is_active=false, must complete password setup via email link');
+    // Redirect to login with message - user must use email link with valid token
+    // (Password setup requires a valid one-time token sent via email)
+    return <Navigate to={`${ROUTES.LOGIN}?reason=setup-required`} replace />;
   }
 
   // All checks passed - allow access

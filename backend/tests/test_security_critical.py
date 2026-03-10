@@ -196,10 +196,8 @@ class TestEmployeeRouteRequiresIsActive:
             data={
                 "sub": str(inactive_user.id),
                 "tenant_id": str(inactive_user.tenant_id),
-                "emp_id": str(uuid.uuid4()),  # Doesn't matter for this test
-                "email": inactive_user.email,
+                "employee_id": str(uuid.uuid4()),  # Doesn't matter for this test
                 "role": inactive_user.role,
-                "is_active": False  # JWT has is_active=false
             }
         )
 

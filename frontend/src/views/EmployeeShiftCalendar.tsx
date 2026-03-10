@@ -72,6 +72,14 @@ export default function EmployeeShiftCalendar() {
     fetchShifts();
   }, [currentDate, user?.employee_id]);
 
+  // Helper: Convert date to local YYYY-MM-DD string (not UTC)
+  const toLocalDateString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Build calendar grid with shifts mapped to dates
   const calendarDays = useMemo<CalendarDay[]>(() => {
     const year = currentDate.getFullYear();
@@ -81,7 +89,8 @@ export default function EmployeeShiftCalendar() {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
+    // Convert Sunday=0 to Monday=0 (subtract 1, add 7 if negative)
+    const startingDayOfWeek = (firstDay.getDay() + 6) % 7;
 
     const days: CalendarDay[] = [];
 
@@ -100,7 +109,7 @@ export default function EmployeeShiftCalendar() {
     // Add current month's days
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = toLocalDateString(date);
       const dayShifts = shifts.filter(
         (shift) => shift.date === dateStr
       );

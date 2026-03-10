@@ -26,6 +26,7 @@ import PasswordSetup from './views/PasswordSetup';
 import EmployeeDashboard from './views/EmployeeDashboard';
 import EmployeeShiftCalendar from './views/EmployeeShiftCalendar';
 import EmployeeVacationView from './views/EmployeeVacationView';
+import EmployeeTimeTracking from './views/EmployeeTimeTracking';
 import { ROUTES } from './config/constants';
 import { Role } from './types';
 
@@ -103,8 +104,16 @@ export default function App() {
         }
       />
 
-      {/* Future employee routes (Time Tracking) will go here */}
-      {/* <Route path="/employee/time-tracking" element={<EmployeeRoute><EmployeeTimeTracking /></EmployeeRoute>} /> */}
+      {/* Feature 005: US4 - Employee Time Tracking */}
+      {/* SECURITY: EmployeeRoute enforces (authenticated + Empleado role + is_active=true) */}
+      <Route
+        path="/employee/time-tracking"
+        element={
+          <EmployeeRoute>
+            <EmployeeTimeTracking />
+          </EmployeeRoute>
+        }
+      />
 
       {/* Feature 006: Moderator Portal - CRITICAL SECURITY ROUTES */}
       {/* All moderator routes require: authenticated + Moderador role + is_active=true */}
