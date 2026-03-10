@@ -80,15 +80,31 @@ export default function VacationRequestList({
   onEmployeeFilterChange,
 }: VacationRequestListProps) {
   const [searchInput, setSearchInput] = useState(employeeFilter);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [dateFromFilter, setDateFromFilter] = useState('');
+  const [dateToFilter, setDateToFilter] = useState('');
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
     onEmployeeFilterChange(value);
   };
 
-  // Filter requests based on search
-  const filteredRequests = requests.filter(req =>
-    req.employee_name.toLowerCase().includes(searchInput.toLowerCase())
+  /**
+   * T045: Filter requests by date range
+   */
+  const getFilteredByDate = (reqs: VacationRequest[]) => {
+    return reqs.filter(req => {
+      if (dateFromFilter && new Date(req.start_date) < new Date(dateFromFilter)) return false;
+      if (dateToFilter && new Date(req.end_date) > new Date(dateToFilter)) return false;
+      return true;
+    });
+  };
+
+  // Filter requests based on search and date range
+  const filteredRequests = getFilteredByDate(
+    requests.filter(req =>
+      req.employee_name.toLowerCase().includes(searchInput.toLowerCase())
+    )
   );
 
   return (
@@ -131,6 +147,52 @@ export default function VacationRequestList({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
+          {/* Advanced Filters Toggle */}
+          <button
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+          >
+            {showAdvancedFilters ? '▼ Ocultar filtros avanzados' : '▶ Mostrar filtros avanzados'}
+          </button>
+
+          {/* Advanced Filters */}
+          {showAdvancedFilters && (
+            <div className="pt-2 border-t border-gray-200 space-y-3">
+              <p className="text-sm font-medium text-gray-700">Rango de Fechas</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs text-gray-600 block mb-1">Desde</label>
+                  <input
+                    type="date"
+                    value={dateFromFilter}
+                    onChange={e => setDateFromFilter(e.target.value)}
+                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-600 block mb-1">Hasta</label>
+                  <input
+                    type="date"
+                    value={dateToFilter}
+                    onChange={e => setDateToFilter(e.target.value)}
+                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  />
+                </div>
+              </div>
+              {(dateFromFilter || dateToFilter) && (
+                <button
+                  onClick={() => {
+                    setDateFromFilter('');
+                    setDateToFilter('');
+                  }}
+                  className="text-xs text-gray-500 hover:text-gray-700 underline"
+                >
+                  Limpiar fechas
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
