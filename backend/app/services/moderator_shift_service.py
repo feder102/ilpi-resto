@@ -254,3 +254,127 @@ def get_vacation_status_for_date(
     )
     result = session.exec(statement).first()
     return result
+
+
+# T017: US1 - Roster retrieval
+def get_department_roster(
+    department: str,
+    year: int,
+    month: int,
+    session: Session,
+) -> List[dict]:
+    """
+    Get shift roster for moderator's department for a specific month.
+
+    Returns all shifts assigned to employees in the department,
+    with vacation status indicators.
+
+    Used by: GET /moderator/roster?year=YYYY&month=MM
+
+    Args:
+        department: Department name (e.g., 'Cocina')
+        year: Year
+        month: Month (1-12)
+        session: Database session
+
+    Returns:
+        List of roster days with employee, shift, and vacation info
+    """
+    # Query shifts for the month in this department
+    statement = (
+        select(ShiftRecord, Employee, ShiftType)
+        .join(Employee, ShiftRecord.employee_id == Employee.id)
+        .join(ShiftType, ShiftRecord.shift_type_id == ShiftType.id)
+        .where(
+            and_(
+                Employee.department == department,
+                Employee.is_active == True,
+            )
+        )
+        .order_by(ShiftRecord.date, Employee.first_name)
+    )
+
+    shifts = session.exec(statement).all()
+
+    roster_days = []
+    for shift, employee, shift_type in shifts:
+        # Only include shifts in the requested month
+        if shift.date.year != year or shift.date.month != month:
+            continue
+
+        # Get vacation status for this date
+        vacation_status = get_vacation_status_for_date(
+            employee.id, shift.date, session
+        )
+
+        roster_days.append({
+            "id": str(shift.id),
+            "employee_id": str(employee.id),
+            "employee_name": f"{employee.first_name} {employee.last_name}",
+            "date": shift.date.isoformat(),
+            "shift_type_id": str(shift_type.id),
+            "shift_type_name": shift_type.name,
+            "entry_time": shift.entry_time.isoformat() if shift.entry_time else None,
+            "exit_time": shift.exit_time.isoformat() if shift.exit_time else None,
+            "vacation_status": vacation_status,
+        })
+
+    return roster_days
+
+
+def get_shifts_for_date(
+    department: str,
+    check_date: date,
+    session: Session,
+) -> List[dict]:
+    """
+    T018: Get shifts assigned for a specific date in moderator's department.
+
+    Returns shift details including employee names, shift types, and
+    vacation status for the specified date.
+
+    Used by: GET /moderator/shifts?date=YYYY-MM-DD
+
+    Args:
+        department: Department name
+        check_date: Date to retrieve shifts for
+        session: Database session
+
+    Returns:
+        List of shifts with employee, shift type, and vacation info
+    """
+    statement = (
+        select(ShiftRecord, Employee, ShiftType)
+        .join(Employee, ShiftRecord.employee_id == Employee.id)
+        .join(ShiftType, ShiftRecord.shift_type_id == ShiftType.id)
+        .where(
+            and_(
+                Employee.department == department,
+                Employee.is_active == True,
+                ShiftRecord.date == check_date,
+            )
+        )
+        .order_by(Employee.first_name)
+    )
+
+    shifts = session.exec(statement).all()
+
+    shifts_list = []
+    for shift, employee, shift_type in shifts:
+        vacation_status = get_vacation_status_for_date(
+            employee.id, check_date, session
+        )
+
+        shifts_list.append({
+            "id": str(shift.id),
+            "employee_id": str(employee.id),
+            "employee_name": f"{employee.first_name} {employee.last_name}",
+            "date": shift.date.isoformat(),
+            "shift_type_id": str(shift_type.id),
+            "shift_type_name": shift_type.name,
+            "entry_time": shift.entry_time.isoformat() if shift.entry_time else None,
+            "exit_time": shift.exit_time.isoformat() if shift.exit_time else None,
+            "vacation_status": vacation_status,
+        })
+
+    return shifts_list
