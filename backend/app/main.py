@@ -152,7 +152,7 @@ def _configure_logging() -> None:
 
 
 def _include_routers(app: FastAPI) -> None:
-    from app.routers import auth, dashboard, employees, shift_types, shifts, teams, users, vacations
+    from app.routers import auth, dashboard, employees, shift_types, shifts, teams, time_tracking, users, vacations
 
     prefix = "/api/v1"
     app.include_router(auth.router, prefix=prefix)
@@ -163,6 +163,7 @@ def _include_routers(app: FastAPI) -> None:
     app.include_router(shifts.router, prefix=prefix)
     app.include_router(vacations.router, prefix=prefix)
     app.include_router(dashboard.router, prefix=prefix)
+    app.include_router(time_tracking.router, prefix=prefix)
 
 
 app = create_app()

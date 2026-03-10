@@ -74,11 +74,13 @@ export interface ShiftRecord {
   employee_name: string;
   employee_image: string | null;
   date: string;
-  entry_time: string;
+  entry_time: string | null;
   exit_time: string | null;
   location_lat: number | null;
   location_lng: number | null;
   task_label: string | null;
+  shift_type_id: string;
+  shift_type_name: string;
 }
 
 export interface Team {

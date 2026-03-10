@@ -12,6 +12,7 @@ export interface AuthUser {
   role: string;
   tenant_id: string;
   employee_id: string | null;
+  is_active: boolean; // Feature 005: Password setup requirement
 }
 
 export interface AuthContextType {

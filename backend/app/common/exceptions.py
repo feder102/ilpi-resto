@@ -21,8 +21,8 @@ class DuplicateError(DomainException):
 
 
 class ValidationError(DomainException):
-    def __init__(self, message: str = "Error de validación") -> None:
-        super().__init__(message, "VALIDATION_ERROR")
+    def __init__(self, message: str = "Error de validación", code: str = "VALIDATION_ERROR") -> None:
+        super().__init__(message, code)
 
 
 class UnauthorizedError(DomainException):
@@ -82,3 +82,42 @@ class VacationOverlapWarning(DomainException):
         self, message: str = "El empleado tiene vacaciones aprobadas en esa fecha"
     ) -> None:
         super().__init__(message, "VACATION_OVERLAP_WARNING_001")
+
+
+# ============================================================================
+# EXCEPTION HANDLER DECORATOR (for FastAPI routes)
+# ============================================================================
+
+from functools import wraps
+from fastapi import HTTPException
+
+
+def handle_exceptions(func):
+    """
+    Decorator to handle domain exceptions in FastAPI routes.
+
+    Converts DomainException instances to appropriate HTTP responses:
+    - NotFoundError → 404
+    - UnauthorizedError → 401
+    - ForbiddenError → 403
+    - ValidationError → 400
+    - ConflictError/ShiftConflictError → 409
+    - Other DomainException → 400
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except UnauthorizedError as e:
+            raise HTTPException(status_code=401, detail={"error": {"message": e.message, "code": e.code}})
+        except ForbiddenError as e:
+            raise HTTPException(status_code=403, detail={"error": {"message": e.message, "code": e.code}})
+        except NotFoundError as e:
+            raise HTTPException(status_code=404, detail={"error": {"message": e.message, "code": e.code}})
+        except ValidationError as e:
+            raise HTTPException(status_code=400, detail={"error": {"message": e.message, "code": e.code}})
+        except (ConflictError, ShiftConflictError) as e:
+            raise HTTPException(status_code=409, detail={"error": {"message": e.message, "code": e.code}})
+        except DomainException as e:
+            raise HTTPException(status_code=400, detail={"error": {"message": e.message, "code": e.code}})
+    return wrapper

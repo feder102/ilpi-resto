@@ -16,6 +16,7 @@ class UserResponse(BaseModel):
     role: str
     tenant_id: uuid.UUID
     employee_id: uuid.UUID | None
+    is_active: bool  # Feature 005: Flag for password setup requirement
 
 
 class LoginResponse(BaseModel):
@@ -28,5 +29,18 @@ class TokenPayload(BaseModel):
     sub: str
     tenant_id: str
     role: str
+    employee_id: str | None
     exp: int
     iat: int
+
+
+# Feature 005: Password Setup Schemas
+class PasswordSetupRequest(BaseModel):
+    token: str
+    password: str
+    password_confirm: str
+
+
+class PasswordSetupResponse(BaseModel):
+    message: str
+    redirect_url: str

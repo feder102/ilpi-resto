@@ -7,7 +7,22 @@ from pydantic import BaseModel, field_validator
 
 
 class VacationRequestCreate(BaseModel):
+    """Admin/Moderador request - requires specifying employee"""
     employee_id: uuid.UUID
+    start_date: date
+    end_date: date
+
+    @field_validator("end_date")
+    @classmethod
+    def end_after_start(cls, v: date, info) -> date:
+        start = info.data.get("start_date")
+        if start and v < start:
+            raise ValueError("La fecha de fin debe ser posterior a la de inicio")
+        return v
+
+
+class VacationRequestCreateEmployee(BaseModel):
+    """Employee request - no employee_id (uses authenticated user)"""
     start_date: date
     end_date: date
 

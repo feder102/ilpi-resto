@@ -5,7 +5,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from app.dependencies import DbSession, RefreshToken
-from app.schemas.auth import LoginRequest, LoginResponse
+from app.schemas.auth import LoginRequest, LoginResponse, PasswordSetupRequest, PasswordSetupResponse
 from app.services import auth_service
 
 router = APIRouter(tags=["auth"])
@@ -51,3 +51,25 @@ def refresh(response: Response, session: DbSession, refresh_token: RefreshToken)
 def logout(response: Response, refresh_token: RefreshToken):
     auth_service.logout(refresh_token)
     response.delete_cookie("refresh_token")
+
+
+# Feature 005: Password Setup Endpoint
+@router.post("/auth/password-setup", response_model=PasswordSetupResponse, status_code=200)
+def password_setup(body: PasswordSetupRequest, session: DbSession):
+    """Set password for employee via email token.
+
+    Feature 005: Employee Workspace Portal
+    Allows employees to set their password using a time-limited email token.
+    """
+    try:
+        return auth_service.setup_password(
+            body.token,
+            body.password,
+            body.password_confirm,
+            session
+        )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Password setup error: {e}", exc_info=True)
+        raise
