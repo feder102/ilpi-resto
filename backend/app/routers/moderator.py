@@ -402,10 +402,11 @@ async def reject_vacation(
 @router.post("/shifts/assign")
 async def assign_shift(
     body: ShiftAssignmentRequest,
+    session: Session = Depends(get_session),
     current_user: dict = Depends(require_role_and_active("Moderador")),
 ):
     """
-    Assign a shift to an employee.
+    T052-T053: Assign a shift to an employee.
 
     Validates:
     1. Employee is in moderator's department (400: EMPLOYEE_NOT_IN_DEPARTMENT)
@@ -413,43 +414,117 @@ async def assign_shift(
     3. Employee has no existing shift on that date (400: SHIFT_EXISTS)
 
     Returns created shift record with assignment details.
+
+    Args:
+        body.employee_id: Employee to assign shift to
+        body.date: Shift date (YYYY-MM-DD)
+        body.shift_type_id: Shift type to assign
+
+    Returns:
+        {
+            "id": str,
+            "employee_id": str,
+            "employee_name": str,
+            "date": str (ISO),
+            "shift_type_id": str,
+            "shift_type_name": str,
+            "entry_time": null,
+            "exit_time": null,
+            "message": str
+        }
     """
-    # Implementation will be added in Phase 5 (T052)
-    pass
+    import uuid
+    from datetime import datetime
+
+    # Parse date
+    shift_date = datetime.strptime(body.date, "%Y-%m-%d").date()
+
+    # Get moderator's department
+    department = moderator_service.get_moderator_department(current_user, session)
+
+    # Assign shift
+    result = moderator_shift_service.assign_shift(
+        employee_id=body.employee_id,
+        shift_date=shift_date,
+        shift_type_id=body.shift_type_id,
+        moderator_department=department,
+        session=session,
+    )
+
+    return result
 
 
 @router.put("/shifts/{shift_id}")
 async def update_shift(
     shift_id: str,
     body: ShiftAssignmentRequest,
+    session: Session = Depends(get_session),
     current_user: dict = Depends(require_role_and_active("Moderador")),
 ):
     """
-    Replace an existing shift assignment with a new shift type.
+    T054-T055: Replace an existing shift assignment with a new shift type.
 
     Applies same conflict validation as assign_shift.
+    Does not allow changing employee or date, only shift type.
 
     Returns updated shift record.
+
+    Args:
+        shift_id: Shift record ID to update
+        body.shift_type_id: New shift type
+
+    Returns:
+        Updated shift record
     """
-    # Implementation will be added in Phase 5 (T054)
-    pass
+    import uuid
+
+    # Get moderator's employee ID
+    moderator_employee_id = current_user.get("employee_id")
+
+    # Update shift
+    result = moderator_shift_service.update_shift(
+        shift_id=shift_id,
+        new_shift_type_id=body.shift_type_id,
+        moderator_employee_id=moderator_employee_id,
+        session=session,
+    )
+
+    return result
 
 
 @router.delete("/shifts/{shift_id}")
 async def delete_shift(
     shift_id: str,
+    session: Session = Depends(get_session),
     current_user: dict = Depends(require_role_and_active("Moderador")),
 ):
     """
-    Delete a shift assignment.
+    T056-T057: Delete a shift assignment.
 
     Can only delete shifts that have not been worked yet (entry_time not set).
-    Returns 400: SHIFT_WORKED if shift has been clocked in.
+    Returns 400 with error code if shift has been clocked in.
 
     Returns 204 No Content on success.
+
+    Args:
+        shift_id: Shift record ID to delete
+
+    Returns:
+        204 No Content
     """
-    # Implementation will be added in Phase 5 (T056)
-    pass
+    import uuid
+
+    # Get moderator's employee ID
+    moderator_employee_id = current_user.get("employee_id")
+
+    # Delete shift
+    moderator_shift_service.delete_shift(
+        shift_id=shift_id,
+        moderator_employee_id=moderator_employee_id,
+        session=session,
+    )
+
+    return None  # 204 No Content
 
 
 # ============================================================================

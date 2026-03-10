@@ -177,7 +177,7 @@ class ShiftAssignmentRequest(BaseModel):
     """Request body for POST /shifts/assign and PUT /shifts/{id}"""
 
     employee_id: str = Field(..., description="Employee ID to assign shift to")
-    date: str = Field(..., description="Shift date (YYYY-MM-DD)", regex=r"^\d{4}-\d{2}-\d{2}$")
+    date: str = Field(..., description="Shift date (YYYY-MM-DD)", pattern=r"^\d{4}-\d{2}-\d{2}$")
     shift_type_id: str = Field(..., description="Shift type ID to assign")
 
     class Config:

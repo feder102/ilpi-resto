@@ -1,0 +1,275 @@
+/**
+ * T061: ShiftAssignmentForm - Feature 006 US3 Form Component
+ *
+ * Form for assigning shifts to employees with validation.
+ *
+ * Features:
+ * - Employee dropdown (department roster)
+ * - Date picker with weekend blocking
+ * - Shift type selector
+ * - Real-time validation
+ * - Helpful error messages
+ * - Loading and disabled states
+ */
+
+import { useState } from 'react';
+
+interface Employee {
+  id: string;
+  name: string;
+}
+
+interface ShiftType {
+  id: string;
+  name: string;
+}
+
+interface ShiftAssignmentFormProps {
+  employees: Employee[];
+  shiftTypes: ShiftType[];
+  isSubmitting: boolean;
+  onSubmit: (employeeId: string, date: string, shiftTypeId: string) => void;
+}
+
+/**
+ * Check if date is a weekend
+ */
+function isWeekend(dateStr: string): boolean {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const dayOfWeek = date.getDay();
+  return dayOfWeek === 0 || dayOfWeek === 6;
+}
+
+/**
+ * Check if date is in the past
+ */
+function isPastDate(dateStr: string): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const selectedDate = new Date(dateStr);
+  selectedDate.setHours(0, 0, 0, 0);
+  return selectedDate < today;
+}
+
+export default function ShiftAssignmentForm({
+  employees,
+  shiftTypes,
+  isSubmitting,
+  onSubmit,
+}: ShiftAssignmentFormProps) {
+  const [employeeId, setEmployeeId] = useState('');
+  const [date, setDate] = useState('');
+  const [shiftTypeId, setShiftTypeId] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  /**
+   * Validate form before submission
+   */
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!employeeId) {
+      newErrors.employeeId = 'Selecciona un empleado';
+    }
+
+    if (!date) {
+      newErrors.date = 'Selecciona una fecha';
+    } else if (isPastDate(date)) {
+      newErrors.date = 'No se pueden asignar turnos en fechas pasadas';
+    } else if (isWeekend(date)) {
+      newErrors.date = 'No se pueden asignar turnos en fines de semana';
+    }
+
+    if (!shiftTypeId) {
+      newErrors.shiftTypeId = 'Selecciona un tipo de turno';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  /**
+   * Handle form submission
+   */
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    onSubmit(employeeId, date, shiftTypeId);
+
+    // Reset form on successful submission
+    setTimeout(() => {
+      setEmployeeId('');
+      setDate('');
+      setShiftTypeId('');
+      setErrors({});
+    }, 500);
+  };
+
+  /**
+   * Get minimum date (today)
+   */
+  const getTodayString = (): string => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleDateChange = (value: string) => {
+    setDate(value);
+    // Clear date error if user is correcting it
+    if (errors.date) {
+      const newErrors = { ...errors };
+      delete newErrors.date;
+      setErrors(newErrors);
+    }
+  };
+
+  const handleEmployeeChange = (value: string) => {
+    setEmployeeId(value);
+    if (errors.employeeId) {
+      const newErrors = { ...errors };
+      delete newErrors.employeeId;
+      setErrors(newErrors);
+    }
+  };
+
+  const handleShiftTypeChange = (value: string) => {
+    setShiftTypeId(value);
+    if (errors.shiftTypeId) {
+      const newErrors = { ...errors };
+      delete newErrors.shiftTypeId;
+      setErrors(newErrors);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Employee Dropdown */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Empleado
+        </label>
+        <select
+          value={employeeId}
+          onChange={e => handleEmployeeChange(e.target.value)}
+          disabled={isSubmitting || employees.length === 0}
+          className={`w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            errors.employeeId
+              ? 'border-red-300 bg-red-50'
+              : 'border-gray-300 bg-white'
+          } disabled:bg-gray-100 disabled:text-gray-500`}
+        >
+          <option value="">
+            {employees.length === 0
+              ? 'No hay empleados disponibles'
+              : 'Selecciona un empleado...'}
+          </option>
+          {employees.map(emp => (
+            <option key={emp.id} value={emp.id}>
+              {emp.name}
+            </option>
+          ))}
+        </select>
+        {errors.employeeId && (
+          <p className="mt-1 text-sm text-red-600">{errors.employeeId}</p>
+        )}
+      </div>
+
+      {/* Date Picker */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Fecha del Turno
+        </label>
+        <input
+          type="date"
+          value={date}
+          onChange={e => handleDateChange(e.target.value)}
+          min={getTodayString()}
+          disabled={isSubmitting}
+          className={`w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            errors.date ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+          } disabled:bg-gray-100 disabled:text-gray-500`}
+        />
+        {errors.date && (
+          <p className="mt-1 text-sm text-red-600">{errors.date}</p>
+        )}
+        {date && !errors.date && !isWeekend(date) && (
+          <p className="mt-1 text-sm text-green-600">
+            ✓ Fecha válida ({new Date(date).toLocaleDateString('es-ES', {
+              weekday: 'long',
+              day: '2-digit',
+              month: 'long',
+            })})
+          </p>
+        )}
+      </div>
+
+      {/* Shift Type Dropdown */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Tipo de Turno
+        </label>
+        <select
+          value={shiftTypeId}
+          onChange={e => handleShiftTypeChange(e.target.value)}
+          disabled={isSubmitting || shiftTypes.length === 0}
+          className={`w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            errors.shiftTypeId
+              ? 'border-red-300 bg-red-50'
+              : 'border-gray-300 bg-white'
+          } disabled:bg-gray-100 disabled:text-gray-500`}
+        >
+          <option value="">
+            {shiftTypes.length === 0
+              ? 'No hay turnos disponibles'
+              : 'Selecciona un turno...'}
+          </option>
+          {shiftTypes.map(shift => (
+            <option key={shift.id} value={shift.id}>
+              {shift.name}
+            </option>
+          ))}
+        </select>
+        {errors.shiftTypeId && (
+          <p className="mt-1 text-sm text-red-600">{errors.shiftTypeId}</p>
+        )}
+      </div>
+
+      {/* Submit Button */}
+      <div className="pt-4">
+        <button
+          type="submit"
+          disabled={isSubmitting || employees.length === 0}
+          className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
+        >
+          {isSubmitting ? (
+            <>
+              <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+              Asignando turno...
+            </>
+          ) : (
+            '✓ Asignar Turno'
+          )}
+        </button>
+      </div>
+
+      {/* Form Help */}
+      <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <p className="text-xs font-semibold text-gray-700 mb-2">💡 NOTA</p>
+        <ul className="text-xs text-gray-600 space-y-1">
+          <li>• Las fechas de fin de semana no están permitidas</li>
+          <li>• No se pueden asignar turnos en fechas pasadas</li>
+          <li>• El sistema valida conflictos de vacaciones automáticamente</li>
+          <li>• No se pueden asignar dos turnos a la misma persona el mismo día</li>
+        </ul>
+      </div>
+    </form>
+  );
+}

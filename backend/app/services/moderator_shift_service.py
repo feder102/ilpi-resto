@@ -22,6 +22,7 @@ from app.common.exceptions import (
     ConflictError,
     ValidationError,
     NotFoundError,
+    ForbiddenError,
 )
 
 
@@ -224,6 +225,128 @@ def get_employee_vacation_balance(
     return session.exec(statement).first()
 
 
+# T054-T055: Update shift with new shift type
+def update_shift(
+    shift_id: str,
+    new_shift_type_id: str,
+    moderator_employee_id: str,
+    session: Session,
+) -> dict:
+    """
+    T055: Update/replace an existing shift assignment.
+
+    Applies same conflict validation as assign_shift.
+    Does not allow changing employee, only shift type.
+
+    Used by: PUT /shifts/{shift_id}
+
+    Args:
+        shift_id: Shift record to update
+        new_shift_type_id: New shift type
+        moderator_employee_id: Moderator's employee ID (for scoping)
+        session: Database session
+
+    Returns:
+        Updated shift record
+
+    Raises:
+        NotFoundError: If shift not found
+        VacationConflictError: If vacation on that date
+        ShiftExistsError: Actually won't happen (same shift)
+    """
+    from app.common.exceptions import VacationConflictError
+
+    # Get existing shift
+    shift = get_shift_by_id(shift_id, session)
+
+    # Get moderator's department
+    moderator = session.get(Employee, moderator_employee_id)
+    if not moderator:
+        raise NotFoundError("Moderador", moderator_employee_id)
+
+    # Verify shift's employee is in moderator's department
+    employee = session.get(Employee, shift.employee_id)
+    if not employee or employee.department != moderator.department:
+        raise ForbiddenError("No tienes acceso a este turno")
+
+    # Re-check vacation conflict (may have changed)
+    vacation_conflict = check_vacation_conflict(shift.employee_id, shift.date, session)
+    if vacation_conflict:
+        raise VacationConflictError(
+            f"El empleado tiene vacaciones aprobadas del {vacation_conflict}"
+        )
+
+    # Get new shift type
+    new_shift_type = get_shift_type_by_id(new_shift_type_id, session)
+
+    # Update shift type
+    shift.shift_type_id = new_shift_type_id
+    session.add(shift)
+    session.commit()
+    session.refresh(shift)
+
+    return {
+        "id": str(shift.id),
+        "employee_id": str(shift.employee_id),
+        "employee_name": f"{employee.first_name} {employee.last_name}",
+        "date": shift.date.isoformat(),
+        "shift_type_id": str(new_shift_type.id),
+        "shift_type_name": new_shift_type.name,
+        "entry_time": shift.entry_time.isoformat() if shift.entry_time else None,
+        "exit_time": shift.exit_time.isoformat() if shift.exit_time else None,
+        "message": f"Turno actualizado a {new_shift_type.name}",
+    }
+
+
+# T056-T057: Delete shift
+def delete_shift(
+    shift_id: str,
+    moderator_employee_id: str,
+    session: Session,
+) -> None:
+    """
+    T057: Delete a shift assignment.
+
+    Only allowed if shift hasn't been worked (entry_time not set).
+
+    Used by: DELETE /shifts/{shift_id}
+
+    Args:
+        shift_id: Shift record to delete
+        moderator_employee_id: Moderator's employee ID (for scoping)
+        session: Database session
+
+    Raises:
+        NotFoundError: If shift not found
+        ValidationError: If shift has been worked (entry_time set)
+        ForbiddenError: If not in same department
+    """
+    from app.common.exceptions import ValidationError
+
+    # Get shift
+    shift = get_shift_by_id(shift_id, session)
+
+    # Get moderator's department
+    moderator = session.get(Employee, moderator_employee_id)
+    if not moderator:
+        raise NotFoundError("Moderador", moderator_employee_id)
+
+    # Verify shift's employee is in moderator's department
+    employee = session.get(Employee, shift.employee_id)
+    if not employee or employee.department != moderator.department:
+        raise ForbiddenError("No tienes acceso a este turno")
+
+    # Check if shift has been worked
+    if check_shift_worked(shift_id, session):
+        raise ValidationError(
+            "No se puede eliminar un turno que ya ha comenzado (entrada registrada)"
+        )
+
+    # Delete shift
+    session.delete(shift)
+    session.commit()
+
+
 def get_vacation_status_for_date(
     employee_id: str,
     check_date: date,
@@ -320,6 +443,96 @@ def get_department_roster(
         })
 
     return roster_days
+
+
+# T052-T053: Shift assignment with conflict detection
+def assign_shift(
+    employee_id: str,
+    shift_date: date,
+    shift_type_id: str,
+    moderator_department: str,
+    session: Session,
+) -> dict:
+    """
+    T053: Assign a shift to an employee with conflict detection.
+
+    Validates:
+    1. Employee is in moderator's department
+    2. No approved vacation on that date
+    3. No existing shift on that date
+
+    Used by: POST /shifts/assign
+
+    Args:
+        employee_id: Employee to assign shift to
+        shift_date: Date of shift
+        shift_type_id: Shift type to assign
+        moderator_department: Moderator's department for scoping
+        session: Database session
+
+    Returns:
+        Created shift record with details
+
+    Raises:
+        EmployeeNotInDepartmentError: If employee not in moderator's dept
+        VacationConflictError: If approved vacation on that date
+        ShiftExistsError: If shift already exists on that date
+    """
+    from app.common.exceptions import (
+        EmployeeNotInDepartmentError,
+        VacationConflictError,
+        ShiftExistsError,
+    )
+
+    # Get employee to verify department
+    employee = session.get(Employee, employee_id)
+    if not employee:
+        raise NotFoundError("Empleado", employee_id)
+
+    if employee.department != moderator_department:
+        raise EmployeeNotInDepartmentError(
+            f"El empleado {employee.first_name} no pertenece a {moderator_department}"
+        )
+
+    # Check for vacation conflict
+    vacation_conflict = check_vacation_conflict(employee_id, shift_date, session)
+    if vacation_conflict:
+        raise VacationConflictError(
+            f"El empleado tiene vacaciones aprobadas del {vacation_conflict}"
+        )
+
+    # Check for existing shift
+    existing_shift = check_shift_exists(employee_id, shift_date, session)
+    if existing_shift:
+        raise ShiftExistsError(
+            f"El empleado ya tiene un turno en esta fecha (ID: {existing_shift.id})"
+        )
+
+    # Get shift type to validate
+    shift_type = get_shift_type_by_id(shift_type_id, session)
+
+    # Create new shift with tenant_id from employee
+    new_shift = ShiftRecord(
+        tenant_id=employee.tenant_id,
+        employee_id=employee_id,
+        date=shift_date,
+        shift_type_id=shift_type_id,
+    )
+    session.add(new_shift)
+    session.commit()
+    session.refresh(new_shift)
+
+    return {
+        "id": str(new_shift.id),
+        "employee_id": str(new_shift.employee_id),
+        "employee_name": f"{employee.first_name} {employee.last_name}",
+        "date": new_shift.date.isoformat(),
+        "shift_type_id": str(shift_type.id),
+        "shift_type_name": shift_type.name,
+        "entry_time": None,
+        "exit_time": None,
+        "message": f"Turno asignado a {employee.first_name} el {new_shift.date.strftime('%d/%m/%Y')}",
+    }
 
 
 def get_shifts_for_date(
