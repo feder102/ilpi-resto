@@ -29,7 +29,7 @@ class TokenPayload(BaseModel):
     sub: str
     tenant_id: str
     role: str
-    emp_id: str | None
+    employee_id: str | None
     exp: int
     iat: int
 

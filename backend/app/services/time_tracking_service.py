@@ -123,15 +123,8 @@ def clock_in(
             message="Ya has registrado entrada. Por favor, registra la salida primero"
         )
 
-    # Validate: No future timestamps
-    now = datetime.now(UTC)
-    if now.isoformat() < now.isoformat():  # Basic check (would be more complex in reality)
-        raise ValidationError(
-            code="FUTURE_TIMESTAMP",
-            message="No puedes usar una hora futura"
-        )
-
     # Create new time record
+    now = datetime.now(UTC)
     time_record = TimeRecord(
         id=uuid.uuid4(),
         tenant_id=tenant_id,
