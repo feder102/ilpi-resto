@@ -1,7 +1,7 @@
 """T037: Authentication service."""
 
 import uuid
-import re
+
 from datetime import UTC, datetime
 
 from sqlmodel import Session, select

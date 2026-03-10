@@ -39,4 +39,10 @@ export const ROUTES = {
   EMPLOYEE_SHIFTS: '/employee/shifts',
   EMPLOYEE_VACATIONS: '/employee/vacations',
   EMPLOYEE_TIME_TRACKING: '/employee/time-tracking',
+  // Feature 006: Moderator Portal Routes
+  MODERATOR_DASHBOARD: '/moderator/dashboard',
+  MODERATOR_ROSTER: '/moderator/roster',
+  MODERATOR_VACATIONS: '/moderator/vacations',
+  MODERATOR_SHIFTS: '/moderator/shifts',
+  MODERATOR_REPORTS: '/moderator/reports',
 } as const;
