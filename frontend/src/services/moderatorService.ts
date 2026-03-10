@@ -78,7 +78,7 @@ async function getShiftsForDate(date: string): Promise<RosterDayDTO[]> {
 }
 
 // ============================================================================
-// Vacation Request Methods
+// Vacation Request Methods (T043-T044)
 // ============================================================================
 
 interface VacationRequestDTO {
@@ -124,7 +124,15 @@ interface VacationListResponse {
 }
 
 /**
- * Get pending vacation requests from moderator's department
+ * T043: Get pending vacation requests from moderator's department
+ *
+ * Used by VacationApproval view to fetch list of pending requests.
+ *
+ * @param status - Optional status filter (Pendiente, Aprobado, Rechazado)
+ * @param employeeId - Optional employee filter
+ * @param dateFrom - Optional start date filter (YYYY-MM-DD)
+ * @param dateTo - Optional end date filter (YYYY-MM-DD)
+ * @returns List of vacation requests with count
  */
 async function getPendingVacationRequests(
   status?: string,
@@ -139,7 +147,12 @@ async function getPendingVacationRequests(
 }
 
 /**
- * Get details of a specific vacation request
+ * T043: Get details of a specific vacation request
+ *
+ * Used by VacationRequestDetail modal to show full request info with balance.
+ *
+ * @param requestId - Vacation request ID
+ * @returns Detailed vacation request with employee and balance info
  */
 async function getVacationRequestDetails(requestId: string): Promise<VacationDetailDTO> {
   const response = await apiClient.get<VacationDetailDTO>(`/vacations/${requestId}`);
@@ -147,7 +160,13 @@ async function getVacationRequestDetails(requestId: string): Promise<VacationDet
 }
 
 /**
- * Approve a vacation request
+ * T044: Approve a vacation request
+ *
+ * Used by VacationRequestDetail to approve pending request.
+ * Records moderador's user_id and timestamp.
+ *
+ * @param requestId - Vacation request ID to approve
+ * @returns Updated request with approval details
  */
 async function approveVacationRequest(requestId: string): Promise<VacationRequestDTO> {
   const response = await apiClient.post<VacationRequestDTO>(
@@ -158,7 +177,14 @@ async function approveVacationRequest(requestId: string): Promise<VacationReques
 }
 
 /**
- * Reject a vacation request with optional reason
+ * T044: Reject a vacation request with optional reason
+ *
+ * Used by VacationRequestDetail to reject pending request.
+ * Records moderador's user_id, timestamp, and rejection reason.
+ *
+ * @param requestId - Vacation request ID to reject
+ * @param reason - Optional rejection reason
+ * @returns Updated request with rejection details
  */
 async function rejectVacationRequest(
   requestId: string,
