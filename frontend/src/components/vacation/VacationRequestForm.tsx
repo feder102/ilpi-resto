@@ -119,8 +119,9 @@ export default function VacationRequestForm({
     }
 
     if (requestedDays > availableDays) {
-      setError(`No tienes suficientes días. Disponibles: ${availableDays}, Solicitados: ${requestedDays}`);
-      onError?.(error);
+      const message = `No tienes suficientes días. Disponibles: ${availableDays}, Solicitados: ${requestedDays}`;
+      setError(message);
+      onError?.(message);
       return;
     }
 
