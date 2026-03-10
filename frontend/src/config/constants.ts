@@ -35,4 +35,8 @@ export const ROUTES = {
   VACATIONS: '/vacations',
   REPORTS: '/reports',
   SETTINGS: '/settings',
+  // Feature 005: Employee Portal Routes
+  EMPLOYEE_SHIFTS: '/employee/shifts',
+  EMPLOYEE_VACATIONS: '/employee/vacations',
+  EMPLOYEE_TIME_TRACKING: '/employee/time-tracking',
 } as const;

@@ -18,6 +18,7 @@ import ShiftRosterCalendar from './views/ShiftRosterCalendar';
 import PasswordSetup from './views/PasswordSetup';
 import EmployeeDashboard from './views/EmployeeDashboard';
 import EmployeeShiftCalendar from './views/EmployeeShiftCalendar';
+import EmployeeVacationView from './views/EmployeeVacationView';
 import { ROUTES } from './config/constants';
 import { Role } from './types';
 
@@ -83,9 +84,20 @@ export default function App() {
         }
       />
 
-      {/* Future employee routes (Vacations, Time Tracking) will go here */}
-      {/* <Route path="/employee/vacations" element={<EmployeeRoute><EmployeeVacations /></EmployeeRoute>} />
-          <Route path="/employee/time-tracking" element={<EmployeeRoute><EmployeeTimeTracking /></EmployeeRoute>} /> */}
+      {/* Feature 005: US3 - Employee Vacation Requests */}
+      {/* SECURITY: EmployeeRoute enforces (authenticated + Empleado role + is_active=true) */}
+      {/* Backend enforces RLS: only current employee's vacation requests returned */}
+      <Route
+        path="/employee/vacations"
+        element={
+          <EmployeeRoute>
+            <EmployeeVacationView />
+          </EmployeeRoute>
+        }
+      />
+
+      {/* Future employee routes (Time Tracking) will go here */}
+      {/* <Route path="/employee/time-tracking" element={<EmployeeRoute><EmployeeTimeTracking /></EmployeeRoute>} /> */}
 
       {/* Catch-all: redirect to appropriate dashboard based on user role */}
       <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />

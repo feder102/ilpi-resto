@@ -36,6 +36,7 @@ def login(email: str, password: str, session: Session) -> tuple[LoginResponse, s
         "sub": str(user.id),
         "tenant_id": str(user.tenant_id),
         "role": user.role,
+        "employee_id": str(user.employee_id) if user.employee_id else None,
     }
     access_token = create_access_token(token_data)
     refresh_token = create_refresh_token(token_data)
@@ -76,6 +77,7 @@ def refresh(refresh_token_str: str, session: Session) -> tuple[LoginResponse, st
         "sub": str(user.id),
         "tenant_id": str(user.tenant_id),
         "role": user.role,
+        "employee_id": str(user.employee_id) if user.employee_id else None,
     }
     new_access = create_access_token(token_data)
     new_refresh = create_refresh_token(token_data)

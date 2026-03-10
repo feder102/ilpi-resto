@@ -189,7 +189,7 @@ def get_employee_month_shifts(
     SECURITY:
     - Requires: authenticated + Empleado role + is_active=true
     - Returns: only current employee's shifts (RLS enforced in service layer)
-    - No employee_id parameter: uses emp_id from JWT
+    - No employee_id parameter: uses employee_id from JWT
 
     Query Parameters:
     - year: Year (YYYY) - required
@@ -201,7 +201,7 @@ def get_employee_month_shifts(
     - 401: Unauthorized - Not authenticated or is_active=false
     - 403: Forbidden - Not Empleado role
     """
-    employee_id = uuid.UUID(current_user.get("emp_id", ""))
+    employee_id = uuid.UUID(current_user.get("employee_id", ""))
     tenant_id = uuid.UUID(current_user.get("tenant_id", ""))
 
     return shift_service.get_employee_month_shifts(
@@ -228,7 +228,7 @@ def get_employee_shifts(
     SECURITY:
     - Requires: authenticated + Empleado role + is_active=true
     - Returns: only current employee's shifts (RLS enforced in service layer)
-    - No employee_id parameter: uses emp_id from JWT
+    - No employee_id parameter: uses employee_id from JWT
 
     Query Parameters:
     - date_from: Start date (optional, default: 30 days ago)
@@ -242,7 +242,7 @@ def get_employee_shifts(
     - 401: Unauthorized - Not authenticated or is_active=false
     - 403: Forbidden - Not Empleado role
     """
-    employee_id = uuid.UUID(current_user.get("emp_id", ""))
+    employee_id = uuid.UUID(current_user.get("employee_id", ""))
     tenant_id = uuid.UUID(current_user.get("tenant_id", ""))
 
     return shift_service.get_employee_shifts(
@@ -274,7 +274,7 @@ def get_employee_today_shift(
     - 403: Forbidden - Not Empleado role
     - 404: Not Found - No shift assigned for today
     """
-    employee_id = uuid.UUID(current_user.get("emp_id", ""))
+    employee_id = uuid.UUID(current_user.get("employee_id", ""))
     tenant_id = uuid.UUID(current_user.get("tenant_id", ""))
 
     result = shift_service.get_employee_today_shift(
@@ -306,7 +306,7 @@ def get_employee_upcoming_shifts(
     - 401: Unauthorized - Not authenticated or is_active=false
     - 403: Forbidden - Not Empleado role
     """
-    employee_id = uuid.UUID(current_user.get("emp_id", ""))
+    employee_id = uuid.UUID(current_user.get("employee_id", ""))
     tenant_id = uuid.UUID(current_user.get("tenant_id", ""))
 
     return shift_service.get_employee_upcoming_shifts(

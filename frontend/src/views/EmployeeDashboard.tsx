@@ -13,6 +13,7 @@ import { Calendar, Clock, PalmtreeIcon, LogOut } from 'lucide-react';
 import { Card, Button } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { ROUTES } from '../config/constants';
+import TimeClock from '../components/time-tracking/TimeClock';
 
 interface DashboardModule {
   id: string;
@@ -33,7 +34,7 @@ export default function EmployeeDashboard() {
       title: 'Mi Calendario de Turnos',
       description: 'Ver tu horario de trabajo de los próximos meses',
       icon: <Calendar className="w-8 h-8" />,
-      route: ROUTES.EMPLOYEE_SHIFTS || '/employee/shifts',
+      route: ROUTES.EMPLOYEE_SHIFTS,
       color: 'bg-blue-50 border-blue-200',
     },
     {
@@ -41,7 +42,7 @@ export default function EmployeeDashboard() {
       title: 'Solicitar Vacaciones',
       description: 'Solicitar tiempo libre y ver el estado de tus peticiones',
       icon: <PalmtreeIcon className="w-8 h-8" />,
-      route: ROUTES.EMPLOYEE_VACATIONS || '/employee/vacations',
+      route: ROUTES.EMPLOYEE_VACATIONS,
       color: 'bg-green-50 border-green-200',
     },
     {
@@ -49,7 +50,7 @@ export default function EmployeeDashboard() {
       title: 'Control de Fichaje',
       description: 'Registra entrada y salida de tu jornada laboral',
       icon: <Clock className="w-8 h-8" />,
-      route: ROUTES.EMPLOYEE_TIME_TRACKING || '/employee/time-tracking',
+      route: ROUTES.EMPLOYEE_TIME_TRACKING,
       color: 'bg-amber-50 border-amber-200',
     },
   ];
@@ -118,6 +119,11 @@ export default function EmployeeDashboard() {
               </p>
             </div>
           </Card>
+        </div>
+
+        {/* Time Clock Widget - Feature 005: US4 Clock In/Out */}
+        <div className="mb-8">
+          <TimeClock />
         </div>
 
         {/* Modules Grid */}

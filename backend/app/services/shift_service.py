@@ -319,7 +319,7 @@ def create_shift(
     # Validate date not in past
     today = date.today()
     if shift_date < today:
-        raise ValidationError("Cannot assign shifts in the past")
+        raise ValidationError("No se pueden asignar turnos en el pasado")
 
     # Verify employee exists and is active
     employee = session.exec(

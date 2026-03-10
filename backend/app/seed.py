@@ -52,6 +52,34 @@ def seed() -> None:
         session.add(admin_user)
         session.flush()
 
+        # Create test employee for testing Feature 005
+        test_employee = Employee(
+            tenant_id=tenant.id,
+            first_name="Carlos",
+            last_name="Rodríguez",
+            email="empleado@ilpi.es",
+            phone="+34611222333",
+            dni="98765432B",
+            role="Cocinero",
+            department="Cocina",
+            status="Activo",
+            hire_date="2024-06-01",
+        )
+        session.add(test_employee)
+        session.flush()
+
+        # Create employee user (without password initially - needs setup)
+        employee_user = User(
+            tenant_id=tenant.id,
+            email="empleado@ilpi.es",
+            hashed_password=hash_password("Empleado123!"),
+            role="Empleado",
+            employee_id=test_employee.id,
+            is_active=True,
+        )
+        session.add(employee_user)
+        session.flush()
+
         # T010: Create default shift types
         shift_types = [
             ShiftType(
@@ -100,9 +128,13 @@ def seed() -> None:
         session.commit()
         print("Seed data created successfully.")
         print(f"  Tenant: {tenant.name} ({tenant.id})")
-        print(f"  Employee: {employee.first_name} {employee.last_name} ({employee.id})")
-        print(f"  Admin User: {admin_user.email} ({admin_user.id})")
-        print(f"  Shift Types: {len(shift_types)} tipos de turno creados")
+        print(f"\n  👤 Users Created:")
+        print(f"    Admin: {admin_user.email} / Password: Admin123!")
+        print(f"    Empleado: {employee_user.email} / Password: Empleado123!")
+        print(f"\n  Employees:")
+        print(f"    {employee.first_name} {employee.last_name} ({employee.role})")
+        print(f"    {test_employee.first_name} {test_employee.last_name} ({test_employee.role})")
+        print(f"\n  Shift Types: {len(shift_types)} tipos de turno creados")
         for st in shift_types:
             print(f"    - {st.name}: {st.expected_hours} horas")
 

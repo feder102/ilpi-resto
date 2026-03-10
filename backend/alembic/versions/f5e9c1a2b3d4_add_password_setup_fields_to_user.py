@@ -1,7 +1,7 @@
 """Add password setup fields to user table.
 
 Revision ID: f5e9c1a2b3d4
-Revises: ab0bd6eec523
+Revises: 20260306_shift_type_fk
 Create Date: 2026-03-09 17:00:00.000000
 
 Feature 005: Employee Workspace Portal
@@ -16,7 +16,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'f5e9c1a2b3d4'
-down_revision = 'ab0bd6eec523'
+down_revision = '20260306_shift_type_fk'
 branch_labels = None
 depends_on = None
 

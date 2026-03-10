@@ -147,19 +147,22 @@ export default function EmployeeShiftCalendar() {
     setCurrentDate(new Date());
   };
 
-  // Get shift type display info
-  const getShiftTypeLabel = (shiftTypeId: string | null): string => {
-    if (!shiftTypeId) return 'Sin tipo';
-    // Map common shift type IDs to labels (from ShiftType enum)
-    const typeMap: Record<string, string> = {
-      'morning': 'Mañana',
-      'afternoon': 'Tarde',
-      'night': 'Noche',
-      'morning-shift': 'Mañana',
-      'afternoon-shift': 'Tarde',
-      'night-shift': 'Noche',
+  // Get shift type display info - use shift_type_name from API response
+  const getShiftTypeLabel = (shiftTypeName: string | null): string => {
+    return shiftTypeName || 'Sin tipo de turno';
+  };
+
+  // Get shift type colors for visual distinction
+  const getShiftTypeColor = (shiftTypeName: string | null): string => {
+    if (!shiftTypeName) return 'bg-slate-100 text-slate-700';
+    const colorMap: Record<string, string> = {
+      'Mañana': 'bg-yellow-100 text-yellow-700 border border-yellow-300',
+      'Tarde': 'bg-orange-100 text-orange-700 border border-orange-300',
+      'Noche': 'bg-blue-100 text-blue-700 border border-blue-300',
+      'Cortado': 'bg-purple-100 text-purple-700 border border-purple-300',
+      'Corrido': 'bg-pink-100 text-pink-700 border border-pink-300',
     };
-    return typeMap[shiftTypeId] || shiftTypeId;
+    return colorMap[shiftTypeName] || 'bg-indigo-100 text-indigo-700 border border-indigo-300';
   };
 
   return (
@@ -260,10 +263,10 @@ export default function EmployeeShiftCalendar() {
                       {day.shifts.map((shift) => (
                         <div
                           key={shift.id}
-                          className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-medium truncate"
-                          title={getShiftTypeLabel(shift.shift_type_id)}
+                          className={`text-xs px-2 py-1 rounded font-medium truncate ${getShiftTypeColor(shift.shift_type_name)}`}
+                          title={`${shift.shift_type_name || 'Sin tipo'}`}
                         >
-                          {getShiftTypeLabel(shift.shift_type_id)}
+                          {shift.shift_type_name || 'Sin tipo'}
                         </div>
                       ))}
                     </div>
@@ -274,12 +277,55 @@ export default function EmployeeShiftCalendar() {
           )}
         </div>
 
-        {/* Legend */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-slate-600">
-            <span className="font-semibold">Nota:</span> Este calendario muestra solo tus turnos asignados.
-            Si crees que hay un error, contacta al administrador o moderador.
-          </p>
+        {/* Legend - Shift Types */}
+        <div className="mt-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-bold text-slate-900 mb-4">📋 Tipos de Turno</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 bg-yellow-200 border border-yellow-400 rounded"></div>
+                <div className="text-sm">
+                  <p className="font-semibold text-slate-900">Mañana</p>
+                  <p className="text-xs text-slate-600">10:30 - 18:00</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 bg-orange-200 border border-orange-400 rounded"></div>
+                <div className="text-sm">
+                  <p className="font-semibold text-slate-900">Tarde</p>
+                  <p className="text-xs text-slate-600">14:00 - 22:00</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 bg-blue-200 border border-blue-400 rounded"></div>
+                <div className="text-sm">
+                  <p className="font-semibold text-slate-900">Noche</p>
+                  <p className="text-xs text-slate-600">17:00 - 23:59</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 bg-purple-200 border border-purple-400 rounded"></div>
+                <div className="text-sm">
+                  <p className="font-semibold text-slate-900">Cortado</p>
+                  <p className="text-xs text-slate-600">12:30-16:30 / 18:30-22:30</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 bg-pink-200 border border-pink-400 rounded"></div>
+                <div className="text-sm">
+                  <p className="font-semibold text-slate-900">Corrido</p>
+                  <p className="text-xs text-slate-600">14:00 - 23:59</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-slate-600">
+                <span className="font-semibold">💡 Nota:</span> Este calendario muestra solo tus turnos asignados.
+                Si crees que hay un error, contacta al administrador o moderador.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

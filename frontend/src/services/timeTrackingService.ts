@@ -46,6 +46,30 @@ class TimeTrackingService {
   }
 
   /**
+   * Get current clock-in/out status for today
+   * Used by dashboard widget to show live clock status
+   */
+  async getTodayStatus(): Promise<{
+    status: 'clocked_in' | 'clocked_out' | 'not_clocked_in';
+    record: any | null;
+    elapsed_seconds: number;
+    summary?: any;
+    message: string;
+  }> {
+    console.log('[TimeTrackingService] Fetching today status');
+    try {
+      const { data } = await apiClient.get<any>(
+        '/employee/time-tracking/today'
+      );
+      console.log('[TimeTrackingService] Today status fetched successfully');
+      return data;
+    } catch (error) {
+      console.error('[TimeTrackingService] Failed to fetch today status:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get employee's time records for a date range
    */
   async getTimeRecords(

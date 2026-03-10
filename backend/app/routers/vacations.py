@@ -5,7 +5,13 @@ from datetime import date
 
 from fastapi import APIRouter, Depends, Query
 
-from app.dependencies import DbSession, TenantId, require_role, require_role_and_active
+from app.dependencies import (
+    CurrentUser,
+    DbSession,
+    TenantId,
+    require_role,
+    require_role_and_active,
+)
 from app.schemas.vacation import VacationActionRequest, VacationRequestCreate, VacationRequestCreateEmployee
 from app.services import vacation_service
 
@@ -137,7 +143,7 @@ def get_employee_vacation_balance(
     - 401: Unauthorized - Not authenticated or is_active=false
     - 403: Forbidden - Not Empleado role
     """
-    employee_id = uuid.UUID(current_user.get("emp_id", ""))
+    employee_id = uuid.UUID(current_user.get("employee_id", ""))
     tenant_id = uuid.UUID(current_user.get("tenant_id", ""))
     target_year = year or date.today().year
 
@@ -174,7 +180,7 @@ def get_employee_vacation_requests(
     - 401: Unauthorized - Not authenticated or is_active=false
     - 403: Forbidden - Not Empleado role
     """
-    employee_id = uuid.UUID(current_user.get("emp_id", ""))
+    employee_id = uuid.UUID(current_user.get("employee_id", ""))
     tenant_id = uuid.UUID(current_user.get("tenant_id", ""))
 
     return vacation_service.list_requests(
@@ -213,7 +219,7 @@ def create_employee_vacation_request(
     - 403: Forbidden - Not Empleado role
     - 422: Unprocessable Entity - Business logic validation failed
     """
-    employee_id = uuid.UUID(current_user.get("emp_id", ""))
+    employee_id = uuid.UUID(current_user.get("employee_id", ""))
     tenant_id = uuid.UUID(current_user.get("tenant_id", ""))
 
     return vacation_service.create_request(
@@ -252,7 +258,7 @@ def cancel_employee_vacation_request(
     - 404: Not Found - Request not found
     - 409: Conflict - Request was modified (version mismatch)
     """
-    employee_id = uuid.UUID(current_user.get("emp_id", ""))
+    employee_id = uuid.UUID(current_user.get("employee_id", ""))
     tenant_id = uuid.UUID(current_user.get("tenant_id", ""))
 
     return vacation_service.cancel(

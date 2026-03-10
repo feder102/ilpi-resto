@@ -76,13 +76,13 @@ Por favor selecciona un empleado y tipo de turno
 
 **Backend Error**:
 ```
-Cannot assign shifts in the past
+No se pueden asignar turnos en el pasado
 ```
 
 **Frontend Display**:
 ```
 ⚠️ Error al procesar la solicitud
-Cannot assign shifts in the past
+No se pueden asignar turnos en el pasado
 ```
 
 **Action for User**: Select a future date.

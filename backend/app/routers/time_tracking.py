@@ -37,7 +37,7 @@ def clock_in(
     - 403: Forbidden - User is not authorized to clock in for this employee
     """
     import uuid
-    employee_id = uuid.UUID(current_user.get("emp_id", ""))
+    employee_id = uuid.UUID(current_user.get("employee_id", ""))
     tenant_id = uuid.UUID(current_user.get("tenant_id", ""))
 
     return time_tracking_service.clock_in(
@@ -66,10 +66,37 @@ def clock_out(
     - 403: Forbidden - User is not authorized to clock out for this employee
     """
     import uuid
-    employee_id = uuid.UUID(current_user.get("emp_id", ""))
+    employee_id = uuid.UUID(current_user.get("employee_id", ""))
     tenant_id = uuid.UUID(current_user.get("tenant_id", ""))
 
     return time_tracking_service.clock_out(
+        employee_id=employee_id,
+        tenant_id=tenant_id,
+        current_user=current_user,
+        session=session
+    )
+
+
+@router.get("/today", status_code=200)
+@handle_exceptions
+def get_today_status(
+    session: DbSession,
+    current_user: dict = Depends(require_role_and_active("Empleado")),
+):
+    """Get current clock-in/out status for today.
+
+    Used by dashboard widget to show if employee is clocked in, clocked out, or has no record.
+
+    Returns:
+    - 200: OK - Status object with record (if exists) and elapsed time (if clocked in)
+    - 401: Unauthorized - Not authenticated or is_active=false
+    - 403: Forbidden - Not Empleado role
+    """
+    import uuid
+    employee_id = uuid.UUID(current_user.get("employee_id", ""))
+    tenant_id = uuid.UUID(current_user.get("tenant_id", ""))
+
+    return time_tracking_service.get_today_status(
         employee_id=employee_id,
         tenant_id=tenant_id,
         current_user=current_user,
@@ -104,7 +131,7 @@ def get_time_records(
     - 403: Forbidden - User is not authorized to see these records
     """
     import uuid
-    employee_id = uuid.UUID(current_user.get("emp_id", ""))
+    employee_id = uuid.UUID(current_user.get("employee_id", ""))
     tenant_id = uuid.UUID(current_user.get("tenant_id", ""))
 
     return time_tracking_service.get_time_records(

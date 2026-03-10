@@ -97,7 +97,7 @@ def clock_in(
     """
     # Row-Level Security: Verify employee can only clock in for themselves
     if current_user.get("role") == "Empleado":
-        if str(employee_id) != current_user.get("emp_id"):
+        if str(employee_id) != current_user.get("employee_id"):
             raise ForbiddenError("Solo puedes registrar tu propio fichaje")
 
     # Validate: Employee has shift scheduled for today
@@ -177,7 +177,7 @@ def clock_out(
     """
     # Row-Level Security: Verify employee can only clock out for themselves
     if current_user.get("role") == "Empleado":
-        if str(employee_id) != current_user.get("emp_id"):
+        if str(employee_id) != current_user.get("employee_id"):
             raise ForbiddenError("Solo puedes registrar tu propia salida")
 
     # Validate: Employee is currently clocked in
@@ -222,6 +222,74 @@ def clock_out(
     )
 
 
+def get_today_status(
+    employee_id: uuid.UUID,
+    tenant_id: uuid.UUID,
+    current_user: dict,
+    session: Session
+) -> dict:
+    """Get current clock-in/out status for today.
+
+    Returns status indicating if employee is currently clocked in, clocked out, or has no record.
+    Used by dashboard widget to display live clock status.
+
+    Args:
+        employee_id: Employee UUID
+        tenant_id: Tenant UUID
+        current_user: JWT token payload (for RLS)
+        session: Database session
+
+    Returns:
+        Dict with status, record (if exists), and elapsed_seconds (if clocked in)
+
+    Raises:
+        ForbiddenError: User is not the employee (RLS violation)
+    """
+    # Row-Level Security: Verify employee can only see own status
+    if current_user.get("role") == "Empleado":
+        if str(employee_id) != current_user.get("employee_id"):
+            raise ForbiddenError("Solo puedes ver tu propio estado de fichaje")
+
+    today = date_type.today()
+    statement = select(TimeRecord).where(
+        TimeRecord.employee_id == employee_id,
+        TimeRecord.tenant_id == tenant_id,
+        TimeRecord.date == today,
+    ).order_by(TimeRecord.created_at.desc())
+
+    record = session.exec(statement).first()
+
+    if not record:
+        return {
+            "status": "not_clocked_in",
+            "record": None,
+            "elapsed_seconds": 0,
+            "message": "No hay registro de entrada para hoy",
+        }
+
+    if record.clock_out_timestamp is None:
+        # Employee is currently clocked in
+        elapsed = datetime.now(UTC) - record.clock_in_timestamp
+        elapsed_seconds = int(elapsed.total_seconds())
+
+        return {
+            "status": "clocked_in",
+            "record": _to_time_record_response(record),
+            "elapsed_seconds": elapsed_seconds,
+            "message": f"Entrada registrada a las {record.clock_in_timestamp.strftime('%H:%M')}",
+        }
+    else:
+        # Employee is clocked out
+        summary = _calculate_time_summary(record.clock_in_timestamp, record.clock_out_timestamp)
+        return {
+            "status": "clocked_out",
+            "record": _to_time_record_response(record),
+            "elapsed_seconds": 0,
+            "summary": summary,
+            "message": f"Salida registrada a las {record.clock_out_timestamp.strftime('%H:%M')}",
+        }
+
+
 def get_time_records(
     employee_id: uuid.UUID,
     tenant_id: uuid.UUID,
@@ -253,7 +321,7 @@ def get_time_records(
     """
     # Row-Level Security: Verify employee can only see own records
     if current_user.get("role") == "Empleado":
-        if str(employee_id) != current_user.get("emp_id"):
+        if str(employee_id) != current_user.get("employee_id"):
             raise ForbiddenError("Solo puedes ver tus propios registros de fichaje")
 
     # Default date range: last 30 days
