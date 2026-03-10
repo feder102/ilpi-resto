@@ -47,7 +47,13 @@ interface RosterDTO {
 }
 
 /**
- * Get shift roster for a specific month
+ * T023: Get shift roster for a specific month
+ *
+ * Used by ModeratorRoster calendar view to fetch shifts.
+ *
+ * @param year - Year (e.g., 2026)
+ * @param month - Month (1-12)
+ * @returns Roster DTO with year, month, department, and shifts array
  */
 async function getRoster(year: number, month: number): Promise<RosterDTO> {
   const response = await apiClient.get<RosterDTO>('/roster', {
@@ -57,7 +63,12 @@ async function getRoster(year: number, month: number): Promise<RosterDTO> {
 }
 
 /**
- * Get shifts for a specific date
+ * T023: Get shifts for a specific date
+ *
+ * Used by ModeratorRoster to fetch shifts for a particular day.
+ *
+ * @param date - Date in YYYY-MM-DD format
+ * @returns Array of shifts for that date
  */
 async function getShiftsForDate(date: string): Promise<RosterDayDTO[]> {
   const response = await apiClient.get<{ shifts: RosterDayDTO[] }>('/shifts', {
