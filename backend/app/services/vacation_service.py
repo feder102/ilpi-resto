@@ -263,3 +263,67 @@ def list_requests(
         "size": size,
         "pages": pages,
     }
+
+
+# T011: Moderator-specific convenience methods
+def get_request_by_id(
+    request_id: uuid.UUID,
+    tenant_id: uuid.UUID,
+    session: Session,
+) -> VacationRequest:
+    """Get vacation request by ID (used by moderator endpoints)."""
+    req = session.exec(
+        select(VacationRequest).where(
+            VacationRequest.id == request_id,
+            VacationRequest.tenant_id == tenant_id,
+        )
+    ).first()
+    if not req:
+        raise NotFoundError("Solicitud de vacaciones no encontrada")
+    return req
+
+
+def approve_request(
+    request_id: uuid.UUID,
+    reviewer_user_id: uuid.UUID,
+    tenant_id: uuid.UUID,
+    session: Session,
+) -> VacationRequestResponse:
+    """
+    Moderator-friendly approval method (gets current version automatically).
+
+    Used by moderator portal to approve vacation requests.
+    """
+    req = get_request_by_id(request_id, tenant_id, session)
+    return approve(request_id, req.version, reviewer_user_id, tenant_id, session)
+
+
+def reject_request(
+    request_id: uuid.UUID,
+    reviewer_user_id: uuid.UUID,
+    tenant_id: uuid.UUID,
+    session: Session,
+    reason: str | None = None,
+) -> VacationRequestResponse:
+    """
+    Moderator-friendly rejection method (gets current version automatically).
+
+    Used by moderator portal to reject vacation requests.
+
+    Args:
+        request_id: Request ID
+        reviewer_user_id: Moderator user ID
+        tenant_id: Tenant ID
+        session: Database session
+        reason: Optional rejection reason
+    """
+    req = get_request_by_id(request_id, tenant_id, session)
+
+    if req.status != "Pendiente":
+        raise ValidationError("Solo se pueden rechazar solicitudes pendientes")
+
+    # Store rejection reason
+    if reason:
+        req.rejection_reason = reason
+
+    return reject(request_id, req.version, reviewer_user_id, tenant_id, session)
