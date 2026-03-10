@@ -19,8 +19,9 @@ export default function LoginView() {
 
     // User just logged in - check if password setup is needed
     if (user.is_active === false) {
-      console.log('[LoginView] User is_active=false, redirecting to password setup');
-      navigate('/auth/password-setup', { replace: true });
+      console.log('[LoginView] User is_active=false, password setup required via email link');
+      setError('Debes completar la configuración de contraseña. Revisa tu correo electrónico para el enlace de activación.');
+      // Note: PasswordSetupRoute requires a valid token in URL, which comes from email link
     } else if (user.role === 'Empleado') {
       // Empleado with is_active=true goes to employee dashboard
       console.log('[LoginView] Empleado logged in, redirecting to employee dashboard');

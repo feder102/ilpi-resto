@@ -25,12 +25,24 @@ def login(email: str, password: str, session: Session) -> tuple[LoginResponse, s
     """Authenticate user and return tokens.
 
     Returns (login_response, refresh_token_string).
+
+    Raises:
+        UnauthorizedError: Invalid credentials (401)
+        ValidationError: Password setup required (403)
     """
-    statement = select(User).where(User.email == email, User.is_active == True)  # noqa: E712
+    # First check if user exists (active or inactive)
+    statement = select(User).where(User.email == email)
     user = session.exec(statement).first()
 
     if not user or not verify_password(password, user.hashed_password):
         raise UnauthorizedError("Credenciales inválidas")
+
+    # CRITICAL SECURITY: Check if password setup is complete (is_active=true)
+    if not user.is_active:
+        raise ValidationError(
+            code="PASSWORD_SETUP_REQUIRED",
+            message="Debes completar la configuración de contraseña. Revisa tu correo electrónico para el enlace de activación."
+        )
 
     token_data = {
         "sub": str(user.id),
