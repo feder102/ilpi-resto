@@ -132,14 +132,61 @@ class PasswordResetService:
             InvalidResetTokenError: If token invalid or already used
             TokenExpiredError: If token has expired
         """
-        # TODO: Implement in Phase 4 (User Story 2)
-        # - Hash plaintext token with SHA256
-        # - Query DB for token
-        # - Check expiration (expires_at > now)
-        # - Check not already used (used_at IS NULL)
-        # - Check tenant isolation
-        # - Return token record
-        raise NotImplementedError("Implement in Phase 4 - User Story 2")
+        # Step 1: Hash plaintext token with SHA256
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+        # Step 2: Query database for token
+        token_record = self.db.execute(
+            select(PasswordResetToken).where(
+                PasswordResetToken.token_hash == token_hash,
+                PasswordResetToken.tenant_id == self.tenant_id,
+            )
+        ).scalars().first()
+
+        if not token_record:
+            logger.warning(f"Invalid token attempt (hash: {token_hash[:8]}...)")
+            raise InvalidResetTokenError(
+                message="El enlace de recuperación es inválido o ha expirado"
+            )
+
+        # Step 3: Check expiration (expires_at > now)
+        now = datetime.now(UTC)
+        if token_record.expires_at <= now:
+            logger.warning(
+                f"Expired token used",
+                extra={
+                    "token_id": str(token_record.id),
+                    "user_id": str(token_record.user_id) if token_record.user_id else None,
+                    "expired_at": token_record.expires_at.isoformat(),
+                },
+            )
+            raise TokenExpiredError(
+                message="El enlace ha expirado. Solicita uno nuevo"
+            )
+
+        # Step 4: Check not already used (used_at IS NULL)
+        if token_record.used_at is not None:
+            logger.warning(
+                f"Already-used token attempted",
+                extra={
+                    "token_id": str(token_record.id),
+                    "user_id": str(token_record.user_id) if token_record.user_id else None,
+                    "used_at": token_record.used_at.isoformat(),
+                },
+            )
+            raise InvalidResetTokenError(
+                message="El enlace ya fue utilizado. Solicita uno nuevo"
+            )
+
+        # Step 5: Return valid token record
+        logger.info(
+            f"Token verified successfully",
+            extra={
+                "token_id": str(token_record.id),
+                "user_id": str(token_record.user_id) if token_record.user_id else None,
+            },
+        )
+        return token_record
 
     def verify_and_reset_password(
         self, token: str, new_password: str, user_id: UUID | None = None

@@ -2,30 +2,92 @@
  * T031 (Phase 4 - US2): ResetTokenVerification Component
  *
  * Verifies token validity on mount and shows password reset form if valid.
- * Placeholder for Dev B to implement in Phase 4.
- *
- * Dev B: Implement token verification and route to PasswordResetForm
+ * Displays error with "Solicitar nuevo enlace" option if token invalid/expired.
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { passwordResetService } from '../../services/passwordResetService';
+import PasswordResetForm from './PasswordResetForm';
 
 interface ResetTokenVerificationProps {
   token: string;
 }
 
-export default function ResetTokenVerification({ token }: ResetTokenVerificationProps) {
-  // TODO: Implement in Phase 4 (User Story 2)
-  // - Check token validity with GET /auth/password-reset/verify?token=...
-  // - Show loading spinner while checking
-  // - If valid: Render PasswordResetForm component
-  // - If invalid/expired: Show error message with "Solicitar nuevo enlace" button
+type VerificationState = 'checking' | 'valid' | 'invalid' | 'expired';
 
-  return (
-    <div className="reset-token-verification">
-      <div className="spinner">
-        <p>Verificando enlace...</p>
+export default function ResetTokenVerification({ token }: ResetTokenVerificationProps) {
+  const [state, setState] = useState<VerificationState>('checking');
+  const [error, setError] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
+
+  useEffect(() => {
+    const verifyToken = async () => {
+      try {
+        // Check token validity with GET /auth/password-reset/verify?token=...
+        const response = await passwordResetService.checkTokenValidity(token);
+
+        // Token is valid
+        setState('valid');
+        setExpiresAt(response.expires_at);
+      } catch (err: any) {
+        // Check error type to determine state
+        if (err.response?.status === 410) {
+          // Token expired (410 Gone)
+          setState('expired');
+          setError(
+            'El enlace ha expirado. Por favor solicita uno nuevo para continuar.'
+          );
+        } else {
+          // Token invalid (400 or other)
+          setState('invalid');
+          setError(
+            err.message ||
+            'El enlace es inválido o no pudo verificarse. Por favor solicita uno nuevo.'
+          );
+        }
+      }
+    };
+
+    verifyToken();
+  }, [token]);
+
+  if (state === 'checking') {
+    // Show loading spinner while verifying
+    return (
+      <div className="reset-token-verification checking">
+        <div className="spinner">
+          <p>Verificando enlace...</p>
+        </div>
       </div>
-      <p className="token-debug">(Dev B: Implement token verification in Phase 4)</p>
+    );
+  }
+
+  if (state === 'valid') {
+    // Token is valid - show password reset form
+    return <PasswordResetForm token={token} />;
+  }
+
+  // Token invalid or expired - show error with retry option
+  return (
+    <div className="reset-token-verification error">
+      <div className="error-icon">✗</div>
+      <h2>Enlace no válido</h2>
+      <p className="error-message">{error}</p>
+
+      <div className="error-actions">
+        <a href="/password-reset" className="btn-primary">
+          Solicitar nuevo enlace
+        </a>
+        <a href="/login" className="btn-secondary">
+          Volver a iniciar sesión
+        </a>
+      </div>
+
+      {expiresAt && (
+        <p className="token-info">
+          Enlace expiró: {new Date(expiresAt).toLocaleString()}
+        </p>
+      )}
     </div>
   );
 }

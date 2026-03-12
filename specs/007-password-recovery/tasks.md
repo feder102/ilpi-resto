@@ -131,15 +131,15 @@
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T024 [P] [US2] Create backend/tests/integration/test_password_reset_verify.py with test_verify_valid_token() - valid token allows password reset form access (200 response)
-- [ ] T025 [P] [US2] Create backend/tests/integration/test_password_reset_verify.py with test_verify_expired_token() - token >24h returns 410 Gone error
-- [ ] T026 [P] [US2] Create backend/tests/integration/test_password_reset_verify.py with test_verify_invalid_token() - malformed token returns 400 Invalid
-- [ ] T027 [P] [US2] Create backend/tests/integration/test_password_reset_verify.py with test_verify_used_token() - token with used_at timestamp returns 400 Already Used
+- [x] T024 [P] [US2] Create backend/tests/integration/test_password_reset_verify.py with test_verify_valid_token() - valid token allows password reset form access (200 response)
+- [x] T025 [P] [US2] Create backend/tests/integration/test_password_reset_verify.py with test_verify_expired_token() - token >24h returns 410 Gone error
+- [x] T026 [P] [US2] Create backend/tests/integration/test_password_reset_verify.py with test_verify_invalid_token() - malformed token returns 400 Invalid
+- [x] T027 [P] [US2] Create backend/tests/integration/test_password_reset_verify.py with test_verify_used_token() - token with used_at timestamp returns 400 Already Used
 - [ ] T028 [P] [US2] Create frontend/src/components/password-reset/__tests__/PasswordResetForm.test.tsx with test_token_validation_on_mount() - invalid token shows error dialog
 
 ### Implementation for User Story 2
 
-- [ ] T029 [US2] Implement verify_token(token: str, tenant_id: UUID) in backend/app/services/password_reset_service.py
+- [x] T029 [US2] Implement verify_token(token: str, tenant_id: UUID) in backend/app/services/password_reset_service.py
   - Hash plaintext token with SHA256
   - Query DB: SELECT * FROM password_reset_tokens WHERE token_hash = ? AND tenant_id = ?
   - Check token exists (raise InvalidResetTokenError if not)
@@ -155,7 +155,7 @@
   - Return {error: {code: INVALID_RESET_TOKEN}} on failure (400)
   - Apply rate limiting: `@limiter.limit("20/minute")` (token checks are fast, allow more)
 
-- [ ] T031 [US2] Create frontend/src/components/password-reset/ResetTokenVerification.tsx component
+- [x] T031 [US2] Create frontend/src/components/password-reset/ResetTokenVerification.tsx component
   - Accept token as prop (extracted from URL query string)
   - On mount: Call passwordResetService.checkTokenValidity(token)
   - While checking: Show loading spinner "Verificando enlace..."
@@ -275,10 +275,10 @@
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T046 [P] [US4] Create backend/tests/unit/test_password_reset_service.py with test_token_expiration_after_24_hours() - token created at time T, at T+24h+1min expires_at < now() returns true
-- [ ] T047 [P] [US4] Create backend/tests/unit/test_password_reset_service.py with test_token_reuse_prevention() - token marked used_at cannot be used again
-- [ ] T048 [P] [US4] Create backend/tests/integration/test_password_reset_full_flow.py with test_token_invalidation_on_new_request() - requesting new reset for same email invalidates previous unused tokens
-- [ ] T049 [P] [US4] Create backend/tests/integration/test_password_reset_full_flow.py with test_old_password_stops_working_after_reset() - login with old password fails after successful password reset
+- [x] T046 [P] [US4] Create backend/tests/unit/test_password_reset_service.py with test_token_expiration_after_24_hours() - token created at time T, at T+24h+1min expires_at < now() returns true
+- [x] T047 [P] [US4] Create backend/tests/unit/test_password_reset_service.py with test_token_reuse_prevention() - token marked used_at cannot be used again
+- [x] T048 [P] [US4] Create backend/tests/integration/test_password_reset_full_flow.py with test_token_invalidation_on_new_request() - requesting new reset for same email invalidates previous unused tokens
+- [x] T049 [P] [US4] Create backend/tests/integration/test_password_reset_full_flow.py with test_old_password_stops_working_after_reset() - login with old password fails after successful password reset
 
 ### Implementation for User Story 4
 
