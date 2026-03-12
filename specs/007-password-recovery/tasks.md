@@ -19,10 +19,10 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Update backend/app/models/__init__.py to prepare for PasswordResetToken import (Alembic metadata discovery)
-- [ ] T002 [P] Create backend/app/schemas/password_reset.py with request/response Pydantic DTOs (PasswordResetRequestSchema, PasswordResetVerifySchema, PasswordResetRequestResponse, PasswordResetVerifyResponse)
-- [ ] T003 [P] Extend backend/app/common/exceptions.py with password reset exceptions (InvalidResetTokenError, TokenExpiredError, RateLimitExceededError, PasswordValidationError)
-- [ ] T004 [P] Create backend/app/common/email_service.py or extend existing to add send_password_reset_email() method with async email template
+- [x] T001 Update backend/app/models/__init__.py to prepare for PasswordResetToken import (Alembic metadata discovery)
+- [x] T002 [P] Create backend/app/schemas/password_reset.py with request/response Pydantic DTOs (PasswordResetRequestSchema, PasswordResetVerifySchema, PasswordResetRequestResponse, PasswordResetVerifyResponse)
+- [x] T003 [P] Extend backend/app/common/exceptions.py with password reset exceptions (InvalidResetTokenError, TokenExpiredError, RateLimitExceededError, PasswordValidationError)
+- [x] T004 [P] Create backend/app/common/email_service.py or extend existing to add send_password_reset_email() method with async email template
 
 **Checkpoint**: Project structure ready for database and backend implementation
 
@@ -34,14 +34,14 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Create Alembic migration: backend/alembic/versions/[timestamp]_add_password_reset_token_table.py to create password_reset_tokens table with all fields (id, tenant_id, user_id, token_hash, expires_at, used_at, ip_address, created_at) and indexes
-- [ ] T006 Create Alembic migration: backend/alembic/versions/[timestamp]_extend_user_for_password_reset.py to add fields to user table (last_password_reset_request_at, password_reset_attempt_count)
-- [ ] T007 Run both migrations: `alembic upgrade head` to create database schema
-- [ ] T008 Create backend/app/models/password_reset_token.py with PasswordResetToken SQLModel entity (id, tenant_id, user_id, token_hash, expires_at, used_at, ip_address, created_at with proper foreign keys and indexes)
-- [ ] T009 Update backend/app/models/__init__.py to import and re-export PasswordResetToken for Alembic
-- [ ] T010 Create backend/app/services/password_reset_service.py with base service class and utility methods (_generate_reset_token, _validate_password, _send_reset_email, _check_rate_limit)
-- [ ] T011 [P] Create frontend/src/types/passwordReset.ts with TypeScript interfaces (PasswordResetRequest, PasswordResetVerifyRequest, PasswordResetResponse, PasswordValidationRequirement, ApiError)
-- [ ] T012 [P] Create frontend/src/services/passwordResetService.ts with API client methods (requestReset, verifyAndReset, checkTokenValidity)
+- [x] T005 Create Alembic migration: backend/alembic/versions/[timestamp]_add_password_reset_token_table.py to create password_reset_tokens table with all fields (id, tenant_id, user_id, token_hash, expires_at, used_at, ip_address, created_at) and indexes
+- [x] T006 Create Alembic migration: backend/alembic/versions/[timestamp]_extend_user_for_password_reset.py to add fields to user table (last_password_reset_request_at, password_reset_attempt_count)
+- [x] T007 Run both migrations: `alembic upgrade head` to create database schema
+- [x] T008 Create backend/app/models/password_reset_token.py with PasswordResetToken SQLModel entity (id, tenant_id, user_id, token_hash, expires_at, used_at, ip_address, created_at with proper foreign keys and indexes)
+- [x] T009 Update backend/app/models/__init__.py to import and re-export PasswordResetToken for Alembic
+- [x] T010 Create backend/app/services/password_reset_service.py with base service class and utility methods (_generate_reset_token, _validate_password, _send_reset_email, _check_rate_limit)
+- [x] T011 [P] Create frontend/src/types/passwordReset.ts with TypeScript interfaces (PasswordResetRequest, PasswordResetVerifyRequest, PasswordResetResponse, PasswordValidationRequirement, ApiError)
+- [x] T012 [P] Create frontend/src/services/passwordResetService.ts with API client methods (requestReset, verifyAndReset, checkTokenValidity)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
