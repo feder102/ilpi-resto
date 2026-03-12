@@ -62,15 +62,15 @@
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T013 [P] [US1] Create backend/tests/integration/test_password_reset_request.py with test_request_password_reset_success() - user requests reset for registered email, expects 200 + success message
-- [ ] T014 [P] [US1] Create backend/tests/integration/test_password_reset_request.py with test_request_password_reset_email_enumeration() - registered + unregistered emails return same message
-- [ ] T015 [P] [US1] Create backend/tests/integration/test_password_reset_request.py with test_request_password_reset_rate_limit_10_min() - second request within 10 min returns 429 rate limit error
-- [ ] T016 [P] [US1] Create backend/tests/unit/test_password_reset_service.py with test_request_password_reset_generates_valid_token() - token is hashed and stored correctly
-- [ ] T017 [P] [US1] Create backend/tests/unit/test_password_reset_service.py with test_email_sent_asynchronously() - email is queued/sent without blocking request
+- [x] T013 [P] [US1] Create backend/tests/integration/test_password_reset_request.py with test_request_password_reset_success() - user requests reset for registered email, expects 200 + success message
+- [x] T014 [P] [US1] Create backend/tests/integration/test_password_reset_request.py with test_request_password_reset_email_enumeration() - registered + unregistered emails return same message
+- [x] T015 [P] [US1] Create backend/tests/integration/test_password_reset_request.py with test_request_password_reset_rate_limit_10_min() - second request within 10 min returns 429 rate limit error
+- [x] T016 [P] [US1] Create backend/tests/unit/test_password_reset_service.py with test_request_password_reset_generates_valid_token() - token is hashed and stored correctly
+- [x] T017 [P] [US1] Create backend/tests/unit/test_password_reset_service.py with test_email_sent_asynchronously() - email is queued/sent without blocking request
 
 ### Implementation for User Story 1
 
-- [ ] T018 [US1] Implement request_password_reset(email: str, tenant_id: UUID, ip_address: str) in backend/app/services/password_reset_service.py
+- [x] T018 [US1] Implement request_password_reset(email: str, tenant_id: UUID, ip_address: str) in backend/app/services/password_reset_service.py
   - Validate email format
   - Check rate limiting (1 request per 10min, 5 per day per email)
   - Generate token (plaintext) and hash (SHA256) separately
@@ -81,7 +81,7 @@
   - Return nothing (service handles all side effects)
   - Email enumeration: Return same response regardless of email existence
 
-- [ ] T019 [US1] Create backend/app/routers/password_reset_router.py with POST /auth/password-reset/request endpoint
+- [x] T019 [US1] Create backend/app/routers/password_reset_router.py with POST /auth/password-reset/request endpoint
   - Extract IP address from request: `request.client.host`
   - Accept PasswordResetRequestSchema (email)
   - Call service: `password_reset_service.request_password_reset(email, tenant_id, ip_address)`
@@ -89,9 +89,9 @@
   - Apply rate limiting decorator: `@limiter.limit("10/minute")` to prevent IP-level brute force
   - Handle exceptions: InvalidEmailError (400), RateLimitExceededError (429), EmailServiceError (503)
 
-- [ ] T020 [US1] Register password_reset_router in backend/app/main.py by adding `app.include_router(password_reset_router.router)` after other routers
+- [x] T020 [US1] Register password_reset_router in backend/app/main.py by adding `app.include_router(password_reset_router.router)` after other routers
 
-- [ ] T021 [US1] Create frontend/src/components/password-reset/ForgotPasswordForm.tsx component
+- [x] T021 [US1] Create frontend/src/components/password-reset/ForgotPasswordForm.tsx component
   - Render email input field with label "Correo electrónico"
   - Render submit button "Solicitar enlace de recuperación"
   - Implement form validation (email format via regex or library)
@@ -101,13 +101,13 @@
   - Show timer for rate limit errors (if retry_after_seconds provided)
   - TypeScript strict mode - all props typed, no `any` types
 
-- [ ] T022 [US1] Create frontend/src/views/PasswordReset.tsx page container
+- [x] T022 [US1] Create frontend/src/views/PasswordReset.tsx page container
   - Route parameter extraction: Get `token` from URL query string `?token=abc123`
   - Conditional rendering: If token exists, show password reset form (US3) else show forgot password form (US1)
   - State management for form submission (loading, error, success)
   - Error boundary handling
 
-- [ ] T023 [US1] Update frontend/src/App.tsx to add public route for password reset
+- [x] T023 [US1] Update frontend/src/App.tsx to add public route for password reset
   - Add route: `<Route path="/password-reset" element={<PasswordReset />} />`
   - Ensure route is PUBLIC (no auth required, placed outside ProtectedLayout)
   - Add link from login page: "¿Olvidaste tu contraseña?" → `/password-reset`

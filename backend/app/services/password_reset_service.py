@@ -10,10 +10,12 @@ This service handles all password reset operations including:
 
 import hashlib
 import logging
+import os
 import re
 from datetime import UTC, datetime, timedelta
 from secrets import token_urlsafe
 from uuid import UUID
+from concurrent.futures import ThreadPoolExecutor
 
 from sqlmodel import Session, select
 
@@ -58,15 +60,64 @@ class PasswordResetService:
         Raises:
             RateLimitExceededError: If rate limit exceeded
         """
-        # TODO: Implement in Phase 3 (User Story 1)
-        # - Validate email format
-        # - Check rate limiting (1/10min, 5/day per email)
-        # - Generate token (plaintext) and hash (SHA256)
-        # - Store PasswordResetToken in DB
-        # - Send email asynchronously with reset link
-        # - Update User.last_password_reset_request_at
-        # - Log event to AuditLog
-        raise NotImplementedError("Implement in Phase 3 - User Story 1")
+        # Step 1: Validate email format (basic check)
+        if not re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", email):
+            logger.warning(f"Invalid email format attempted: {email}")
+            # Email enumeration protection: Return same response for invalid emails
+            # Don't raise exception, proceed as if email exists
+
+        # Step 2: Check rate limiting (before any other operation)
+        self._check_rate_limit(email)
+
+        # Step 3: Look up user (if exists) for future use
+        user = self.db.execute(
+            select(User).where(
+                User.email == email,
+                User.tenant_id == self.tenant_id,
+            )
+        ).scalars().first()
+
+        # Step 4: Generate token and hash
+        plaintext_token, token_hash = self._generate_reset_token()
+
+        # Step 5: Create PasswordResetToken in database
+        now = datetime.now(UTC)
+        expires_at = now + timedelta(hours=self.TOKEN_EXPIRATION_HOURS)
+
+        reset_token = PasswordResetToken(
+            tenant_id=self.tenant_id,
+            user_id=user.id if user else None,
+            token_hash=token_hash,
+            expires_at=expires_at,
+            ip_address=ip_address,
+            created_at=now,
+        )
+        self.db.add(reset_token)
+        self.db.flush()
+
+        # Step 6: Update User fields (if user exists)
+        if user:
+            user.last_password_reset_request_at = now
+            user.password_reset_attempt_count = (user.password_reset_attempt_count or 0) + 1
+            self.db.add(user)
+
+        # Step 7: Send email asynchronously
+        reset_link = f"{os.getenv('APP_URL', 'https://app.local')}/password-reset?token={plaintext_token}"
+        self._send_reset_email(email, reset_link)
+
+        # Step 8: Commit database changes
+        self.db.commit()
+
+        # Step 9: Log event
+        logger.info(
+            f"Password reset requested",
+            extra={
+                "user_id": user.id if user else None,
+                "email": email,
+                "ip_address": ip_address,
+                "tenant_id": str(self.tenant_id),
+            },
+        )
 
     def verify_token(self, token: str) -> PasswordResetToken:
         """Verify reset token and return token record.
@@ -184,12 +235,32 @@ class PasswordResetService:
         Raises:
             RateLimitExceededError: If rate limit exceeded
         """
-        # TODO: Implement in Phase 7 (User Story 5)
-        # - Query User by email
-        # - Check last_password_reset_request_at (>= 10 minutes ago)
-        # - Check password_reset_attempt_count (< 5 today)
-        # - Raise RateLimitExceededError if violated
-        pass
+        # Query User by email
+        user = self.db.execute(
+            select(User).where(
+                User.email == email,
+                User.tenant_id == self.tenant_id,
+            )
+        ).scalars().first()
+
+        if not user:
+            # User doesn't exist - allow attempt (email enumeration protection)
+            return
+
+        # Check per-email 10-minute cooldown
+        if user.last_password_reset_request_at:
+            elapsed = datetime.now(UTC) - user.last_password_reset_request_at
+            if elapsed < timedelta(minutes=self.RATE_LIMIT_MINUTES):
+                wait_minutes = self.RATE_LIMIT_MINUTES - int(elapsed.total_seconds() / 60)
+                raise RateLimitExceededError(
+                    message=f"Intenta de nuevo en {wait_minutes} minutos"
+                )
+
+        # Check per-email daily limit
+        if user.password_reset_attempt_count and user.password_reset_attempt_count >= self.RATE_LIMIT_DAILY_MAX:
+            raise RateLimitExceededError(
+                message="Límite diario de solicitudes excedido"
+            )
 
     def _send_reset_email(self, email: str, reset_link: str) -> None:
         """Send password reset email asynchronously.
@@ -198,9 +269,19 @@ class PasswordResetService:
             email: Recipient email address
             reset_link: Full reset link to include in email
         """
-        # TODO: Implement in Phase 1-2
-        # - Use app.common.email_service to send
-        # - Include reset link with plaintext token
-        # - Send in background (ThreadPoolExecutor or async queue)
-        # - Log errors for admin visibility
-        pass
+        # Use ThreadPoolExecutor to send email without blocking request
+        # This prevents slow email service from delaying the HTTP response
+        def _send():
+            try:
+                # Import here to avoid circular imports
+                from app.common.email_service import send_password_reset_email
+
+                send_password_reset_email(email, reset_link)
+                logger.info(f"Password reset email sent to {email}")
+            except Exception as e:
+                logger.error(f"Failed to send password reset email to {email}: {str(e)}")
+                # Don't raise - we want request to succeed even if email fails
+
+        # Submit to thread pool for async execution
+        executor = ThreadPoolExecutor(max_workers=2)
+        executor.submit(_send)
