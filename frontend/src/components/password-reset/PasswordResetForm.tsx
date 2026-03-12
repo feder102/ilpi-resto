@@ -70,23 +70,24 @@ export default function PasswordResetForm({ token }: PasswordResetFormProps) {
     setError(null);
 
     try {
-      const response = await passwordResetService.verifyAndReset(token, password);
+      await passwordResetService.verifyAndReset(token, password);
       setSuccess(true);
 
       // Auto-redirect after 3 seconds
       setTimeout(() => {
         navigate('/login');
       }, 3000);
-    } catch (err: any) {
-      if (err.response?.status === 410) {
+    } catch (err) {
+      const error = err as { response?: { status: number }; error?: { message?: string }; message?: string };
+      if (error.response?.status === 410) {
         setError('Tu enlace ha expirado. Solicita uno nuevo');
-      } else if (err.response?.status === 422) {
+      } else if (error.response?.status === 422) {
         // Password validation error with details
         setError(
-          err.error?.message ||
+          error.error?.message ||
           'La contraseña no cumple con los requisitos de seguridad'
         );
-      } else if (err.response?.status === 400) {
+      } else if (error.response?.status === 400) {
         setError('El enlace es inválido o ya fue utilizado');
       } else {
         setError(err.message || 'Error al restablecer la contraseña');

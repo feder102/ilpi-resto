@@ -11,7 +11,6 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ApiError, PasswordResetResponse } from '../../types/passwordReset';
 import { passwordResetService } from '../../services/passwordResetService';
 import './ForgotPasswordForm.css';
 
@@ -67,7 +66,7 @@ export default function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProp
     }
 
     try {
-      const response = await passwordResetService.requestReset(email);
+      await passwordResetService.requestReset(email);
       setSuccess(true);
       setEmail('');
 
@@ -75,10 +74,11 @@ export default function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProp
       if (onSuccess) {
         onSuccess(email);
       }
-    } catch (err: any) {
+    } catch (err) {
+      const error = err as { response?: { status: number }; code?: string; retry_after_seconds?: number; message?: string };
       // Check for rate limit error (429)
-      if (err.response?.status === 429 || err.code === 'RATE_LIMIT_EXCEEDED') {
-        const retrySeconds = err.retry_after_seconds || 600;
+      if (error.response?.status === 429 || error.code === 'RATE_LIMIT_EXCEEDED') {
+        const retrySeconds = error.retry_after_seconds || 600;
         setRetryAfter(retrySeconds);
         setError(
           `Demasiados intentos. Intenta de nuevo en ${Math.ceil(
@@ -87,7 +87,7 @@ export default function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProp
         );
       } else {
         // Generic error handling
-        setError(err.message || 'Error al solicitar la recuperación de contraseña');
+        setError(error.message || 'Error al solicitar la recuperación de contraseña');
       }
     } finally {
       setLoading(false);

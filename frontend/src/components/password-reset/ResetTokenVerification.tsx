@@ -29,9 +29,10 @@ export default function ResetTokenVerification({ token }: ResetTokenVerification
         // Token is valid
         setState('valid');
         setExpiresAt(response.expires_at);
-      } catch (err: any) {
+      } catch (err) {
+        const error = err as { response?: { status: number }; message?: string };
         // Check error type to determine state
-        if (err.response?.status === 410) {
+        if (error.response?.status === 410) {
           // Token expired (410 Gone)
           setState('expired');
           setError(
@@ -41,7 +42,7 @@ export default function ResetTokenVerification({ token }: ResetTokenVerification
           // Token invalid (400 or other)
           setState('invalid');
           setError(
-            err.message ||
+            error.message ||
             'El enlace es inválido o no pudo verificarse. Por favor solicita uno nuevo.'
           );
         }
