@@ -66,7 +66,12 @@ def upgrade() -> None:
     op.drop_index('idx_time_record_employee_date', table_name='time_record')
     op.drop_index('uq_active_clock_in', table_name='time_record', postgresql_where='(clock_out_timestamp IS NULL)')
     op.add_column('user', sa.Column('last_password_reset_request_at', sa.DateTime(), nullable=True))
-    op.add_column('user', sa.Column('password_reset_attempt_count', sa.Integer(), nullable=False))
+    # Add column as nullable first
+    op.add_column('user', sa.Column('password_reset_attempt_count', sa.Integer(), nullable=True))
+    # Set default value for existing rows
+    op.execute('UPDATE "user" SET password_reset_attempt_count = 0 WHERE password_reset_attempt_count IS NULL')
+    # Make column NOT NULL
+    op.alter_column('user', 'password_reset_attempt_count', existing_type=sa.Integer(), nullable=False)
     op.alter_column('user', 'password_reset_expires',
                existing_type=postgresql.TIMESTAMP(timezone=True),
                type_=sa.DateTime(),
@@ -88,6 +93,7 @@ def downgrade() -> None:
                existing_type=sa.DateTime(),
                type_=postgresql.TIMESTAMP(timezone=True),
                existing_nullable=True)
+    op.alter_column('user', 'password_reset_attempt_count', existing_type=sa.Integer(), nullable=True)
     op.drop_column('user', 'password_reset_attempt_count')
     op.drop_column('user', 'last_password_reset_request_at')
     op.create_index('uq_active_clock_in', 'time_record', ['tenant_id', 'employee_id', 'date'], unique=True, postgresql_where='(clock_out_timestamp IS NULL)')
