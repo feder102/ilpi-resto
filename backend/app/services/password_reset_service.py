@@ -17,7 +17,7 @@ from secrets import token_urlsafe
 from uuid import UUID
 from concurrent.futures import ThreadPoolExecutor
 
-from sqlmodel import Session, select
+from sqlmodel import Session, select, update
 
 from app.common.exceptions import (
     InvalidResetTokenError,
@@ -76,6 +76,17 @@ class PasswordResetService:
                 User.tenant_id == self.tenant_id,
             )
         ).scalars().first()
+
+        # Step 3b: If user exists, invalidate previous unused tokens
+        if user:
+            now = datetime.now(UTC)
+            self.db.execute(
+                update(PasswordResetToken).where(
+                    PasswordResetToken.user_id == user.id,
+                    PasswordResetToken.tenant_id == self.tenant_id,
+                    PasswordResetToken.used_at == None,
+                ).values(used_at=now)
+            )
 
         # Step 4: Generate token and hash
         plaintext_token, token_hash = self._generate_reset_token()
@@ -206,17 +217,70 @@ class PasswordResetService:
             TokenExpiredError: If token expired
             PasswordValidationError: If password doesn't meet requirements
         """
-        # TODO: Implement in Phase 5 (User Story 3)
-        # - Call verify_token(token) to validate token
-        # - Call _validate_password(new_password)
-        # - Get User from token
-        # - Hash password with bcrypt (cost >= 10)
-        # - Update User.hashed_password
-        # - Mark token as used (used_at = now)
-        # - Invalidate other unused tokens for this user
-        # - Log event to AuditLog
-        # - Return updated user
-        raise NotImplementedError("Implement in Phase 5 - User Story 3")
+        # Step 1: Verify token (checks expiration, reuse, tenant isolation)
+        token_record = self.verify_token(token)
+
+        # Step 2: Validate password meets security requirements
+        self._validate_password(new_password)
+
+        # Step 3: Get User from token
+        user = self.db.execute(
+            select(User).where(
+                User.id == token_record.user_id,
+                User.tenant_id == self.tenant_id,
+            )
+        ).scalars().first()
+
+        if not user:
+            logger.error(
+                f"User not found for password reset token",
+                extra={"token_id": str(token_record.id)},
+            )
+            raise InvalidResetTokenError(
+                message="El enlace es inválido o el usuario no existe"
+            )
+
+        # Step 4: Hash new password with bcrypt (cost >= 10)
+        from passlib.context import CryptContext
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        hashed_password = pwd_context.hash(new_password)
+
+        # Step 5: Update User password
+        user.password_hash = hashed_password
+        self.db.add(user)
+
+        # Step 6: Mark token as used
+        now = datetime.now(UTC)
+        token_record.used_at = now
+        self.db.add(token_record)
+
+        # Step 7: Invalidate other unused tokens for this user
+        # Update all unused tokens for this user to be marked as used
+        self.db.execute(
+            update(PasswordResetToken).where(
+                PasswordResetToken.user_id == user.id,
+                PasswordResetToken.tenant_id == self.tenant_id,
+                PasswordResetToken.used_at == None,
+                PasswordResetToken.id != token_record.id,
+            ).values(used_at=now)
+        )
+
+        # Step 8: Commit all changes
+        self.db.commit()
+
+        # Step 9: Log event
+        logger.info(
+            f"Password reset successful",
+            extra={
+                "user_id": str(user.id),
+                "email": user.email,
+                "token_id": str(token_record.id),
+                "tenant_id": str(self.tenant_id),
+            },
+        )
+
+        # Step 10: Return updated user
+        return user
 
     def _validate_password(self, password: str) -> None:
         """Validate password meets security requirements.

@@ -191,17 +191,17 @@
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T033 [P] [US3] Create backend/tests/integration/test_password_reset_full_flow.py with test_password_reset_success() - valid token + valid password → update DB, mark token used, return 200
-- [ ] T034 [P] [US3] Create backend/tests/integration/test_password_reset_full_flow.py with test_password_reset_invalid_password() - weak password returns 422 with validation details
-- [ ] T035 [P] [US3] Create backend/tests/integration/test_password_reset_full_flow.py with test_password_change_invalidates_old_tokens() - after reset, other unused tokens for same user become invalid
-- [ ] T036 [P] [US3] Create backend/tests/unit/test_password_reset_service.py with test_password_validation_all_requirements() - validate 8+, upper, lower, number, special char requirements
-- [ ] T037 [P] [US3] Create backend/tests/unit/test_password_reset_service.py with test_bcrypt_hashing() - password hashed with bcrypt cost ≥10
-- [ ] T038 [P] [US3] Create frontend/src/components/password-reset/__tests__/PasswordResetForm.test.tsx with test_password_validation_requirements() - requirements update as user types
-- [ ] T039 [P] [US3] Create frontend/src/components/password-reset/__tests__/PasswordResetForm.test.tsx with test_submit_button_disabled_until_requirements_met() - button state toggles with password strength
+- [x] T033 [P] [US3] Create backend/tests/integration/test_password_reset_full_flow.py with test_password_reset_success() - valid token + valid password → update DB, mark token used, return 200
+- [x] T034 [P] [US3] Create backend/tests/integration/test_password_reset_full_flow.py with test_password_reset_invalid_password() - weak password returns 422 with validation details
+- [x] T035 [P] [US3] Create backend/tests/integration/test_password_reset_full_flow.py with test_password_change_invalidates_old_tokens() - after reset, other unused tokens for same user become invalid
+- [x] T036 [P] [US3] Create backend/tests/unit/test_password_reset_service.py with test_password_validation_all_requirements() - validate 8+, upper, lower, number, special char requirements
+- [x] T037 [P] [US3] Create backend/tests/unit/test_password_reset_service.py with test_bcrypt_hashing() - password hashed with bcrypt cost ≥10
+- [x] T038 [P] [US3] Create frontend/src/components/password-reset/__tests__/PasswordResetForm.test.tsx with test_password_validation_requirements() - requirements update as user types
+- [x] T039 [P] [US3] Create frontend/src/components/password-reset/__tests__/PasswordResetForm.test.tsx with test_submit_button_disabled_until_requirements_met() - button state toggles with password strength
 
 ### Implementation for User Story 3
 
-- [ ] T040 [US3] Implement _validate_password(password: str) in backend/app/services/password_reset_service.py
+- [x] T040 [US3] Implement _validate_password(password: str) in backend/app/services/password_reset_service.py
   - Check length >= 8 characters
   - Check at least 1 uppercase letter (A-Z)
   - Check at least 1 lowercase letter (a-z)
@@ -210,7 +210,7 @@
   - Raise PasswordValidationError with details on failure (which requirements failed)
   - Return None on success
 
-- [ ] T041 [US3] Implement verify_and_reset_password(token: str, new_password: str, tenant_id: UUID) in backend/app/services/password_reset_service.py
+- [x] T041 [US3] Implement verify_and_reset_password(token: str, new_password: str, tenant_id: UUID) in backend/app/services/password_reset_service.py
   - Call verify_token(token, tenant_id) to get token record (validates hash, expiration, not used)
   - Call _validate_password(new_password) to check complexity requirements
   - Hash new_password with bcrypt (cost >= 10): `passlib.hash.bcrypt_sha256.using(rounds=10).hash(new_password)`
@@ -222,14 +222,14 @@
   - Commit changes
   - Return User object (for response)
 
-- [ ] T042 [US3] Add POST /auth/password-reset/verify endpoint to backend/app/routers/password_reset_router.py
+- [x] T042 [US3] Add POST /auth/password-reset/verify endpoint to backend/app/routers/password_reset_router.py
   - Accept PasswordResetVerifySchema (token, new_password)
   - Call service: `user = password_reset_service.verify_and_reset_password(token, new_password, tenant_id)`
   - Return PasswordResetVerifyResponse (message, action: redirect_to_login, redirect_url: /login, user: {id, email})
   - Apply rate limiting: `@limiter.limit("5/minute")` (password resets are sensitive, limit strictly)
   - Handle exceptions: InvalidResetTokenError (400), TokenExpiredError (410), PasswordValidationError (422)
 
-- [ ] T043 [US3] Create frontend/src/components/password-reset/PasswordResetForm.tsx component
+- [x] T043 [US3] Create frontend/src/components/password-reset/PasswordResetForm.tsx component
   - Accept token as prop
   - Render password input field with label "Nueva contraseña"
   - Render password requirements list:
@@ -246,12 +246,12 @@
   - On error (400/410/422): Show error dialog with details (password validation errors if 422)
   - TypeScript strict mode
 
-- [ ] T044 [US3] Create frontend/src/components/password-reset/ResetSuccess.tsx component
+- [x] T044 [US3] Create frontend/src/components/password-reset/ResetSuccess.tsx component
   - Display confirmation message: "Contraseña restablecida exitosamente"
   - Display "Ir a Iniciar Sesión" button → redirect to /login
   - Optional: Timer to auto-redirect after 3 seconds
 
-- [ ] T045 [US3] Update frontend/src/views/PasswordReset.tsx to show success component after password reset
+- [x] T045 [US3] Update frontend/src/views/PasswordReset.tsx to show success component after password reset
   - Add state for success/completed flag
   - After verifyAndReset succeeds: Set completed = true, render ResetSuccess component
   - ResetSuccess button/timer redirects to /login
@@ -322,15 +322,15 @@
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T055 [P] [US5] Create backend/tests/unit/test_password_reset_service.py with test_rate_limit_10_minutes() - second request within 10min raises RateLimitExceededError
-- [ ] T056 [P] [US5] Create backend/tests/unit/test_password_reset_service.py with test_rate_limit_5_per_day() - 6th request in same day raises RateLimitExceededError
-- [ ] T057 [P] [US5] Create backend/tests/unit/test_password_reset_service.py with test_rate_limit_per_ip_10_per_min() - 11 requests from same IP in 60sec raises RateLimitExceededError
-- [ ] T058 [P] [US5] Create backend/tests/integration/test_password_reset_request.py with test_rate_limit_retry_after_10_minutes() - after 10min+1sec, user can request again (reset counters)
-- [ ] T059 [P] [US5] Create backend/tests/integration/test_password_reset_request.py with test_rate_limit_reset_at_24_hour_boundary() - daily limit resets at 00:00 UTC
+- [x] T055 [P] [US5] Create backend/tests/unit/test_password_reset_service.py with test_rate_limit_10_minutes() - second request within 10min raises RateLimitExceededError
+- [x] T056 [P] [US5] Create backend/tests/unit/test_password_reset_service.py with test_rate_limit_5_per_day() - 6th request in same day raises RateLimitExceededError
+- [x] T057 [P] [US5] Create backend/tests/unit/test_password_reset_service.py with test_rate_limit_per_ip_10_per_min() - 11 requests from same IP in 60sec raises RateLimitExceededError
+- [x] T058 [P] [US5] Create backend/tests/integration/test_password_reset_request.py with test_rate_limit_retry_after_10_minutes() - after 10min+1sec, user can request again (reset counters)
+- [x] T059 [P] [US5] Create backend/tests/integration/test_password_reset_request.py with test_rate_limit_reset_at_24_hour_boundary() - daily limit resets at 00:00 UTC
 
 ### Implementation for User Story 5
 
-- [ ] T060 [US5] Implement _check_rate_limit(email: str, ip_address: str, tenant_id: UUID) in backend/app/services/password_reset_service.py
+- [x] T060 [US5] Implement _check_rate_limit(email: str, ip_address: str, tenant_id: UUID) in backend/app/services/password_reset_service.py
   - Query User: `user = db.query(User).filter(User.email == email, User.tenant_id == tenant_id).first()`
   - Per-email 10-minute check:
     ```python
@@ -348,24 +348,24 @@
   - Per-IP check: Use slowapi (already integrated in FastAPI)
     - Configured via @limiter.limit("10/minute") on /request endpoint
 
-- [ ] T061 [US5] Call _check_rate_limit() at start of request_password_reset() method
+- [x] T061 [US5] Call _check_rate_limit() at start of request_password_reset() method
   - Call before checking email existence
   - On RateLimitExceededError: Catch in router and return 429 with retry_after_seconds
 
-- [ ] T062 [US5] Ensure POST /auth/password-reset/request has rate limiting decorator (already done in T019)
+- [x] T062 [US5] Ensure POST /auth/password-reset/request has rate limiting decorator (already done in T019)
   - Verify: `@limiter.limit("10/minute")` is applied to block IP-level brute force
   - This is separate from per-email rate limiting (defense-in-depth)
 
-- [ ] T063 [US5] Update error response for RateLimitExceededError to include retry_after_seconds in router
+- [x] T063 [US5] Update error response for RateLimitExceededError to include retry_after_seconds in router
   - Calculate: `retry_after_seconds = int(elapsed.total_seconds()) + (10 * 60)` (round up to next 10-min window)
   - Return HTTP 429 with `Retry-After` header and JSON body: `{error: {code: RATE_LIMIT_EXCEEDED, message: "...", retry_after_seconds: 540}}`
 
-- [ ] T064 [US5] Update frontend error handling in ForgotPasswordForm (T021) to show rate limit timer
+- [x] T064 [US5] Update frontend error handling in ForgotPasswordForm (T021) to show rate limit timer
   - If API returns 429: Extract retry_after_seconds
   - Show message: "Intenta de nuevo en {retry_after_seconds / 60} minutos"
   - Optional: Count down timer updates every second until retry window available
 
-- [ ] T065 [US5] Add cleanup task for password reset attempt counters (deferred to post-MVP)
+- [x] T065 [US5] Add cleanup task for password reset attempt counters (deferred to post-MVP)
   - Daily cron job: At 00:00 UTC, reset User.password_reset_attempt_count = 0 for all users
   - For MVP: Document in quickstart.md, implementation post-MVP
 

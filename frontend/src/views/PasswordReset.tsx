@@ -1,10 +1,18 @@
 /**
- * T022: PasswordReset View Component
+ * T022 (Updated for Phase 5): PasswordReset View Component
  *
  * Main view for password recovery flow.
  * Routes to different components based on URL state:
  * - No token: Show ForgotPasswordForm (US1)
  * - With token: Show ResetTokenVerification → PasswordResetForm (US2-3)
+ *
+ * Flow:
+ * 1. User requests reset (ForgotPasswordForm)
+ * 2. User clicks email link with token
+ * 3. Token verified (ResetTokenVerification)
+ * 4. User enters new password (PasswordResetForm)
+ * 5. Success confirmation (ResetSuccess)
+ * 6. Redirect to login
  */
 
 import React, { useMemo } from 'react';
@@ -21,10 +29,13 @@ export default function PasswordReset() {
     <div className="password-reset-container">
       <div className="password-reset-card">
         {token ? (
-          // Phase 2 & 3: Token verification and password reset form
+          // US2-3: Token verification and password reset form
+          // ResetTokenVerification validates token
+          // → If valid: renders PasswordResetForm
+          // → If invalid/expired: shows error + links
           <ResetTokenVerification token={token} />
         ) : (
-          // Phase 1: Forgot password form - request reset link
+          // US1: Request password reset by email
           <ForgotPasswordForm />
         )}
       </div>

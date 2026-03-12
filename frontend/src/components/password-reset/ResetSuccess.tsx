@@ -14,21 +14,37 @@ interface ResetSuccessProps {
 }
 
 export default function ResetSuccess({ onLoginClick }: ResetSuccessProps) {
-  // TODO: Implement in Phase 5 (User Story 3)
-  // - Display success message: "Contraseña restablecida exitosamente"
-  // - Show "Ir a Iniciar Sesión" button
-  // - Optional: Auto-redirect after 3 seconds
-  // - On click: Navigate to /login
+  const [countdown, setCountdown] = React.useState(3);
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1 && onLoginClick) {
+          onLoginClick();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [onLoginClick]);
 
   return (
     <div className="reset-success">
       <div className="success-icon">✓</div>
       <h2>Contraseña restablecida exitosamente</h2>
-      <p>Tu contraseña ha sido actualizada.</p>
+      <p className="success-message">
+        Tu contraseña ha sido actualizada y ahora puedes iniciar sesión con tu nueva contraseña.
+      </p>
+
       <button className="btn-primary" onClick={onLoginClick}>
         Ir a Iniciar Sesión
       </button>
-      <p className="dev-note">(Dev B: Implement success component in Phase 5)</p>
+
+      <p className="redirect-info">
+        Te redireccionaremos automáticamente en {countdown} segundos...
+      </p>
     </div>
   );
 }
