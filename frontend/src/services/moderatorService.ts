@@ -120,7 +120,6 @@ interface VacationDetailDTO {
 interface VacationListResponse {
   requests: VacationRequestDTO[];
   count: number;
-  total: number;
 }
 
 /**

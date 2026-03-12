@@ -12,6 +12,7 @@ All moderator endpoints use these utilities to prevent cross-department access.
 from typing import Optional
 from sqlmodel import Session, select
 from app.models import Employee
+from app.common.exceptions import UnauthorizedError, ForbiddenError, NotFoundError
 
 
 def get_moderator_department(current_user: dict, session: Session) -> str:
@@ -32,14 +33,14 @@ def get_moderator_department(current_user: dict, session: Session) -> str:
     """
     employee_id = current_user.get("employee_id")
     if not employee_id:
-        raise ValueError("JWT missing employee_id - moderator identity cannot be determined")
+        raise UnauthorizedError("JWT missing employee_id - moderator identity cannot be determined")
 
     # Fetch employee record to get department
     statement = select(Employee).where(Employee.id == employee_id)
     employee = session.exec(statement).first()
 
     if not employee:
-        raise ValueError(f"Employee record not found for ID: {employee_id}")
+        raise NotFoundError(f"Employee record not found for ID: {employee_id}")
 
     return employee.department
 
@@ -73,11 +74,11 @@ def enforce_department_scope(
     moderator = session.exec(moderator_stmt).first()
 
     if not target or not moderator:
-        raise ValueError("Employee record(s) not found")
+        raise NotFoundError("Employee record(s) not found")
 
     # Verify same department
     if target.department != moderator.department:
-        raise PermissionError(
+        raise ForbiddenError(
             f"Cannot access employee in {target.department}. "
             f"You are authorized for {moderator.department} only."
         )

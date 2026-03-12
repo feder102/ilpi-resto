@@ -19,6 +19,16 @@ import { moderatorService } from '../services/moderatorService';
 import { extractErrorMessage } from '../utils/errorHandler';
 import ShiftAssignmentForm from '../components/moderator/ShiftAssignmentForm';
 
+interface Employee {
+  id: string;
+  name: string;
+}
+
+interface ShiftType {
+  id: string;
+  name: string;
+}
+
 interface AssignmentResult {
   id: string;
   employee_name: string;
@@ -27,8 +37,8 @@ interface AssignmentResult {
 }
 
 export default function ShiftAssignment() {
-  const [employees, setEmployees] = useState<any[]>([]);
-  const [shiftTypes, setShiftTypes] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [shiftTypes, setShiftTypes] = useState<ShiftType[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,13 +74,17 @@ export default function ShiftAssignment() {
 
       setEmployees(uniqueEmployees);
 
-      // Mock shift types (Mañana, Noche, Cortado, Corrido)
-      setShiftTypes([
-        { id: '1', name: 'Mañana' },
-        { id: '2', name: 'Noche' },
-        { id: '3', name: 'Cortado' },
-        { id: '4', name: 'Corrido' },
-      ]);
+      // Extract unique shift types from roster (with real UUIDs from backend)
+      const uniqueShiftTypes = Array.from(
+        new Map(
+          roster.shifts.map(shift => [shift.shift_type_id, shift])
+        ).values()
+      ).map(shift => ({
+        id: shift.shift_type_id,
+        name: shift.shift_type_name,
+      }));
+
+      setShiftTypes(uniqueShiftTypes);
     } catch (err) {
       const errorMessage = extractErrorMessage(err);
       setError(`No se pudieron cargar los datos: ${errorMessage}`);
@@ -80,13 +94,13 @@ export default function ShiftAssignment() {
   };
 
   /**
-   * Handle form submission
+   * Handle form submission (returns Promise so form can wait for completion)
    */
   const handleAssign = async (
     employeeId: string,
     date: string,
     shiftTypeId: string
-  ) => {
+  ): Promise<void> => {
     setIsSubmitting(true);
     setError(null);
     setSuccessMessage(null);
@@ -114,6 +128,7 @@ export default function ShiftAssignment() {
     } catch (err) {
       const errorMessage = extractErrorMessage(err);
       setError(errorMessage);
+      throw err; // Re-throw so form knows submission failed
     } finally {
       setIsSubmitting(false);
     }

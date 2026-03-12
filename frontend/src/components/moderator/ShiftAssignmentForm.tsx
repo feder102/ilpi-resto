@@ -28,7 +28,7 @@ interface ShiftAssignmentFormProps {
   employees: Employee[];
   shiftTypes: ShiftType[];
   isSubmitting: boolean;
-  onSubmit: (employeeId: string, date: string, shiftTypeId: string) => void;
+  onSubmit: (employeeId: string, date: string, shiftTypeId: string) => Promise<void>;
 }
 
 /**
@@ -92,22 +92,26 @@ export default function ShiftAssignmentForm({
   /**
    * Handle form submission
    */
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    onSubmit(employeeId, date, shiftTypeId);
+    try {
+      // Wait for async submission to complete
+      await onSubmit(employeeId, date, shiftTypeId);
 
-    // Reset form on successful submission
-    setTimeout(() => {
+      // Only reset form after successful submission
       setEmployeeId('');
       setDate('');
       setShiftTypeId('');
       setErrors({});
-    }, 500);
+    } catch {
+      // Form NOT reset on error - user can correct and retry
+      // Error handling is done by parent component
+    }
   };
 
   /**

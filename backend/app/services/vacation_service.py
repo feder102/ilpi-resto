@@ -3,7 +3,7 @@
 import uuid
 from datetime import UTC, date, datetime
 
-from sqlmodel import Session, func, select
+from sqlmodel import Session, func, select, and_
 
 from app.common.exceptions import (
     BalanceExceededError,
