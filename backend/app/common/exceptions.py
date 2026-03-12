@@ -98,6 +98,43 @@ class EmployeeNotInDepartmentError(DomainException):
         super().__init__(message, "EMPLOYEE_NOT_IN_DEPARTMENT")
 
 
+# ============================================================================
+# NEW EXCEPTIONS FOR PASSWORD RECOVERY (Feature 007)
+# ============================================================================
+
+
+class InvalidResetTokenError(DomainException):
+    """Raised when password reset token is invalid, expired, or already used."""
+
+    def __init__(
+        self, message: str = "El enlace de recuperación es inválido o ha expirado"
+    ) -> None:
+        super().__init__(message, "INVALID_RESET_TOKEN")
+
+
+class TokenExpiredError(DomainException):
+    """Raised when password reset token has expired (>24 hours)."""
+
+    def __init__(self, message: str = "El enlace ha expirado. Solicita uno nuevo") -> None:
+        super().__init__(message, "TOKEN_EXPIRED")
+
+
+class RateLimitExceededError(DomainException):
+    """Raised when rate limit is exceeded for password reset requests."""
+
+    def __init__(self, message: str = "Demasiados intentos. Intenta de nuevo más tarde") -> None:
+        super().__init__(message, "RATE_LIMIT_EXCEEDED")
+
+
+class PasswordValidationError(DomainException):
+    """Raised when new password doesn't meet security requirements."""
+
+    def __init__(
+        self, message: str = "La contraseña no cumple con los requisitos"
+    ) -> None:
+        super().__init__(message, "PASSWORD_VALIDATION_FAILED")
+
+
 class VacationConflictError(DomainException):
     """Raised when trying to assign a shift during an approved vacation."""
 
@@ -120,11 +157,12 @@ class ShiftExistsError(DomainException):
 # EXCEPTION HANDLER DECORATOR (for FastAPI routes)
 # ============================================================================
 
+from typing import Any, Callable
 from functools import wraps
 from fastapi import HTTPException
 
 
-def handle_exceptions(func):
+def handle_exceptions(func: Callable[..., Any]) -> Callable[..., Any]:
     """
     Decorator to handle domain exceptions in FastAPI routes.
 
@@ -137,7 +175,7 @@ def handle_exceptions(func):
     - Other DomainException → 400
     """
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
             return func(*args, **kwargs)
         except UnauthorizedError as e:

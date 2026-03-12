@@ -23,5 +23,7 @@ class User(SQLModel, table=True):
     password_reset_token: str | None = Field(default=None, unique=True)  # Feature 005: Password setup token
     password_reset_expires: datetime | None = Field(default=None)  # Feature 005: Token expiration
     last_login: datetime | None = Field(default=None)  # Feature 005: Audit trail
+    last_password_reset_request_at: datetime | None = Field(default=None)  # Feature 007: Rate limiting (10 min)
+    password_reset_attempt_count: int = Field(default=0)  # Feature 007: Daily limit (5/day)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
