@@ -135,3 +135,87 @@ export interface VacationBalance {
   used_days: number;
   remaining_days: number;
 }
+
+// ============================================================================
+// Feature 006: Moderator Portal Types
+// ============================================================================
+
+/**
+ * Roster day display in moderator calendar view
+ */
+export interface RosterDay {
+  id: string;
+  employee_id: string;
+  employee_name: string;
+  date: string;
+  shift_type_name: string;
+  entry_time: string | null;
+  exit_time: string | null;
+  vacation_status: VacationStatus | null;
+}
+
+/**
+ * Moderator's roster for a month
+ */
+export interface ModeratorRoster {
+  year: number;
+  month: number;
+  department: Department;
+  shifts: RosterDay[];
+}
+
+/**
+ * Vacation request with moderator-specific fields
+ */
+export interface ModeratorVacationRequest extends VacationRequest {
+  rejection_reason?: string | null;
+}
+
+/**
+ * Vacation summary row (per employee)
+ */
+export interface VacationSummaryRow {
+  employee_id: string;
+  employee_name: string;
+  approved_days: number;
+  rejected_days: number;
+  pending_days: number;
+  remaining_days: number;
+}
+
+/**
+ * Vacation summary report
+ */
+export interface VacationSummaryReport {
+  year: number;
+  department: Department;
+  summary: VacationSummaryRow[];
+  department_total: {
+    approved_days: number;
+    rejected_days: number;
+    pending_days: number;
+  };
+}
+
+/**
+ * Attendance record for report
+ */
+export interface AttendanceRecord {
+  employee_id: string;
+  employee_name: string;
+  date: string;
+  clock_in: string | null;
+  clock_out: string | null;
+  hours_worked: number | null;
+  shift_type: string;
+}
+
+/**
+ * Attendance report
+ */
+export interface AttendanceReport {
+  date_from: string;
+  date_to: string;
+  department: Department;
+  records: AttendanceRecord[];
+}

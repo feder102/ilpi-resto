@@ -85,6 +85,38 @@ class VacationOverlapWarning(DomainException):
 
 
 # ============================================================================
+# NEW EXCEPTIONS FOR MODERATOR PORTAL (Feature 006)
+# ============================================================================
+
+
+class EmployeeNotInDepartmentError(DomainException):
+    """Raised when trying to manage an employee outside moderator's department."""
+
+    def __init__(
+        self, message: str = "El empleado no pertenece a tu departamento"
+    ) -> None:
+        super().__init__(message, "EMPLOYEE_NOT_IN_DEPARTMENT")
+
+
+class VacationConflictError(DomainException):
+    """Raised when trying to assign a shift during an approved vacation."""
+
+    def __init__(
+        self, message: str = "El empleado tiene vacaciones aprobadas en esa fecha"
+    ) -> None:
+        super().__init__(message, "VACATION_CONFLICT")
+
+
+class ShiftExistsError(DomainException):
+    """Raised when employee already has a shift assigned on that date."""
+
+    def __init__(
+        self, message: str = "El empleado ya tiene un turno asignado en esa fecha"
+    ) -> None:
+        super().__init__(message, "SHIFT_EXISTS")
+
+
+# ============================================================================
 # EXCEPTION HANDLER DECORATOR (for FastAPI routes)
 # ============================================================================
 

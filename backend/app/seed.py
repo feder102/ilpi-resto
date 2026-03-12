@@ -52,6 +52,34 @@ def seed() -> None:
         session.add(admin_user)
         session.flush()
 
+        # Create moderator employee for testing Feature 006
+        moderator_employee = Employee(
+            tenant_id=tenant.id,
+            first_name="María",
+            last_name="González",
+            email="moderador@ilpi.es",
+            phone="+34633444555",
+            dni="87654321C",
+            role="Jefe de Cocina",
+            department="Cocina",
+            status="Activo",
+            hire_date="2023-01-15",
+        )
+        session.add(moderator_employee)
+        session.flush()
+
+        # Create moderator user
+        moderator_user = User(
+            tenant_id=tenant.id,
+            email="moderador@ilpi.es",
+            hashed_password=hash_password("Moderador123!"),
+            role="Moderador",
+            employee_id=moderator_employee.id,
+            is_active=True,
+        )
+        session.add(moderator_user)
+        session.flush()
+
         # Create test employee for testing Feature 005
         test_employee = Employee(
             tenant_id=tenant.id,
@@ -128,11 +156,15 @@ def seed() -> None:
         session.commit()
         print("Seed data created successfully.")
         print(f"  Tenant: {tenant.name} ({tenant.id})")
-        print(f"\n  👤 Users Created:")
-        print(f"    Admin: {admin_user.email} / Password: Admin123!")
-        print(f"    Empleado: {employee_user.email} / Password: Empleado123!")
+        print(f"\n  👤 Users Created (Development Only - Change passwords in production!):")
+        print(f"    Admin: {admin_user.email}")
+        print(f"    Moderador: {moderator_user.email}")
+        print(f"    Empleado: {employee_user.email}")
+        print(f"\n  ⚠️  Passwords are set to default development credentials.")
+        print(f"  Change them in production via the admin panel or directly in the database.")
         print(f"\n  Employees:")
         print(f"    {employee.first_name} {employee.last_name} ({employee.role})")
+        print(f"    {moderator_employee.first_name} {moderator_employee.last_name} ({moderator_employee.role})")
         print(f"    {test_employee.first_name} {test_employee.last_name} ({test_employee.role})")
         print(f"\n  Shift Types: {len(shift_types)} tipos de turno creados")
         for st in shift_types:

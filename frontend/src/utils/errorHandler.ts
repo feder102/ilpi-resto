@@ -29,6 +29,11 @@ const ERROR_MESSAGE_MAP: Record<string, string> = {
   'vacaciones aprobadas':
     'El empleado tiene vacaciones aprobadas en esta fecha. No se puede asignar un turno.',
 
+  // T014: Moderator portal errors (Feature 006)
+  EMPLOYEE_NOT_IN_DEPARTMENT: 'El empleado no pertenece a tu departamento.',
+  VACATION_CONFLICT: 'El empleado tiene vacaciones aprobadas en esa fecha. No se puede asignar un turno.',
+  SHIFT_EXISTS: 'El empleado ya tiene un turno asignado en esa fecha. ¿Deseas reemplazarlo?',
+
   // Common conflicts
   DUPLICATE: 'Este recurso ya existe. Por favor, intenta con datos diferentes.',
   CONFLICT: 'Existe un conflicto de versión. La información puede haber sido modificada.',

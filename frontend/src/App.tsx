@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import { EmployeeRoute } from './components/EmployeeRoute';
+import { ModeratorRoute } from './components/ModeratorRoute';
 import { PasswordSetupRoute } from './components/PasswordSetupRoute';
 import LoginView from './views/LoginView';
 import DashboardView from './views/DashboardView';
@@ -14,6 +15,12 @@ import ReportsView from './views/ReportsView';
 import SettingsView from './views/SettingsView';
 import { ShiftConfiguration } from './views/ShiftConfiguration';
 import ShiftRosterCalendar from './views/ShiftRosterCalendar';
+// Feature 006: Moderator Portal
+import ModeratorDashboard from './views/ModeratorDashboard';
+import ModeratorRoster from './views/ModeratorRoster';
+import ModeratorVacations from './views/ModeratorVacations';
+import ModeratorShifts from './views/ModeratorShifts';
+import ModeratorReports from './views/ModeratorReports';
 // Feature 005: Employee Workspace Portal
 import PasswordSetup from './views/PasswordSetup';
 import EmployeeDashboard from './views/EmployeeDashboard';
@@ -105,6 +112,65 @@ export default function App() {
           <EmployeeRoute>
             <EmployeeTimeTracking />
           </EmployeeRoute>
+        }
+      />
+
+      {/* Feature 006: Moderator Portal - CRITICAL SECURITY ROUTES */}
+      {/* All moderator routes require: authenticated + Moderador role + is_active=true */}
+      <Route
+        path="/moderator/dashboard"
+        element={
+          <ModeratorRoute>
+            <ModeratorDashboard />
+          </ModeratorRoute>
+        }
+      />
+
+      {/* Feature 006: US1 - Moderator Roster */}
+      {/* SECURITY: ModeratorRoute enforces (authenticated + Moderador role + is_active=true) */}
+      {/* Backend enforces RLS: only current moderator's department shifts returned */}
+      <Route
+        path="/moderator/roster"
+        element={
+          <ModeratorRoute>
+            <ModeratorRoster />
+          </ModeratorRoute>
+        }
+      />
+
+      {/* Feature 006: US2 - Moderator Vacation Management */}
+      {/* SECURITY: ModeratorRoute enforces (authenticated + Moderador role + is_active=true) */}
+      {/* Backend enforces RLS: only current moderator's department vacation requests returned */}
+      <Route
+        path="/moderator/vacations"
+        element={
+          <ModeratorRoute>
+            <ModeratorVacations />
+          </ModeratorRoute>
+        }
+      />
+
+      {/* Feature 006: US3 - Moderator Shift Assignment */}
+      {/* SECURITY: ModeratorRoute enforces (authenticated + Moderador role + is_active=true) */}
+      {/* Backend enforces RLS: moderator can only assign shifts to employees in their department */}
+      <Route
+        path="/moderator/shifts"
+        element={
+          <ModeratorRoute>
+            <ModeratorShifts />
+          </ModeratorRoute>
+        }
+      />
+
+      {/* Feature 006: US4 - Moderator Reports */}
+      {/* SECURITY: ModeratorRoute enforces (authenticated + Moderador role + is_active=true) */}
+      {/* Backend enforces RLS: only current moderator's department data in reports */}
+      <Route
+        path="/moderator/reports"
+        element={
+          <ModeratorRoute>
+            <ModeratorReports />
+          </ModeratorRoute>
         }
       />
 
