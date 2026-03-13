@@ -135,7 +135,7 @@
 - [x] T025 [P] [US2] Create backend/tests/integration/test_password_reset_verify.py with test_verify_expired_token() - token >24h returns 410 Gone error
 - [x] T026 [P] [US2] Create backend/tests/integration/test_password_reset_verify.py with test_verify_invalid_token() - malformed token returns 400 Invalid
 - [x] T027 [P] [US2] Create backend/tests/integration/test_password_reset_verify.py with test_verify_used_token() - token with used_at timestamp returns 400 Already Used
-- [ ] T028 [P] [US2] Create frontend/src/components/password-reset/__tests__/PasswordResetForm.test.tsx with test_token_validation_on_mount() - invalid token shows error dialog
+- [x] T028 [P] [US2] Create frontend/src/components/password-reset/__tests__/PasswordResetForm.test.tsx with test_token_validation_on_mount() - invalid token shows error dialog
 
 ### Implementation for User Story 2
 
@@ -148,7 +148,7 @@
   - Check tenant_id matches (raise InvalidResetTokenError if not)
   - Return PasswordResetToken object (metadata only, not for password change)
 
-- [ ] T030 [US2] Create GET /auth/password-reset/verify endpoint (optional convenience endpoint for frontend)
+- [x] T030 [US2] Create GET /auth/password-reset/verify endpoint (optional convenience endpoint for frontend)
   - Accept token as query parameter: `?token=abc123`
   - Call service: `verify_token(token, tenant_id)`
   - Return {valid: true, user_email, expires_at} on success (200)
@@ -164,7 +164,7 @@
   - Offer "Solicitar nuevo enlace" button → redirect to /password-reset
   - TypeScript strict mode
 
-- [ ] T032 [US2] Update frontend/src/views/PasswordReset.tsx to integrate token verification
+- [x] T032 [US2] Update frontend/src/views/PasswordReset.tsx to integrate token verification
   - On mount with token: Render ResetTokenVerification component
   - ResetTokenVerification validates token then renders PasswordResetForm (US3) on success
   - On error: Show error message with retry option
@@ -282,23 +282,23 @@
 
 ### Implementation for User Story 4
 
-- [ ] T050 [US4] Update database schema: Alembic migration already created in Phase 2 (T005) includes expires_at with 24-hour window
+- [x] T050 [US4] Update database schema: Alembic migration already created in Phase 2 (T005) includes expires_at with 24-hour window
   - Verify migration sets: `expires_at = created_at + interval '24 hours'`
   - Verify index on expires_at for cleanup queries
 
-- [ ] T051 [US4] Update verify_token() in backend/app/services/password_reset_service.py to check expiration (already done in T029 implementation)
+- [x] T051 [US4] Update verify_token() in backend/app/services/password_reset_service.py to check expiration (already done in T029 implementation)
   - Ensure check: `if token.expires_at <= datetime.utcnow(): raise TokenExpiredError()`
   - Return 410 Gone on timeout (client should show "link expired" and offer to request new link)
 
-- [ ] T052 [US4] Update verify_and_reset_password() to invalidate other tokens (already done in T041 implementation)
+- [x] T052 [US4] Update verify_and_reset_password() to invalidate other tokens (already done in T041 implementation)
   - Ensure update query invalidates unused tokens: `db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user.id, PasswordResetToken.used_at == None, PasswordResetToken.id != token.id).update(...)`
 
-- [ ] T053 [US4] Update request_password_reset() in backend/app/services/password_reset_service.py to invalidate previous unused tokens for email
+- [x] T053 [US4] Update request_password_reset() in backend/app/services/password_reset_service.py to invalidate previous unused tokens for email
   - Before creating new token, get user: `user = db.query(User).filter(User.email == email, User.tenant_id == tenant_id).first()`
   - Invalidate previous unused tokens: `db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user.id, PasswordResetToken.used_at == None).update({PasswordResetToken.used_at: datetime.utcnow()})`
   - Then create new token as normal
 
-- [ ] T054 [US4] Implement token expiration verification in GET /auth/password-reset/verify endpoint (T030)
+- [x] T054 [US4] Implement token expiration verification in GET /auth/password-reset/verify endpoint (T030)
   - verify_token() already checks expiration
   - On TokenExpiredError: Return 410 error response
 

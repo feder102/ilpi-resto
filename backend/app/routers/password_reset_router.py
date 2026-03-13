@@ -7,12 +7,13 @@ Provides REST API endpoints for password recovery flow:
 """
 
 from fastapi import APIRouter, Request, Depends, HTTPException
-from sqlmodel import Session
+from sqlmodel import Session, select
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from uuid import UUID
 
 from app.database import get_session
+from app.models.tenant import Tenant
 from app.common.exceptions import (
     RateLimitExceededError,
     InvalidResetTokenError,
@@ -32,6 +33,35 @@ router = APIRouter(prefix="/auth/password-reset", tags=["password-reset"])
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
+
+
+# Helper function to get tenant ID (inline version)
+def _get_tenant_id_from_request(request: Request, db: Session) -> UUID:
+    """Get tenant ID from header, or use default 'ilpi' tenant for public password reset endpoints.
+
+    Since password reset is a public endpoint (no authentication required),
+    we use the default tenant "ilpi" if no X-Tenant-ID header is provided.
+    """
+    tenant_id_str = request.headers.get("X-Tenant-ID")
+
+    if tenant_id_str:
+        # If header provided, validate and use it
+        try:
+            return UUID(tenant_id_str)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid tenant ID format")
+
+    # Fallback to default "ilpi" tenant for public endpoints
+    statement = select(Tenant).where(Tenant.slug == "ilpi")
+    tenant = db.exec(statement).first()
+
+    if not tenant:
+        raise HTTPException(
+            status_code=500,
+            detail="Default tenant not found. System configuration error."
+        )
+
+    return tenant.id
 
 
 # ============================================================================
@@ -71,16 +101,8 @@ async def request_password_reset(
     # Get IP address from request
     ip_address = request.client.host if request.client else "unknown"
 
-    # Get tenant ID from request context (would come from JWT token in production)
-    # For now, use a default tenant or get from header
-    tenant_id = request.headers.get("X-Tenant-ID")
-    if not tenant_id:
-        raise HTTPException(status_code=400, detail="Tenant ID required")
-
-    try:
-        tenant_id = UUID(tenant_id)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid tenant ID format")
+    # Get tenant ID (with fallback to default "ilpi" tenant)
+    tenant_id = _get_tenant_id_from_request(request, db)
 
     try:
         # Create service and request password reset
@@ -144,14 +166,8 @@ async def check_token_validity(
 
     This endpoint is optional - primarily for frontend to validate token on page load.
     """
-    tenant_id = request.headers.get("X-Tenant-ID")
-    if not tenant_id:
-        raise HTTPException(status_code=400, detail="Tenant ID required")
-
-    try:
-        tenant_id = UUID(tenant_id)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid tenant ID format")
+    # Get tenant ID (with fallback to default "ilpi" tenant)
+    tenant_id = _get_tenant_id_from_request(request, db)
 
     try:
         service = PasswordResetService(db=db, tenant_id=tenant_id)
@@ -210,14 +226,8 @@ async def verify_and_reset_password(
     - Token marked as used, preventing reuse
     - Other unused tokens for same user invalidated
     """
-    tenant_id = request.headers.get("X-Tenant-ID")
-    if not tenant_id:
-        raise HTTPException(status_code=400, detail="Tenant ID required")
-
-    try:
-        tenant_id = UUID(tenant_id)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid tenant ID format")
+    # Get tenant ID (with fallback to default "ilpi" tenant)
+    tenant_id = _get_tenant_id_from_request(request, db)
 
     try:
         service = PasswordResetService(db=db, tenant_id=tenant_id)

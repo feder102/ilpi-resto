@@ -9,7 +9,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { passwordResetService } from '../../services/passwordResetService';
-import { PasswordValidationRequirement } from '../../types/passwordReset';
+import type { PasswordValidationRequirement } from '../../types';
 import ResetSuccess from './ResetSuccess';
 import './PasswordResetForm.css';
 

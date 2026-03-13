@@ -77,27 +77,41 @@ class PasswordResetService:
             )
         ).scalars().first()
 
-        # Step 3b: If user exists, invalidate previous unused tokens
-        if user:
-            now = datetime.now(UTC)
-            self.db.execute(
-                update(PasswordResetToken).where(
-                    PasswordResetToken.user_id == user.id,
-                    PasswordResetToken.tenant_id == self.tenant_id,
-                    PasswordResetToken.used_at == None,
-                ).values(used_at=now)
+        # Step 3b: Email enumeration protection
+        # Only create token if user exists (prevents database bloat from spam)
+        # For non-existent emails, we return the same success message
+        if not user:
+            # User doesn't exist - return success message without creating token
+            # This prevents email enumeration attacks
+            logger.info(
+                f"Password reset requested for non-existent email (enumeration protection)",
+                extra={
+                    "email": email,
+                    "ip_address": ip_address,
+                    "tenant_id": str(self.tenant_id),
+                },
             )
+            return
+
+        # Step 3c: If user exists, invalidate previous unused tokens
+        now = datetime.now(UTC)
+        self.db.execute(
+            update(PasswordResetToken).where(
+                PasswordResetToken.user_id == user.id,
+                PasswordResetToken.tenant_id == self.tenant_id,
+                PasswordResetToken.used_at == None,
+            ).values(used_at=now)
+        )
 
         # Step 4: Generate token and hash
         plaintext_token, token_hash = self._generate_reset_token()
 
         # Step 5: Create PasswordResetToken in database
-        now = datetime.now(UTC)
         expires_at = now + timedelta(hours=self.TOKEN_EXPIRATION_HOURS)
 
         reset_token = PasswordResetToken(
             tenant_id=self.tenant_id,
-            user_id=user.id if user else None,
+            user_id=user.id,  # user_id is never None here
             token_hash=token_hash,
             expires_at=expires_at,
             ip_address=ip_address,
@@ -106,11 +120,10 @@ class PasswordResetService:
         self.db.add(reset_token)
         self.db.flush()
 
-        # Step 6: Update User fields (if user exists)
-        if user:
-            user.last_password_reset_request_at = now
-            user.password_reset_attempt_count = (user.password_reset_attempt_count or 0) + 1
-            self.db.add(user)
+        # Step 6: Update User fields
+        user.last_password_reset_request_at = now
+        user.password_reset_attempt_count = (user.password_reset_attempt_count or 0) + 1
+        self.db.add(user)
 
         # Step 7: Send email asynchronously
         reset_link = f"{os.getenv('APP_URL', 'https://app.local')}/password-reset?token={plaintext_token}"
@@ -123,7 +136,7 @@ class PasswordResetService:
         logger.info(
             f"Password reset requested",
             extra={
-                "user_id": user.id if user else None,
+                "user_id": str(user.id),
                 "email": email,
                 "ip_address": ip_address,
                 "tenant_id": str(self.tenant_id),
@@ -162,13 +175,20 @@ class PasswordResetService:
 
         # Step 3: Check expiration (expires_at > now)
         now = datetime.now(UTC)
-        if token_record.expires_at <= now:
+        expires_at = token_record.expires_at
+
+        # Handle timezone-aware vs naive datetimes
+        if expires_at.tzinfo is None:
+            # If expires_at is naive, make it aware (assuming UTC)
+            expires_at = expires_at.replace(tzinfo=UTC)
+
+        if expires_at <= now:
             logger.warning(
                 f"Expired token used",
                 extra={
                     "token_id": str(token_record.id),
                     "user_id": str(token_record.user_id) if token_record.user_id else None,
-                    "expired_at": token_record.expires_at.isoformat(),
+                    "expired_at": expires_at.isoformat(),
                 },
             )
             raise TokenExpiredError(
@@ -246,7 +266,7 @@ class PasswordResetService:
         hashed_password = pwd_context.hash(new_password)
 
         # Step 5: Update User password
-        user.password_hash = hashed_password
+        user.hashed_password = hashed_password
         self.db.add(user)
 
         # Step 6: Mark token as used
@@ -360,7 +380,15 @@ class PasswordResetService:
 
         # Check per-email 10-minute cooldown
         if user.last_password_reset_request_at:
-            elapsed = datetime.now(UTC) - user.last_password_reset_request_at
+            now = datetime.now(UTC)
+            last_request = user.last_password_reset_request_at
+
+            # Handle timezone-aware vs naive datetimes
+            if last_request.tzinfo is None:
+                # If last_request is naive, make it aware (assuming UTC)
+                last_request = last_request.replace(tzinfo=UTC)
+
+            elapsed = now - last_request
             if elapsed < timedelta(minutes=self.RATE_LIMIT_MINUTES):
                 wait_minutes = self.RATE_LIMIT_MINUTES - int(elapsed.total_seconds() / 60)
                 raise RateLimitExceededError(

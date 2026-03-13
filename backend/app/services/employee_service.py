@@ -47,7 +47,7 @@ def create(
     if existing:
         raise DuplicateError("Ya existe un empleado con este DNI", "DUPLICATE_DNI")
 
-    # Check email uniqueness
+    # Check email uniqueness in Employee table
     existing = session.exec(
         select(Employee).where(
             Employee.tenant_id == tenant_id,
@@ -57,10 +57,40 @@ def create(
     if existing:
         raise DuplicateError("Ya existe un empleado con este email", "DUPLICATE_EMAIL")
 
+    # Check email uniqueness in User table (for auth)
+    from app.models.user import User
+    existing_user = session.exec(
+        select(User).where(
+            User.tenant_id == tenant_id,
+            User.email == data.email,
+        )
+    ).first()
+    if existing_user:
+        raise DuplicateError("Ya existe un usuario con este email", "DUPLICATE_EMAIL")
+
+    # Create Employee
     employee = Employee(tenant_id=tenant_id, **data.model_dump())
     session.add(employee)
+    session.flush()  # Get the ID without committing
+
+    # Create corresponding User for authentication
+    # Use a temporary password that will be set via email/password-setup flow
+    from passlib.context import CryptContext
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    temp_password = "TempPassword123!"  # Will be changed by user
+
+    user = User(
+        tenant_id=tenant_id,
+        email=data.email,
+        hashed_password=pwd_context.hash(temp_password),
+        role="Empleado",  # Default role for new employees
+        is_active=False,  # Will be activated after password setup
+        employee_id=employee.id,  # Link to employee
+    )
+    session.add(user)
     session.commit()
     session.refresh(employee)
+
     return _to_response(employee)
 
 

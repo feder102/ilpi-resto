@@ -4,13 +4,13 @@
  */
 
 import axios from 'axios';
-import {
+import type {
   ApiError,
   PasswordResetRequest,
   PasswordResetResponse,
   PasswordResetVerifyRequest,
   TokenValidityResponse,
-} from '../types/passwordReset';
+} from '../types';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 const PASSWORD_RESET_API_BASE = `${API_BASE}/auth/password-reset`;
