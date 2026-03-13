@@ -42,7 +42,7 @@ class TestPasswordResetErrorScenarios:
         user = User(
             tenant_id=uuid4(),
             email="error_test@example.com",
-            password_hash=pwd_context.hash("InitialPassword123!"),
+            hashed_password=pwd_context.hash("InitialPassword123!"),
             role="Empleado"
         )
         db.add(user)

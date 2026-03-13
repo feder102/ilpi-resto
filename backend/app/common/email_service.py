@@ -100,13 +100,16 @@ ILPI - Kitchen Staff Management
                 "smtp_port": smtp_port,
             },
         )
+        # Log only opaque identifier (token hash prefix) for security
+        # Never log the plaintext reset_link or token
+        token_hash_prefix = hashlib.sha256(reset_link.split('token=')[-1].encode()).hexdigest()[:8]
         print(f"\n{'='*80}")
         print(f"📧 PASSWORD RESET EMAIL SENT")
         print(f"{'='*80}")
         print(f"To: {email}")
         print(f"Subject: Recupera tu contraseña - ILPI")
         print(f"SMTP Server: {smtp_host}:{smtp_port}")
-        print(f"\nReset Link: {reset_link}")
+        print(f"Token Hash Prefix: {token_hash_prefix}")
         print(f"{'='*80}\n")
 
     except Exception as e:
@@ -122,5 +125,5 @@ ILPI - Kitchen Staff Management
         print(f"{'='*80}")
         print(f"To: {email}")
         print(f"Error: {str(e)}")
-        print(f"Reset Link (fallback): {reset_link}")
+        # Never log plaintext reset_link
         print(f"{'='*80}\n")

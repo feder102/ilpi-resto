@@ -13,6 +13,8 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID
 import secrets
 
+from sqlmodel import Session
+
 from app.services.password_reset_service import PasswordResetService
 from app.common.exceptions import (
     RateLimitExceededError,
@@ -29,23 +31,30 @@ class TestPasswordTokenGeneration:
         """T016: Generated token is 32 URL-safe bytes, 43 characters."""
         service = PasswordResetService(db=None, tenant_id=UUID("12345678-1234-5678-1234-567812345678"))
 
-        plaintext_token = service._generate_reset_token()
+        plaintext_token, token_hash = service._generate_reset_token()
 
-        # Assert: Token is URL-safe and correct length
+        # Assert: Plaintext token is URL-safe and correct length
         assert isinstance(plaintext_token, str)
         assert len(plaintext_token) == 43  # base64 encoded 32 bytes
         # Only alphanumeric, -, _ (URL-safe)
         assert all(c.isalnum() or c in "-_" for c in plaintext_token)
 
+        # Assert: Token hash is SHA256 hex (64 characters)
+        assert isinstance(token_hash, str)
+        assert len(token_hash) == 64
+        assert all(c in "0123456789abcdef" for c in token_hash)
+
     def test_generate_reset_token_unique(self):
         """Generated tokens are cryptographically unique."""
         service = PasswordResetService(db=None, tenant_id=UUID("12345678-1234-5678-1234-567812345678"))
 
-        token1 = service._generate_reset_token()
-        token2 = service._generate_reset_token()
+        plaintext1, hash1 = service._generate_reset_token()
+        plaintext2, hash2 = service._generate_reset_token()
 
-        # Assert: Tokens are different
-        assert token1 != token2
+        # Assert: Plaintext tokens are different
+        assert plaintext1 != plaintext2
+        # Assert: Hashes are different
+        assert hash1 != hash2
 
     def test_token_hashing_sha256(self):
         """T016: Token hashing uses SHA256 hex (64 characters)."""

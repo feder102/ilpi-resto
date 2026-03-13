@@ -15,20 +15,26 @@ interface ResetSuccessProps {
 
 export default function ResetSuccess({ onLoginClick }: ResetSuccessProps) {
   const [countdown, setCountdown] = React.useState(3);
+  const [redirected, setRedirected] = React.useState(false);
 
   React.useEffect(() => {
+    if (redirected) return;
+
     const timer = setInterval(() => {
       setCountdown((prev) => {
-        if (prev <= 1 && onLoginClick) {
+        const newCountdown = prev - 1;
+        if (newCountdown <= 0 && onLoginClick) {
+          clearInterval(timer);
+          setRedirected(true);
           onLoginClick();
           return 0;
         }
-        return prev - 1;
+        return newCountdown;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [onLoginClick]);
+  }, [onLoginClick, redirected]);
 
   return (
     <div className="reset-success">

@@ -12,7 +12,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from uuid import UUID
 
-from app.database import get_session
+from app.dependencies import get_db
 from app.models.tenant import Tenant
 from app.common.exceptions import (
     RateLimitExceededError,
@@ -74,7 +74,7 @@ def _get_tenant_id_from_request(request: Request, db: Session) -> UUID:
 async def request_password_reset(
     request: Request,
     data: PasswordResetRequestSchema,
-    db: Session = Depends(get_session),
+    db: Session = Depends(get_db),
 ) -> PasswordResetRequestResponse:
     """Request a password reset link.
 
@@ -151,7 +151,7 @@ async def request_password_reset(
 async def check_token_validity(
     token: str,
     request: Request,
-    db: Session = Depends(get_session),
+    db: Session = Depends(get_db),
 ) -> dict:
     """Verify if a password reset token is valid (optional convenience endpoint).
 
@@ -200,7 +200,7 @@ async def check_token_validity(
 async def verify_and_reset_password(
     request: Request,
     data: PasswordResetVerifySchema,
-    db: Session = Depends(get_session),
+    db: Session = Depends(get_db),
 ) -> PasswordResetVerifyResponse:
     """Verify token and set new password.
 

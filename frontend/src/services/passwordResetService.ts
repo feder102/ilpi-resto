@@ -73,6 +73,7 @@ export const passwordResetService = {
    *
    * @param token Reset token to validate
    * @returns Promise resolving to token validity response
+   * @throws ApiError on invalid/expired token
    */
   checkTokenValidity: async (token: string): Promise<TokenValidityResponse> => {
     try {
@@ -82,14 +83,10 @@ export const passwordResetService = {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        return {
-          valid: false,
-          message:
-            'El enlace es inválido o ha expirado',
-        };
+      if (axios.isAxiosError(error) && error.response?.data) {
+        throw error.response.data as ApiError;
       }
-      return { valid: false };
+      throw error;
     }
   },
 };

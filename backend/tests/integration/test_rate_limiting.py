@@ -9,37 +9,34 @@ Tests password reset request rate limiting:
 """
 
 import pytest
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 from uuid import UUID
 
 from app.main import app
 from app.models.user import User
-from app.database import get_session
+from app.dependencies import get_db
 from app.common.exceptions import RateLimitExceededError
-
-
-client = TestClient(app)
 
 
 class TestRateLimiting:
     """Test cases for password reset rate limiting (User Story 5)."""
 
-    def test_rate_limit_10_minutes(self, db: Session):
+    def test_rate_limit_10_minutes(self, session: Session):
         """T055: Second request within 10 min raises RateLimitExceededError (429)."""
         # Setup: Create user
+        tenant_id = UUID("12345678-1234-5678-1234-567812345678")
         user = User(
             email="user@example.com",
-            password_hash="hashed_password",
-            first_name="Test",
-            last_name="User",
-            tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
+            hashed_password="hashed_password",
+            role="Empleado",
+            tenant_id=tenant_id,
             last_password_reset_request_at=None,
             password_reset_attempt_count=0,
         )
-        db.add(user)
-        db.commit()
+        session.add(user)
+        session.commit()
 
         # Action 1: First request - should succeed
         response1 = client.post(
@@ -50,7 +47,7 @@ class TestRateLimiting:
         assert response1.status_code == 200
 
         # Verify: User's last_password_reset_request_at is set
-        db.refresh(user)
+        session.refresh(user)
         assert user.last_password_reset_request_at is not None
 
         # Action 2: Second request immediately after - should fail with 429
@@ -66,20 +63,20 @@ class TestRateLimiting:
         assert "Intenta de nuevo" in response2.json()["error"]["message"]
         assert response2.headers.get("Retry-After") is not None
 
-    def test_rate_limit_5_per_day(self, db: Session):
+    def test_rate_limit_5_per_day(self, session: Session):
         """T056: 6th request in same day raises RateLimitExceededError (429)."""
         # Setup: Create user with 5 password reset attempts already
+        tenant_id = UUID("12345678-1234-5678-1234-567812345678")
         user = User(
             email="user@example.com",
-            password_hash="hashed_password",
-            first_name="Test",
-            last_name="User",
-            tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
-            last_password_reset_request_at=datetime.now(timezone.utc) - timedelta(hours=1),
+            hashed_password="hashed_password",
+            role="Empleado",
+            tenant_id=tenant_id,
+            last_password_reset_request_at=datetime.now(UTC) - timedelta(hours=1),
             password_reset_attempt_count=5,  # Already at maximum
         )
-        db.add(user)
-        db.commit()
+        session.add(user)
+        session.commit()
 
         # Action: Try 6th request
         response = client.post(
@@ -93,7 +90,7 @@ class TestRateLimiting:
         assert response.json()["error"]["code"] == "RATE_LIMIT_EXCEEDED"
         assert "Límite diario" in response.json()["error"]["message"]
 
-    def test_rate_limit_per_ip_10_per_minute(self, db: Session):
+    def test_rate_limit_per_ip_10_per_minute(self, session: Session):
         """T057: 11 requests from same IP in 60sec raises RateLimitExceededError (429).
 
         This is enforced by slowapi @limiter.limit("10/minute") on the endpoint.
@@ -104,23 +101,23 @@ class TestRateLimiting:
         # The 10/minute limit is configured at the router level.
         pass
 
-    def test_rate_limit_reset_after_10_minutes(self, db: Session):
+    def test_rate_limit_reset_after_10_minutes(self, session: Session):
         """T058: After 10min+1sec, user can request again (window expired)."""
         # Setup: Create user with last request exactly 10 minutes 1 second ago
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         last_request = now - timedelta(minutes=10, seconds=1)
+        tenant_id = UUID("12345678-1234-5678-1234-567812345678")
 
         user = User(
             email="user@example.com",
-            password_hash="hashed_password",
-            first_name="Test",
-            last_name="User",
-            tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
+            hashed_password="hashed_password",
+            role="Empleado",
+            tenant_id=tenant_id,
             last_password_reset_request_at=last_request,
             password_reset_attempt_count=1,
         )
-        db.add(user)
-        db.commit()
+        session.add(user)
+        session.commit()
 
         # Action: Request password reset (should be allowed)
         # In real scenario with time mocking:
@@ -131,24 +128,24 @@ class TestRateLimiting:
         elapsed = now - user.last_password_reset_request_at
         assert elapsed > timedelta(minutes=10)
 
-    def test_rate_limit_reset_at_24_hour_boundary(self, db: Session):
+    def test_rate_limit_reset_at_24_hour_boundary(self, session: Session):
         """T059: Daily limit resets at 00:00 UTC boundary."""
         # Setup: Create user with last request yesterday at 23:00 UTC
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         yesterday = now - timedelta(days=1)
         last_request = yesterday.replace(hour=23, minute=0, second=0, microsecond=0)
+        tenant_id = UUID("12345678-1234-5678-1234-567812345678")
 
         user = User(
             email="user@example.com",
-            password_hash="hashed_password",
-            first_name="Test",
-            last_name="User",
-            tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
+            hashed_password="hashed_password",
+            role="Empleado",
+            tenant_id=tenant_id,
             last_password_reset_request_at=last_request,
             password_reset_attempt_count=5,  # At maximum for yesterday
         )
-        db.add(user)
-        db.commit()
+        session.add(user)
+        session.commit()
 
         # In actual implementation:
         # - password_reset_attempt_count resets daily (via cron or task)
@@ -170,17 +167,17 @@ class TestRateLimiting:
 # ============================================================================
 
 
-def test_rate_limit_exactly_10_minutes(db: Session):
+def test_rate_limit_exactly_10_minutes(session: Session):
     """Request exactly at 10-minute boundary should fail (not > 10min)."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     last_request = now - timedelta(minutes=10)  # Exactly 10 minutes ago
+    tenant_id = UUID("12345678-1234-5678-1234-567812345678")
 
     user = User(
         email="user@example.com",
-        password_hash="hashed_password",
-        first_name="Test",
-        last_name="User",
-        tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
+        hashed_password="hashed_password",
+        role="Empleado",
+        tenant_id=tenant_id,
         last_password_reset_request_at=last_request,
         password_reset_attempt_count=1,
     )
@@ -191,18 +188,18 @@ def test_rate_limit_exactly_10_minutes(db: Session):
     assert elapsed == timedelta(minutes=10)
 
 
-def test_rate_limit_message_includes_wait_time(db: Session):
+def test_rate_limit_message_includes_wait_time(session: Session):
     """Rate limit error message includes calculated wait time."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     # Last request 5 minutes ago = need to wait 5 more minutes
     last_request = now - timedelta(minutes=5)
+    tenant_id = UUID("12345678-1234-5678-1234-567812345678")
 
     user = User(
         email="user@example.com",
-        password_hash="hashed_password",
-        first_name="Test",
-        last_name="User",
-        tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
+        hashed_password="hashed_password",
+        role="Empleado",
+        tenant_id=tenant_id,
         last_password_reset_request_at=last_request,
         password_reset_attempt_count=1,
     )

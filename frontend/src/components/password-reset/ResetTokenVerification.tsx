@@ -30,19 +30,19 @@ export default function ResetTokenVerification({ token }: ResetTokenVerification
         setState('valid');
         setExpiresAt(response.expires_at);
       } catch (err) {
-        const error = err as { response?: { status: number }; message?: string };
+        const error = err as { error?: { code?: string; message?: string } };
         // Check error type to determine state
-        if (error.response?.status === 410) {
-          // Token expired (410 Gone)
+        if (error.error?.code === 'TOKEN_EXPIRED') {
+          // Token expired
           setState('expired');
           setError(
-            'El enlace ha expirado. Por favor solicita uno nuevo para continuar.'
+            error.error?.message || 'El enlace ha expirado. Por favor solicita uno nuevo para continuar.'
           );
         } else {
-          // Token invalid (400 or other)
+          // Token invalid (invalid format, not found, etc)
           setState('invalid');
           setError(
-            error.message ||
+            error.error?.message ||
             'El enlace es inválido o no pudo verificarse. Por favor solicita uno nuevo.'
           );
         }

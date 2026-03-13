@@ -28,35 +28,35 @@ export default function PasswordResetForm({ token }: PasswordResetFormProps) {
   const requirements: PasswordValidationRequirement[] = useMemo(
     () => [
       {
-        id: 'length',
-        label: 'Mínimo 8 caracteres',
-        met: password.length >= 8,
+        requirement: 'length',
+        message: 'Mínimo 8 caracteres',
+        satisfied: password.length >= 8,
       },
       {
-        id: 'uppercase',
-        label: 'Al menos una mayúscula (A-Z)',
-        met: /[A-Z]/.test(password),
+        requirement: 'uppercase',
+        message: 'Al menos una mayúscula (A-Z)',
+        satisfied: /[A-Z]/.test(password),
       },
       {
-        id: 'lowercase',
-        label: 'Al menos una minúscula (a-z)',
-        met: /[a-z]/.test(password),
+        requirement: 'lowercase',
+        message: 'Al menos una minúscula (a-z)',
+        satisfied: /[a-z]/.test(password),
       },
       {
-        id: 'number',
-        label: 'Al menos un número (0-9)',
-        met: /[0-9]/.test(password),
+        requirement: 'number',
+        message: 'Al menos un número (0-9)',
+        satisfied: /[0-9]/.test(password),
       },
       {
-        id: 'special',
-        label: 'Al menos un carácter especial (!@#$%...)',
-        met: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+        requirement: 'special',
+        message: 'Al menos un carácter especial (!@#$%...)',
+        satisfied: /[!@#$%^&*(),.?":{}|<>]/.test(password),
       },
     ],
     [password]
   );
 
-  const allRequirementsMet = requirements.every((req) => req.met);
+  const allRequirementsMet = requirements.every((req) => req.satisfied);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,19 +78,19 @@ export default function PasswordResetForm({ token }: PasswordResetFormProps) {
         navigate('/login');
       }, 3000);
     } catch (err) {
-      const error = err as { response?: { status: number }; error?: { message?: string }; message?: string };
-      if (error.response?.status === 410) {
+      const error = err as { error?: { code?: string; message?: string } };
+      if (error.error?.code === 'TOKEN_EXPIRED') {
         setError('Tu enlace ha expirado. Solicita uno nuevo');
-      } else if (error.response?.status === 422) {
+      } else if (error.error?.code === 'PASSWORD_VALIDATION_FAILED') {
         // Password validation error with details
         setError(
           error.error?.message ||
           'La contraseña no cumple con los requisitos de seguridad'
         );
-      } else if (error.response?.status === 400) {
+      } else if (error.error?.code === 'INVALID_RESET_TOKEN') {
         setError('El enlace es inválido o ya fue utilizado');
       } else {
-        setError(err.message || 'Error al restablecer la contraseña');
+        setError(error.error?.message || 'Error al restablecer la contraseña');
       }
     } finally {
       setLoading(false);
@@ -136,11 +136,11 @@ export default function PasswordResetForm({ token }: PasswordResetFormProps) {
           <p className="requirements-title">Requisitos de contraseña:</p>
           <ul className="requirements-list">
             {requirements.map((req) => (
-              <li key={req.id} className={req.met ? 'met' : 'unmet'}>
+              <li key={req.requirement} className={req.satisfied ? 'met' : 'unmet'}>
                 <span className="requirement-icon">
-                  {req.met ? '✓' : '○'}
+                  {req.satisfied ? '✓' : '○'}
                 </span>
-                <span className="requirement-label">{req.label}</span>
+                <span className="requirement-label">{req.message}</span>
               </li>
             ))}
           </ul>

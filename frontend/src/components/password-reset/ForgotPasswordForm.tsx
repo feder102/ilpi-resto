@@ -20,6 +20,7 @@ interface ForgotPasswordFormProps {
 
 export default function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
   const [email, setEmail] = useState('');
+  const [submittedEmail, setSubmittedEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -67,18 +68,18 @@ export default function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProp
 
     try {
       await passwordResetService.requestReset(email);
+      setSubmittedEmail(email);
       setSuccess(true);
-      setEmail('');
 
       // Call parent callback if provided
       if (onSuccess) {
         onSuccess(email);
       }
     } catch (err) {
-      const error = err as { response?: { status: number }; code?: string; retry_after_seconds?: number; message?: string };
-      // Check for rate limit error (429)
-      if (error.response?.status === 429 || error.code === 'RATE_LIMIT_EXCEEDED') {
-        const retrySeconds = error.retry_after_seconds || 600;
+      const error = err as { error?: { code?: string; message?: string; retry_after_seconds?: number } };
+      // Check for rate limit error
+      if (error.error?.code === 'RATE_LIMIT_EXCEEDED') {
+        const retrySeconds = error.error?.retry_after_seconds || 600;
         setRetryAfter(retrySeconds);
         setError(
           `Demasiados intentos. Intenta de nuevo en ${Math.ceil(
@@ -87,7 +88,7 @@ export default function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProp
         );
       } else {
         // Generic error handling
-        setError(error.message || 'Error al solicitar la recuperación de contraseña');
+        setError(error.error?.message || 'Error al solicitar la recuperación de contraseña');
       }
     } finally {
       setLoading(false);
@@ -107,7 +108,7 @@ export default function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProp
           <div className="success-icon">✓</div>
           <h3>Correo enviado</h3>
           <p>
-            Si {email} está registrado en nuestro sistema, recibirás un enlace de
+            Si {submittedEmail} está registrado en nuestro sistema, recibirás un enlace de
             recuperación en breve.
           </p>
           <p className="success-subtext">

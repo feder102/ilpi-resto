@@ -8,7 +8,7 @@ Tests the verify_token() service method and GET /auth/password-reset/verify endp
 """
 
 import pytest
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 from uuid import UUID
@@ -17,33 +17,30 @@ import hashlib
 from app.main import app
 from app.models.password_reset_token import PasswordResetToken
 from app.models.user import User
-from app.database import get_session
+from app.dependencies import get_db
 from app.common.exceptions import TokenExpiredError, InvalidResetTokenError
-
-
-client = TestClient(app)
 
 
 class TestTokenVerification:
     """Test cases for token verification endpoint and service."""
 
-    def test_verify_valid_token(self, db: Session):
+    def test_verify_valid_token(self, session: Session):
         """T024: Valid token → 200 OK with metadata."""
         # Setup: Create user and valid reset token
+        tenant_id = UUID("12345678-1234-5678-1234-567812345678")
         user = User(
             email="user@example.com",
-            password_hash="hashed_password",
-            first_name="Test",
-            last_name="User",
-            tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
+            hashed_password="hashed_password",
+            role="Empleado",
+            tenant_id=tenant_id,
         )
-        db.add(user)
-        db.flush()
+        session.add(user)
+        session.flush()
 
         # Create valid token (expires in future)
         plaintext_token = "valid_test_token_12345"
         token_hash = hashlib.sha256(plaintext_token.encode()).hexdigest()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         reset_token = PasswordResetToken(
             tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
@@ -54,8 +51,8 @@ class TestTokenVerification:
             created_at=now,
             used_at=None,
         )
-        db.add(reset_token)
-        db.commit()
+        session.add(reset_token)
+        session.commit()
 
         # Action: Verify token
         response = client.get(
@@ -69,23 +66,23 @@ class TestTokenVerification:
         assert response.json()["valid"] is True
         assert "expires_at" in response.json()
 
-    def test_verify_expired_token(self, db: Session):
+    def test_verify_expired_token(self, session: Session):
         """T025: Expired token (>24h) → 410 Gone."""
         # Setup: Create user and EXPIRED token
+        tenant_id = UUID("12345678-1234-5678-1234-567812345678")
         user = User(
             email="user@example.com",
-            password_hash="hashed_password",
-            first_name="Test",
-            last_name="User",
-            tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
+            hashed_password="hashed_password",
+            role="Empleado",
+            tenant_id=tenant_id,
         )
-        db.add(user)
-        db.flush()
+        session.add(user)
+        session.flush()
 
         # Create expired token
         plaintext_token = "expired_token_12345"
         token_hash = hashlib.sha256(plaintext_token.encode()).hexdigest()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         reset_token = PasswordResetToken(
             tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
@@ -96,8 +93,8 @@ class TestTokenVerification:
             created_at=now - timedelta(hours=25),
             used_at=None,
         )
-        db.add(reset_token)
-        db.commit()
+        session.add(reset_token)
+        session.commit()
 
         # Action: Try to verify expired token
         response = client.get(
@@ -124,23 +121,23 @@ class TestTokenVerification:
         assert response.status_code == 400
         assert response.json()["error"]["code"] == "INVALID_RESET_TOKEN"
 
-    def test_verify_used_token(self, db: Session):
+    def test_verify_used_token(self, session: Session):
         """T027: Already-used token → 400 Bad Request."""
         # Setup: Create user and USED token
+        tenant_id = UUID("12345678-1234-5678-1234-567812345678")
         user = User(
             email="user@example.com",
-            password_hash="hashed_password",
-            first_name="Test",
-            last_name="User",
-            tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
+            hashed_password="hashed_password",
+            role="Empleado",
+            tenant_id=tenant_id,
         )
-        db.add(user)
-        db.flush()
+        session.add(user)
+        session.flush()
 
         # Create used token
         plaintext_token = "used_token_12345"
         token_hash = hashlib.sha256(plaintext_token.encode()).hexdigest()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         reset_token = PasswordResetToken(
             tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
@@ -151,8 +148,8 @@ class TestTokenVerification:
             created_at=now,
             used_at=now - timedelta(minutes=5),  # Used 5 minutes ago
         )
-        db.add(reset_token)
-        db.commit()
+        session.add(reset_token)
+        session.commit()
 
         # Action: Try to verify already-used token
         response = client.get(
@@ -181,22 +178,22 @@ def test_verify_token_missing_parameter():
     assert response.status_code == 422
 
 
-def test_verify_token_tenant_isolation(db: Session):
+def test_verify_token_tenant_isolation(session: Session):
     """Token from different tenant cannot be verified."""
     # Setup: Create token in tenant A
+    tenant_a_id = UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
     user = User(
         email="user@example.com",
-        password_hash="hashed_password",
-        first_name="Test",
-        last_name="User",
-        tenant_id=UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),  # Tenant A
+        hashed_password="hashed_password",
+        role="Empleado",
+        tenant_id=tenant_a_id,  # Tenant A
     )
-    db.add(user)
-    db.flush()
+    session.add(user)
+    session.flush()
 
     plaintext_token = "tenant_a_token"
     token_hash = hashlib.sha256(plaintext_token.encode()).hexdigest()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     reset_token = PasswordResetToken(
         tenant_id=UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),  # Tenant A
@@ -207,8 +204,8 @@ def test_verify_token_tenant_isolation(db: Session):
         created_at=now,
         used_at=None,
     )
-    db.add(reset_token)
-    db.commit()
+    session.add(reset_token)
+    session.commit()
 
     # Action: Try to verify token with Tenant B
     response = client.get(

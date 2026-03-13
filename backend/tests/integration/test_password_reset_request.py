@@ -7,7 +7,7 @@ Tests the POST /auth/password-reset/request endpoint behavior:
 """
 
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 from uuid import UUID
@@ -15,11 +15,8 @@ from uuid import UUID
 from app.main import app
 from app.models.user import User
 from app.models.password_reset_token import PasswordResetToken
-from app.database import get_session
+from app.dependencies import get_db
 from app.common.exceptions import RateLimitExceededError
-
-
-client = TestClient(app)
 
 
 @pytest.fixture
@@ -32,18 +29,18 @@ def db_session(mocker):
 class TestPasswordResetRequest:
     """Test cases for POST /auth/password-reset/request endpoint."""
 
-    def test_request_password_reset_success(self, db: Session):
+    def test_request_password_reset_success(self, session: Session):
         """T013: User requests reset for registered email → 200 + success message."""
         # Setup: Create a test user
+        tenant_id = UUID("12345678-1234-5678-1234-567812345678")
         user = User(
             email="user@example.com",
-            password_hash="hashed_password",
-            first_name="Test",
-            last_name="User",
-            tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
+            hashed_password="hashed_password",
+            role="Empleado",
+            tenant_id=tenant_id,
         )
-        db.add(user)
-        db.commit()
+        session.add(user)
+        session.commit()
 
         # Action: Request password reset
         response = client.post(
@@ -58,24 +55,24 @@ class TestPasswordResetRequest:
         assert response.json()["expires_in_hours"] == 24
 
         # Verify: Token was created in database
-        token = db.query(PasswordResetToken).filter_by(user_id=user.id).first()
+        token = session.query(PasswordResetToken).filter_by(user_id=user.id).first()
         assert token is not None
         assert token.token_hash is not None
         assert token.expires_at > datetime.utcnow()
         assert token.used_at is None
 
-    def test_request_password_reset_email_enumeration(self, db: Session):
+    def test_request_password_reset_email_enumeration(self, session: Session):
         """T014: Email enumeration protection - registered + unregistered return same response."""
         # Setup: Create a test user
+        tenant_id = UUID("12345678-1234-5678-1234-567812345678")
         registered_user = User(
             email="registered@example.com",
-            password_hash="hashed_password",
-            first_name="Test",
-            last_name="User",
-            tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
+            hashed_password="hashed_password",
+            role="Empleado",
+            tenant_id=tenant_id,
         )
-        db.add(registered_user)
-        db.commit()
+        session.add(registered_user)
+        session.commit()
 
         # Action 1: Request for registered email
         response_registered = client.post(
@@ -96,18 +93,18 @@ class TestPasswordResetRequest:
         assert response_unregistered.status_code == 200
         assert response_registered.json()["message"] == response_unregistered.json()["message"]
 
-    def test_request_password_reset_rate_limit_10_min(self, db: Session):
+    def test_request_password_reset_rate_limit_10_min(self, session: Session):
         """T015: Rate limiting - 2nd request within 10 min returns 429."""
         # Setup: Create a test user
+        tenant_id = UUID("12345678-1234-5678-1234-567812345678")
         user = User(
             email="user@example.com",
-            password_hash="hashed_password",
-            first_name="Test",
-            last_name="User",
-            tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
+            hashed_password="hashed_password",
+            role="Empleado",
+            tenant_id=tenant_id,
         )
-        db.add(user)
-        db.commit()
+        session.add(user)
+        session.commit()
 
         # Action 1: First request - should succeed
         response_1 = client.post(
