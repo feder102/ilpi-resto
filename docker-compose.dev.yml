@@ -31,9 +31,16 @@ services:
       SECRET_KEY: dev-secret-key-change-in-production-min32chars
       CORS_ORIGINS: http://localhost
       LOG_LEVEL: DEBUG
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
+      SMTP_FROM: noreply@ilpi.local
     depends_on:
       db:
         condition: service_healthy
+      mailhog:
+        condition: service_started
     networks:
       - ilpi-network
 
@@ -77,6 +84,15 @@ services:
       - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
     depends_on:
       - db
+    networks:
+      - ilpi-network
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: ilpi-mailhog-dev
+    ports:
+      - "1025:1025"  # SMTP port
+      - "8025:8025"  # Web UI port
     networks:
       - ilpi-network
 
