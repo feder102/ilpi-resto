@@ -1,6 +1,6 @@
 // T034: Employee list view with card grid, search/filter, create/edit modal - refactored to use UI components
 import { useState, useEffect, useCallback } from 'react';
-import { UserPlus, Edit2, Trash2, User } from 'lucide-react';
+import { UserPlus, Edit2, Trash2, User, RotateCcw } from 'lucide-react';
 import { Button, Card, Modal, Alert, Badge } from '../components/ui';
 import SearchFilter from '../components/SearchFilter';
 import { useAuth } from '../hooks/useAuth';
@@ -13,6 +13,7 @@ import {
   createEmployee,
   updateEmployee,
   deleteEmployee,
+  reactivateEmployee,
   type EmployeeCreateData,
   type EmployeeUpdateData,
 } from '../services/employeeService';
@@ -74,6 +75,11 @@ export default function EmployeeListView() {
   // Delete confirm
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteName, setDeleteName] = useState('');
+
+  // Reactivate confirm
+  const [reactivateId, setReactivateId] = useState<string | null>(null);
+  const [reactivateName, setReactivateName] = useState('');
+  const [reactivating, setReactivating] = useState(false);
 
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
@@ -207,6 +213,21 @@ export default function EmployeeListView() {
     }
   };
 
+  const handleReactivate = async () => {
+    if (!reactivateId) return;
+    setReactivating(true);
+    try {
+      await reactivateEmployee(reactivateId);
+      setReactivateId(null);
+      fetchEmployees();
+    } catch {
+      setError('Error al reactivar empleado');
+      setReactivateId(null);
+    } finally {
+      setReactivating(false);
+    }
+  };
+
   const updateField = (field: keyof EmployeeCreateData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -275,23 +296,38 @@ export default function EmployeeListView() {
 
                 {isAdminOrMod && (
                   <div className="flex gap-2 mt-auto pt-3 border-t border-slate-200">
-                    <Button
-                      onClick={() => openEdit(emp)}
-                      variant="secondary"
-                      size="sm"
-                      className="flex-1 flex items-center justify-center gap-1"
-                    >
-                      <Edit2 size={14} /> Editar
-                    </Button>
-                    {isAdmin && (
-                      <Button
-                        onClick={() => { setDeleteId(emp.id); setDeleteName(`${emp.first_name} ${emp.last_name}`); }}
-                        variant="danger"
-                        size="sm"
-                        className="flex-1 flex items-center justify-center gap-1"
-                      >
-                        <Trash2 size={14} /> Eliminar
-                      </Button>
+                    {emp.status === 'Inactivo' ? (
+                      isAdmin && (
+                        <Button
+                          onClick={() => { setReactivateId(emp.id); setReactivateName(`${emp.first_name} ${emp.last_name}`); }}
+                          variant="success"
+                          size="sm"
+                          className="flex-1 flex items-center justify-center gap-1"
+                        >
+                          <RotateCcw size={14} /> Reactivar
+                        </Button>
+                      )
+                    ) : (
+                      <>
+                        <Button
+                          onClick={() => openEdit(emp)}
+                          variant="secondary"
+                          size="sm"
+                          className="flex-1 flex items-center justify-center gap-1"
+                        >
+                          <Edit2 size={14} /> Editar
+                        </Button>
+                        {isAdmin && (
+                          <Button
+                            onClick={() => { setDeleteId(emp.id); setDeleteName(`${emp.first_name} ${emp.last_name}`); }}
+                            variant="danger"
+                            size="sm"
+                            className="flex-1 flex items-center justify-center gap-1"
+                          >
+                            <Trash2 size={14} /> Eliminar
+                          </Button>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
@@ -486,6 +522,34 @@ export default function EmployeeListView() {
       >
         <p className="text-slate-700">
           ¿Está seguro de que desea eliminar a {deleteName}? Esta acción desactivará al empleado y rechazará sus solicitudes de vacaciones pendientes.
+        </p>
+      </Modal>
+
+      {/* Reactivate Confirmation */}
+      <Modal
+        isOpen={!!reactivateId}
+        onClose={() => setReactivateId(null)}
+        title="Reactivar empleado"
+        footer={
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="secondary"
+              onClick={() => setReactivateId(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="success"
+              loading={reactivating}
+              onClick={handleReactivate}
+            >
+              {reactivating ? 'Reactivando...' : 'Reactivar'}
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-slate-700">
+          ¿Está seguro de que desea reactivar a {reactivateName}? El empleado podrá volver a iniciar sesión y acceder al sistema.
         </p>
       </Modal>
     </div>

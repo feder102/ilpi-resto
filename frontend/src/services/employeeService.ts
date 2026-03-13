@@ -62,3 +62,8 @@ export async function updateEmployee(
 export async function deleteEmployee(id: string): Promise<void> {
   await apiClient.delete(`/employees/${id}`);
 }
+
+export async function reactivateEmployee(id: string): Promise<Employee> {
+  const { data } = await apiClient.post(`/employees/${id}/activate`);
+  return data;
+}
