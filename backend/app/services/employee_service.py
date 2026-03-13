@@ -7,6 +7,7 @@ from sqlmodel import Session, func, select
 
 from app.common.exceptions import DuplicateError, ForbiddenError, NotFoundError
 from app.models.employee import Employee
+from app.models.user import User
 from app.models.vacation_request import VacationRequest
 from app.schemas.employee import EmployeeCreate, EmployeeResponse, EmployeeUpdate
 
@@ -208,6 +209,14 @@ def soft_delete(
     user_role: str,
     session: Session,
 ) -> dict:
+    """Soft delete employee (mark as inactive) and disable associated user account.
+
+    Only Admin can delete employees.
+    Automatically:
+    - Marks employee as inactive (is_active=False)
+    - Disables associated user account (is_active=False)
+    - Rejects all pending vacation requests
+    """
     if user_role != "Admin":
         raise ForbiddenError("Solo los administradores pueden eliminar empleados")
 
@@ -223,6 +232,18 @@ def soft_delete(
     employee.is_active = False
     employee.status = "Inactivo"
     employee.updated_at = datetime.now(UTC)
+
+    # Disable associated user account
+    user = session.exec(
+        select(User).where(
+            User.employee_id == employee_id,
+            User.tenant_id == tenant_id,
+        )
+    ).first()
+    if user:
+        user.is_active = False
+        user.updated_at = datetime.now(UTC)
+        session.add(user)
 
     # Auto-reject pending vacation requests
     pending = session.exec(
@@ -242,4 +263,55 @@ def soft_delete(
     session.add(employee)
     session.commit()
 
-    return {"message": "Empleado desactivado", "rejected_requests": rejected_count}
+    return {
+        "message": "Empleado desactivado y usuario deshabilitado",
+        "rejected_requests": rejected_count
+    }
+
+
+def activate_employee(
+    employee_id: uuid.UUID,
+    tenant_id: uuid.UUID,
+    user_role: str,
+    session: Session,
+) -> EmployeeResponse:
+    """Reactivate inactive employee and enable associated user account.
+
+    Only Admin can reactivate employees.
+    Restores:
+    - Employee to active status (is_active=True)
+    - Associated user account to active (is_active=True)
+    """
+    if user_role != "Admin":
+        raise ForbiddenError("Solo los administradores pueden reactivar empleados")
+
+    employee = session.exec(
+        select(Employee).where(
+            Employee.id == employee_id,
+            Employee.tenant_id == tenant_id,
+        )
+    ).first()
+    if not employee:
+        raise NotFoundError("Empleado no encontrado")
+
+    employee.is_active = True
+    employee.status = "Activo"
+    employee.updated_at = datetime.now(UTC)
+
+    # Reactivate associated user account
+    user = session.exec(
+        select(User).where(
+            User.employee_id == employee_id,
+            User.tenant_id == tenant_id,
+        )
+    ).first()
+    if user:
+        user.is_active = True
+        user.updated_at = datetime.now(UTC)
+        session.add(user)
+
+    session.add(employee)
+    session.commit()
+    session.refresh(employee)
+
+    return _to_response(employee)
