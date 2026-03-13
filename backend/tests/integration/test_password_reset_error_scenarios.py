@@ -44,16 +44,16 @@ class TestPasswordResetErrorScenarios:
             hashed_password=pwd_context.hash("InitialPassword123!"),
             role="Empleado"
         )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        session.add(user)
+        session.commit()
+        session.refresh(user)
         return user
 
     # ===== Invalid Token Tests =====
 
     def test_invalid_token_format(self, session: Session, setup_user: User):
         """Test that malformed token is rejected."""
-        service = PasswordResetService(db)
+        service = PasswordResetService(session, setup_user.tenant_id)
         tenant_id = setup_user.tenant_id
 
         # Try to verify completely invalid token
@@ -63,8 +63,8 @@ class TestPasswordResetErrorScenarios:
 
     def test_nonexistent_token(self, session: Session, setup_user: User):
         """Test that token that doesn't exist in database is rejected."""
-        service = PasswordResetService(db)
         tenant_id = setup_user.tenant_id
+        service = PasswordResetService(session, tenant_id)
 
         # Create a valid-looking token hash that doesn't exist in DB
         import hashlib
@@ -77,8 +77,8 @@ class TestPasswordResetErrorScenarios:
 
     def test_corrupted_token(self, session: Session, setup_user: User):
         """Test that partially corrupted token is rejected."""
-        service = PasswordResetService(db)
         tenant_id = setup_user.tenant_id
+        service = PasswordResetService(session, tenant_id)
 
         # Create valid token first
         service.request_password_reset(
@@ -88,7 +88,7 @@ class TestPasswordResetErrorScenarios:
         )
 
         # Get token
-        token = db.query(PasswordResetToken).filter(
+        token = session.query(PasswordResetToken).filter(
             PasswordResetToken.user_id == setup_user.id
         ).first()
 
@@ -103,8 +103,8 @@ class TestPasswordResetErrorScenarios:
 
     def test_expired_token_24_hours(self, session: Session, setup_user: User):
         """Test that token older than 24 hours is rejected."""
-        service = PasswordResetService(db)
         tenant_id = setup_user.tenant_id
+        service = PasswordResetService(session, tenant_id)
 
         # Create token
         service.request_password_reset(
@@ -114,11 +114,11 @@ class TestPasswordResetErrorScenarios:
         )
 
         # Get token and set expiration to past
-        token = db.query(PasswordResetToken).filter(
+        token = session.query(PasswordResetToken).filter(
             PasswordResetToken.user_id == setup_user.id
         ).first()
         token.expires_at = datetime.utcnow() - timedelta(seconds=1)
-        db.commit()
+        session.commit()
 
         # Attempt to verify expired token
         with pytest.raises(TokenExpiredError) as exc_info:
@@ -127,8 +127,8 @@ class TestPasswordResetErrorScenarios:
 
     def test_token_expiring_soon(self, session: Session, setup_user: User):
         """Test that token just before expiration can still be used."""
-        service = PasswordResetService(db)
         tenant_id = setup_user.tenant_id
+        service = PasswordResetService(session, tenant_id)
 
         # Create token
         service.request_password_reset(
@@ -138,11 +138,11 @@ class TestPasswordResetErrorScenarios:
         )
 
         # Get token and set expiration to 1 second in future
-        token = db.query(PasswordResetToken).filter(
+        token = session.query(PasswordResetToken).filter(
             PasswordResetToken.user_id == setup_user.id
         ).first()
         token.expires_at = datetime.utcnow() + timedelta(seconds=1)
-        db.commit()
+        session.commit()
 
         # Should still be able to verify (not expired yet)
         verified = service.verify_token(token.token_hash, tenant_id)
@@ -152,8 +152,8 @@ class TestPasswordResetErrorScenarios:
 
     def test_already_used_token_rejected(self, session: Session, setup_user: User):
         """Test that token marked as used cannot be reused."""
-        service = PasswordResetService(db)
         tenant_id = setup_user.tenant_id
+        service = PasswordResetService(session, tenant_id)
 
         # Create token
         service.request_password_reset(
@@ -163,13 +163,13 @@ class TestPasswordResetErrorScenarios:
         )
 
         # Get token
-        token = db.query(PasswordResetToken).filter(
+        token = session.query(PasswordResetToken).filter(
             PasswordResetToken.user_id == setup_user.id
         ).first()
 
         # Mark token as used
         token.used_at = datetime.utcnow()
-        db.commit()
+        session.commit()
 
         # Attempt to verify used token
         with pytest.raises(InvalidResetTokenError) as exc_info:
@@ -178,8 +178,8 @@ class TestPasswordResetErrorScenarios:
 
     def test_token_cannot_be_used_twice(self, session: Session, setup_user: User):
         """Test that same token cannot be reused for password reset."""
-        service = PasswordResetService(db)
         tenant_id = setup_user.tenant_id
+        service = PasswordResetService(session, tenant_id)
 
         # Create token
         service.request_password_reset(
@@ -189,7 +189,7 @@ class TestPasswordResetErrorScenarios:
         )
 
         # Get token
-        token = db.query(PasswordResetToken).filter(
+        token = session.query(PasswordResetToken).filter(
             PasswordResetToken.user_id == setup_user.id
         ).first()
 
@@ -213,8 +213,8 @@ class TestPasswordResetErrorScenarios:
 
     def test_password_too_short(self, session: Session, setup_user: User):
         """Test that password < 8 characters is rejected."""
-        service = PasswordResetService(db)
         tenant_id = setup_user.tenant_id
+        service = PasswordResetService(session, tenant_id)
 
         # Create token
         service.request_password_reset(
@@ -224,7 +224,7 @@ class TestPasswordResetErrorScenarios:
         )
 
         # Get token
-        token = db.query(PasswordResetToken).filter(
+        token = session.query(PasswordResetToken).filter(
             PasswordResetToken.user_id == setup_user.id
         ).first()
 
@@ -240,8 +240,8 @@ class TestPasswordResetErrorScenarios:
 
     def test_password_missing_uppercase(self, session: Session, setup_user: User):
         """Test that password without uppercase letter is rejected."""
-        service = PasswordResetService(db)
         tenant_id = setup_user.tenant_id
+        service = PasswordResetService(session, tenant_id)
 
         service.request_password_reset(
             email=setup_user.email,
@@ -249,7 +249,7 @@ class TestPasswordResetErrorScenarios:
             ip_address="192.168.1.1"
         )
 
-        token = db.query(PasswordResetToken).filter(
+        token = session.query(PasswordResetToken).filter(
             PasswordResetToken.user_id == setup_user.id
         ).first()
 
@@ -264,8 +264,8 @@ class TestPasswordResetErrorScenarios:
 
     def test_password_missing_lowercase(self, session: Session, setup_user: User):
         """Test that password without lowercase letter is rejected."""
-        service = PasswordResetService(db)
         tenant_id = setup_user.tenant_id
+        service = PasswordResetService(session, tenant_id)
 
         service.request_password_reset(
             email=setup_user.email,
@@ -273,7 +273,7 @@ class TestPasswordResetErrorScenarios:
             ip_address="192.168.1.1"
         )
 
-        token = db.query(PasswordResetToken).filter(
+        token = session.query(PasswordResetToken).filter(
             PasswordResetToken.user_id == setup_user.id
         ).first()
 
@@ -288,8 +288,8 @@ class TestPasswordResetErrorScenarios:
 
     def test_password_missing_number(self, session: Session, setup_user: User):
         """Test that password without number is rejected."""
-        service = PasswordResetService(db)
         tenant_id = setup_user.tenant_id
+        service = PasswordResetService(session, tenant_id)
 
         service.request_password_reset(
             email=setup_user.email,
@@ -297,7 +297,7 @@ class TestPasswordResetErrorScenarios:
             ip_address="192.168.1.1"
         )
 
-        token = db.query(PasswordResetToken).filter(
+        token = session.query(PasswordResetToken).filter(
             PasswordResetToken.user_id == setup_user.id
         ).first()
 
@@ -312,8 +312,8 @@ class TestPasswordResetErrorScenarios:
 
     def test_password_missing_special_char(self, session: Session, setup_user: User):
         """Test that password without special character is rejected."""
-        service = PasswordResetService(db)
         tenant_id = setup_user.tenant_id
+        service = PasswordResetService(session, tenant_id)
 
         service.request_password_reset(
             email=setup_user.email,
@@ -321,7 +321,7 @@ class TestPasswordResetErrorScenarios:
             ip_address="192.168.1.1"
         )
 
-        token = db.query(PasswordResetToken).filter(
+        token = session.query(PasswordResetToken).filter(
             PasswordResetToken.user_id == setup_user.id
         ).first()
 
@@ -338,8 +338,8 @@ class TestPasswordResetErrorScenarios:
 
     def test_rate_limit_exceeded_within_10_minutes(self, session: Session, setup_user: User):
         """Test that second request within 10 minutes raises rate limit error."""
-        service = PasswordResetService(db)
         tenant_id = setup_user.tenant_id
+        service = PasswordResetService(session, tenant_id)
 
         # First request succeeds
         service.request_password_reset(
@@ -359,13 +359,13 @@ class TestPasswordResetErrorScenarios:
 
     def test_rate_limit_daily_exceeded(self, session: Session, setup_user: User):
         """Test that 6th request same day raises daily rate limit error."""
-        service = PasswordResetService(db)
         tenant_id = setup_user.tenant_id
+        service = PasswordResetService(session, tenant_id)
 
         # Simulate 5 previous attempts today (set directly in DB to bypass 10-min limit)
         setup_user.password_reset_attempt_count = 5
         setup_user.last_password_reset_request_at = datetime.utcnow() - timedelta(hours=1)
-        db.commit()
+        session.commit()
 
         # 6th attempt same day should fail
         with pytest.raises(RateLimitExceededError) as exc_info:
@@ -387,14 +387,14 @@ class TestPasswordResetErrorScenarios:
         user_a = User(
             tenant_id=tenant_a,
             email="user_a@example.com",
-            password_hash=pwd_context.hash("PasswordA123!"),
+            hashed_password=pwd_context.hash("PasswordA123!"),
             role="Empleado"
         )
-        db.add(user_a)
-        db.commit()
-        db.refresh(user_a)
+        session.add(user_a)
+        session.commit()
+        session.refresh(user_a)
 
-        service = PasswordResetService(db)
+        service = PasswordResetService(session, tenant_a)
 
         # Create reset token for user in tenant A
         service.request_password_reset(
@@ -404,7 +404,7 @@ class TestPasswordResetErrorScenarios:
         )
 
         # Get token
-        token = db.query(PasswordResetToken).filter(
+        token = session.query(PasswordResetToken).filter(
             PasswordResetToken.user_id == user_a.id
         ).first()
 
@@ -416,11 +416,11 @@ class TestPasswordResetErrorScenarios:
 
     def test_invalid_email_format(self, session: Session):
         """Test that invalid email format is rejected."""
-        service = PasswordResetService(db)
+        service = PasswordResetService(session, tenant_id)
         tenant_id = uuid4()
 
         # Attempt to request reset with invalid email
-        with pytest.raises(InvalidEmailError):
+        with pytest.raises(ValidationError):
             service.request_password_reset(
                 email="not-an-email",
                 tenant_id=tenant_id,
@@ -429,10 +429,10 @@ class TestPasswordResetErrorScenarios:
 
     def test_empty_email(self, session: Session):
         """Test that empty email is rejected."""
-        service = PasswordResetService(db)
+        service = PasswordResetService(session, tenant_id)
         tenant_id = uuid4()
 
-        with pytest.raises((InvalidEmailError, ValueError)):
+        with pytest.raises((ValidationError, ValueError)):
             service.request_password_reset(
                 email="",
                 tenant_id=tenant_id,
@@ -443,8 +443,8 @@ class TestPasswordResetErrorScenarios:
 
     def test_token_expires_at_exactly_24_hours(self, session: Session, setup_user: User):
         """Test boundary condition: token at exactly 24 hour mark should be expired."""
-        service = PasswordResetService(db)
         tenant_id = setup_user.tenant_id
+        service = PasswordResetService(session, tenant_id)
 
         service.request_password_reset(
             email=setup_user.email,
@@ -452,13 +452,13 @@ class TestPasswordResetErrorScenarios:
             ip_address="192.168.1.1"
         )
 
-        token = db.query(PasswordResetToken).filter(
+        token = session.query(PasswordResetToken).filter(
             PasswordResetToken.user_id == setup_user.id
         ).first()
 
         # Set expires_at to exactly now (boundary)
         token.expires_at = datetime.utcnow()
-        db.commit()
+        session.commit()
 
         # Token at boundary should be expired
         with pytest.raises(TokenExpiredError):
@@ -466,8 +466,8 @@ class TestPasswordResetErrorScenarios:
 
     def test_token_expires_at_24_hours_minus_1_second(self, session: Session, setup_user: User):
         """Test that token 1 second before 24-hour mark is still valid."""
-        service = PasswordResetService(db)
         tenant_id = setup_user.tenant_id
+        service = PasswordResetService(session, tenant_id)
 
         service.request_password_reset(
             email=setup_user.email,
@@ -475,13 +475,13 @@ class TestPasswordResetErrorScenarios:
             ip_address="192.168.1.1"
         )
 
-        token = db.query(PasswordResetToken).filter(
+        token = session.query(PasswordResetToken).filter(
             PasswordResetToken.user_id == setup_user.id
         ).first()
 
         # Set expires_at to 1 second in future
         token.expires_at = datetime.utcnow() + timedelta(seconds=1)
-        db.commit()
+        session.commit()
 
         # Should still be valid
         verified = service.verify_token(token.token_hash, tenant_id)
