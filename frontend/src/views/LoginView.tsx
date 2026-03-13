@@ -103,6 +103,15 @@ export default function LoginView() {
           >
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </Button>
+
+          <div className="text-center text-sm text-slate-600 mt-4">
+            <a
+              href="/password-reset"
+              className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+            >
+              ¿Olvidaste tu contraseña?
+            </a>
+          </div>
         </form>
       </Card>
     </div>

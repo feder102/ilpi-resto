@@ -37,6 +37,12 @@ def _calculate_time_summary(
     clock_out: Optional[datetime]
 ) -> dict:
     """Calculate time summary between clock in and clock out."""
+    # Handle timezone-aware vs naive datetimes
+    if clock_in.tzinfo is None:
+        clock_in = clock_in.replace(tzinfo=UTC)
+    if clock_out is not None and clock_out.tzinfo is None:
+        clock_out = clock_out.replace(tzinfo=UTC)
+
     if clock_out is None:
         return {
             "total_hours": 0,
@@ -191,7 +197,13 @@ def clock_out(
 
     # Validate: No future timestamps
     now = datetime.now(UTC)
-    if now < time_record.clock_in_timestamp:
+    clock_in = time_record.clock_in_timestamp
+
+    # Handle timezone-aware vs naive datetimes
+    if clock_in.tzinfo is None:
+        clock_in = clock_in.replace(tzinfo=UTC)
+
+    if now < clock_in:
         raise ValidationError(
             code="FUTURE_TIMESTAMP",
             message="La hora de salida no puede ser anterior a la de entrada"
@@ -262,7 +274,13 @@ def get_today_status(
 
     if record.clock_out_timestamp is None:
         # Employee is currently clocked in
-        elapsed = datetime.now(UTC) - record.clock_in_timestamp
+        clock_in = record.clock_in_timestamp
+
+        # Handle timezone-aware vs naive datetimes
+        if clock_in.tzinfo is None:
+            clock_in = clock_in.replace(tzinfo=UTC)
+
+        elapsed = datetime.now(UTC) - clock_in
         elapsed_seconds = int(elapsed.total_seconds())
 
         return {

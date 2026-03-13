@@ -27,6 +27,8 @@ import EmployeeDashboard from './views/EmployeeDashboard';
 import EmployeeShiftCalendar from './views/EmployeeShiftCalendar';
 import EmployeeVacationView from './views/EmployeeVacationView';
 import EmployeeTimeTracking from './views/EmployeeTimeTracking';
+// Feature 007: Password Recovery
+import PasswordReset from './views/PasswordReset';
 import { ROUTES } from './config/constants';
 import { Role } from './types';
 
@@ -49,6 +51,10 @@ export default function App() {
           </PasswordSetupRoute>
         }
       />
+
+      {/* Feature 007: Password Recovery - Public routes for password reset flow */}
+      {/* T023: No auth required - allows unauthenticated users to reset forgotten passwords */}
+      <Route path="/password-reset" element={<PasswordReset />} />
 
       {/* Admin/Moderator routes with Layout */}
       <Route

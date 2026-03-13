@@ -1,6 +1,7 @@
 """T019: Import all models for Alembic metadata discovery."""
 
 from app.models.employee import Employee
+from app.models.password_reset_token import PasswordResetToken
 from app.models.shift_record import ShiftRecord
 from app.models.shift_type import ShiftType
 from app.models.team import Team
@@ -20,4 +21,5 @@ __all__ = [
     "VacationRequest",
     "VacationBalance",
     "ShiftType",
+    "PasswordResetToken",
 ]

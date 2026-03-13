@@ -7,6 +7,7 @@ from sqlmodel import Session, func, select
 
 from app.common.exceptions import DuplicateError, ForbiddenError, NotFoundError
 from app.models.employee import Employee
+from app.models.user import User
 from app.models.vacation_request import VacationRequest
 from app.schemas.employee import EmployeeCreate, EmployeeResponse, EmployeeUpdate
 
@@ -47,7 +48,7 @@ def create(
     if existing:
         raise DuplicateError("Ya existe un empleado con este DNI", "DUPLICATE_DNI")
 
-    # Check email uniqueness
+    # Check email uniqueness in Employee table
     existing = session.exec(
         select(Employee).where(
             Employee.tenant_id == tenant_id,
@@ -57,10 +58,40 @@ def create(
     if existing:
         raise DuplicateError("Ya existe un empleado con este email", "DUPLICATE_EMAIL")
 
+    # Check email uniqueness in User table (for auth)
+    from app.models.user import User
+    existing_user = session.exec(
+        select(User).where(
+            User.tenant_id == tenant_id,
+            User.email == data.email,
+        )
+    ).first()
+    if existing_user:
+        raise DuplicateError("Ya existe un usuario con este email", "DUPLICATE_EMAIL")
+
+    # Create Employee
     employee = Employee(tenant_id=tenant_id, **data.model_dump())
     session.add(employee)
+    session.flush()  # Get the ID without committing
+
+    # Create corresponding User for authentication
+    # Use a temporary password that will be set via email/password-setup flow
+    from passlib.context import CryptContext
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    temp_password = "TempPassword123!"  # Will be changed by user
+
+    user = User(
+        tenant_id=tenant_id,
+        email=data.email,
+        hashed_password=pwd_context.hash(temp_password),
+        role="Empleado",  # Default role for new employees
+        is_active=False,  # Will be activated after password setup
+        employee_id=employee.id,  # Link to employee
+    )
+    session.add(user)
     session.commit()
     session.refresh(employee)
+
     return _to_response(employee)
 
 
@@ -178,6 +209,14 @@ def soft_delete(
     user_role: str,
     session: Session,
 ) -> dict:
+    """Soft delete employee (mark as inactive) and disable associated user account.
+
+    Only Admin can delete employees.
+    Automatically:
+    - Marks employee as inactive (is_active=False)
+    - Disables associated user account (is_active=False)
+    - Rejects all pending vacation requests
+    """
     if user_role != "Admin":
         raise ForbiddenError("Solo los administradores pueden eliminar empleados")
 
@@ -193,6 +232,18 @@ def soft_delete(
     employee.is_active = False
     employee.status = "Inactivo"
     employee.updated_at = datetime.now(UTC)
+
+    # Disable associated user account
+    user = session.exec(
+        select(User).where(
+            User.employee_id == employee_id,
+            User.tenant_id == tenant_id,
+        )
+    ).first()
+    if user:
+        user.is_active = False
+        user.updated_at = datetime.now(UTC)
+        session.add(user)
 
     # Auto-reject pending vacation requests
     pending = session.exec(
@@ -212,4 +263,55 @@ def soft_delete(
     session.add(employee)
     session.commit()
 
-    return {"message": "Empleado desactivado", "rejected_requests": rejected_count}
+    return {
+        "message": "Empleado desactivado y usuario deshabilitado",
+        "rejected_requests": rejected_count
+    }
+
+
+def activate_employee(
+    employee_id: uuid.UUID,
+    tenant_id: uuid.UUID,
+    user_role: str,
+    session: Session,
+) -> EmployeeResponse:
+    """Reactivate inactive employee and enable associated user account.
+
+    Only Admin can reactivate employees.
+    Restores:
+    - Employee to active status (is_active=True)
+    - Associated user account to active (is_active=True)
+    """
+    if user_role != "Admin":
+        raise ForbiddenError("Solo los administradores pueden reactivar empleados")
+
+    employee = session.exec(
+        select(Employee).where(
+            Employee.id == employee_id,
+            Employee.tenant_id == tenant_id,
+        )
+    ).first()
+    if not employee:
+        raise NotFoundError("Empleado no encontrado")
+
+    employee.is_active = True
+    employee.status = "Activo"
+    employee.updated_at = datetime.now(UTC)
+
+    # Reactivate associated user account
+    user = session.exec(
+        select(User).where(
+            User.employee_id == employee_id,
+            User.tenant_id == tenant_id,
+        )
+    ).first()
+    if user:
+        user.is_active = True
+        user.updated_at = datetime.now(UTC)
+        session.add(user)
+
+    session.add(employee)
+    session.commit()
+    session.refresh(employee)
+
+    return _to_response(employee)

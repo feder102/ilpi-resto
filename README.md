@@ -216,10 +216,104 @@ Los servicios estarán disponibles en los mismos puertos (Backend: 8000, Fronten
 
 Una vez levantado el proyecto:
 
-- **Frontend:** http://localhost:5173
-- **Backend API:** http://localhost:8000
-- **Documentación API (Swagger):** http://localhost:8000/docs
-- **Documentación API (ReDoc):** http://localhost:8000/redoc
+| Servicio | URL | Propósito |
+|----------|-----|----------|
+| **Frontend** | http://localhost:5173 | Interfaz web de usuario |
+| **Backend API** | http://localhost:8000 | API REST |
+| **Swagger (API Docs)** | http://localhost:8000/docs | Documentación interactiva |
+| **ReDoc (API Docs)** | http://localhost:8000/redoc | Documentación en formato ReDoc |
+| **pgAdmin** | http://localhost:5050 | Interfaz gráfica de PostgreSQL |
+| **MailHog (Email)** | http://localhost:8025 | Captura y visualización de emails |
+
+---
+
+## 📧 Servicios de Desarrollo
+
+### MailHog - Captura de Emails
+
+Para desarrollo sin SMTP configurado, el proyecto incluye **MailHog**, un servidor SMTP fake que captura todos los emails enviados por la aplicación.
+
+#### Cómo usar MailHog
+
+**Abre:** http://localhost:8025 en tu navegador
+
+Aquí podrás:
+1. Ver todos los emails capturados
+2. Leer el contenido (HTML o texto plano)
+3. Ver los enlaces de recuperación de contraseña
+4. Copiar tokens de reset
+
+#### Flujo de Prueba - Recuperación de Contraseña
+
+1. **Solicita un reset:**
+   - Haz clic en "¿Olvidaste tu contraseña?" en el login
+   - Ingresa tu email registrado
+   - Recibirás un mensaje de confirmación
+
+2. **Captura el email:**
+   - Abre http://localhost:8025
+   - Deberías ver el email de recuperación
+   - Haz clic para abrir y ver el contenido completo
+
+3. **Obtén el enlace:**
+   - En el email HTML encontrarás el botón "Recuperar mi contraseña"
+   - O copia la URL completa del enlace
+   - La URL tendrá la forma: `http://localhost/password-reset?token=xyz123...`
+
+4. **Cambia tu contraseña:**
+   - Pega la URL en tu navegador
+   - Ingresa tu nueva contraseña (debe cumplir: 8+ chars, mayúscula, minúscula, número, carácter especial)
+   - Haz clic en "Cambiar contraseña"
+
+5. **Inicia sesión:**
+   - Regresa a http://localhost/login
+   - Usa tu email y la nueva contraseña
+
+#### Configuración de MailHog
+
+MailHog está pre-configurado en `docker-compose.dev.yml`:
+
+```yaml
+mailhog:
+  image: mailhog/mailhog:latest
+  container_name: ilpi-mailhog-dev
+  ports:
+    - "1025:1025"  # SMTP port (para el backend)
+    - "8025:8025"  # Web UI (para visualizar emails)
+```
+
+**Variables de entorno del backend** (en `.env`):
+```env
+SMTP_HOST=mailhog
+SMTP_PORT=1025
+SMTP_USER=
+SMTP_PASSWORD=
+SMTP_FROM=noreply@ilpi.local
+```
+
+#### Alternativa: Ver enlaces en los logs
+
+Si prefieres no usar MailHog, también puedes ver los enlaces de reset directamente en los logs del backend:
+
+```bash
+docker-compose logs -f ilpi-backend-dev | grep "Reset Link"
+```
+
+---
+
+### pgAdmin - Gestión de Base de Datos
+
+**Abre:** http://localhost:5050
+
+- **Usuario:** admin@ilpi.es
+- **Password:** admin
+- **Servidor preconfigurado:** ILPI PostgreSQL Dev
+
+Permite:
+- Ver todas las tablas y datos
+- Ejecutar queries SQL
+- Inspeccionar estructura de la BD
+- Debugging de datos
 
 ## 🔑 Credenciales por Defecto
 

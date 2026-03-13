@@ -83,6 +83,32 @@ def delete_employee(
     tenant_id: TenantId,
     current_user: CurrentUser,
 ):
+    """Soft delete employee and disable user account.
+
+    - Marks employee as inactive (is_active=False)
+    - Disables associated user account (is_active=False)
+    - Rejects all pending vacation requests
+    - Only Admin can delete employees
+    """
     return employee_service.soft_delete(
+        employee_id, tenant_id, current_user.get("role", ""), session
+    )
+
+
+@router.post("/employees/{employee_id}/activate", response_model=EmployeeResponse)
+def activate_employee(
+    employee_id: uuid.UUID,
+    session: DbSession,
+    tenant_id: TenantId,
+    current_user: CurrentUser,
+    _: dict = AdminOnly,
+):
+    """Reactivate inactive employee and enable user account.
+
+    - Marks employee as active (is_active=True)
+    - Enables associated user account (is_active=True)
+    - Only Admin can reactivate employees
+    """
+    return employee_service.activate_employee(
         employee_id, tenant_id, current_user.get("role", ""), session
     )
