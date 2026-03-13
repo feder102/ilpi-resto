@@ -211,14 +211,14 @@ def test_rate_limit_message_includes_wait_time(session: Session):
     assert wait_minutes == 5
 
 
-def test_per_ip_limit_independent_of_email(db: Session):
+def test_per_ip_limit_independent_of_email(session: Session):
     """Per-IP limit applies across different emails (distributed attack)."""
     # 10 different emails from same IP should trigger limit on 11th
     # This is enforced by slowapi, not per-email logic
     pass
 
 
-def test_per_email_limit_independent_of_ip(db: Session):
+def test_per_email_limit_independent_of_ip(session: Session):
     """Per-email limit applies from different IPs (same account attack)."""
     # Same email from 10 different IPs still triggers daily limit
     # This is enforced by User.password_reset_attempt_count, not IP

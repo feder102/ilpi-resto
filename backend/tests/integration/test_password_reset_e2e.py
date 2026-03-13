@@ -34,7 +34,7 @@ class TestPasswordResetE2E:
     """End-to-end tests for full password recovery flow."""
 
     @pytest.fixture
-    def setup_user(self, db: Session):
+    def setup_user(self, session: Session):
         """Create a test user with initial password."""
         user = User(
             tenant_id=uuid4(),
@@ -47,7 +47,7 @@ class TestPasswordResetE2E:
         db.refresh(user)
         return user
 
-    def test_complete_password_recovery_flow(self, db: Session, setup_user: User):
+    def test_complete_password_recovery_flow(self, session: Session, setup_user: User):
         """
         Test full password recovery workflow end-to-end.
 
@@ -117,7 +117,7 @@ class TestPasswordResetE2E:
             service.verify_token(plaintext_token, tenant_id)
         assert "already used" in str(exc_info.value).lower()
 
-    def test_cascade_token_invalidation_on_new_request(self, db: Session, setup_user: User):
+    def test_cascade_token_invalidation_on_new_request(self, session: Session, setup_user: User):
         """
         Test that requesting new reset invalidates previous unused tokens.
 
@@ -175,7 +175,7 @@ class TestPasswordResetE2E:
         with pytest.raises(InvalidResetTokenError):
             service.verify_token(first_token_hash, tenant_id)
 
-    def test_token_expiration_blocks_reset(self, db: Session, setup_user: User):
+    def test_token_expiration_blocks_reset(self, session: Session, setup_user: User):
         """
         Test that expired tokens cannot be used for password reset.
 
@@ -204,7 +204,7 @@ class TestPasswordResetE2E:
         with pytest.raises(TokenExpiredError):
             service.verify_token(token.token_hash, tenant_id)
 
-    def test_weak_password_rejected_on_reset(self, db: Session, setup_user: User):
+    def test_weak_password_rejected_on_reset(self, session: Session, setup_user: User):
         """
         Test that weak passwords are rejected with clear validation errors.
 
@@ -237,7 +237,7 @@ class TestPasswordResetE2E:
             )
         assert "uppercase" in str(exc_info.value).lower()
 
-    def test_multiple_users_tokens_isolated(self, db: Session):
+    def test_multiple_users_tokens_isolated(self, session: Session):
         """
         Test that password reset tokens are isolated per user.
 

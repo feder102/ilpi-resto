@@ -8,9 +8,10 @@ Tests token expiration validation:
 """
 
 import pytest
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 from uuid import UUID
 import hashlib
+from sqlmodel import Session
 
 from app.services.password_reset_service import PasswordResetService
 from app.models.password_reset_token import PasswordResetToken
@@ -49,7 +50,7 @@ class TestTokenExpiration:
         # Service should check: if token.used_at IS NOT NULL → InvalidResetTokenError
         # This is validated in verify_token() method
 
-    def test_token_invalidation_on_new_request(self, db: Session):
+    def test_token_invalidation_on_new_request(self, session: Session):
         """T048: Requesting new reset for same email invalidates previous unused tokens."""
         # Setup: Create user with existing unused token
         user = User(
@@ -86,7 +87,7 @@ class TestTokenExpiration:
         db.refresh(token1)
         assert token1.used_at is not None
 
-    def test_old_password_stops_working_after_reset(self, db: Session):
+    def test_old_password_stops_working_after_reset(self, session: Session):
         """T049: Login with old password fails after successful password reset."""
         # Setup: Create user with old password hash
         old_password_hash = "old_bcrypt_hash_12345"
@@ -121,12 +122,12 @@ class TestTokenExpiration:
 
 
 @pytest.fixture
-def password_reset_service(db: Session):
+def password_reset_service(session: Session):
     """Create service instance for testing."""
     return PasswordResetService(db=db, tenant_id=UUID("12345678-1234-5678-1234-567812345678"))
 
 
-def test_token_not_expired_before_24_hours(db: Session, password_reset_service):
+def test_token_not_expired_before_24_hours(session: Session, password_reset_service):
     """Token valid within 24 hours."""
     now = datetime.now(timezone.utc)
     expires_at = now + timedelta(hours=23, minutes=59)
@@ -135,7 +136,7 @@ def test_token_not_expired_before_24_hours(db: Session, password_reset_service):
     assert expires_at > now
 
 
-def test_token_exactly_24_hours(db: Session, password_reset_service):
+def test_token_exactly_24_hours(session: Session, password_reset_service):
     """Token exactly at 24-hour boundary is expired."""
     now = datetime.now(timezone.utc)
 
@@ -147,7 +148,7 @@ def test_token_exactly_24_hours(db: Session, password_reset_service):
     assert expires_at <= now
 
 
-def test_multiple_tokens_same_user_independent_expiration(db: Session):
+def test_multiple_tokens_same_user_independent_expiration(session: Session):
     """Multiple tokens for same user have independent expiration times."""
     user = User(
         email="user@example.com",

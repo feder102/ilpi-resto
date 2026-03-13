@@ -108,7 +108,7 @@ class TestTokenVerification:
         assert response.json()["error"]["code"] == "TOKEN_EXPIRED"
         assert "expirado" in response.json()["error"]["message"].lower()
 
-    def test_verify_invalid_token(self, db: Session):
+    def test_verify_invalid_token(self, session: Session):
         """T026: Invalid/corrupted token → 400 Bad Request."""
         # Action: Verify with non-existent token
         response = client.get(

@@ -235,6 +235,6 @@ class TestRateLimiting:
 # ============================================================================
 
 @pytest.fixture
-def password_reset_service(db: Session):
+def password_reset_service(session: Session):
     """Create service with test database."""
     return PasswordResetService(db=db, tenant_id=UUID("12345678-1234-5678-1234-567812345678"))

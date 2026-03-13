@@ -206,7 +206,7 @@ class TestPasswordResetFlow:
 # ============================================================================
 
 
-def test_password_reset_after_expiration(db: Session):
+def test_password_reset_after_expiration(session: Session):
     """Cannot reset password with expired token."""
     user = User(
         email="user@example.com",
@@ -249,7 +249,7 @@ def test_password_reset_after_expiration(db: Session):
     assert response.status_code == 410
 
 
-def test_old_password_no_longer_works(db: Session):
+def test_old_password_no_longer_works(session: Session):
     """After password reset, old password cannot be used for login."""
     old_password = "OldPassword123!"
     user = User(
