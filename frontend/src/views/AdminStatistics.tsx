@@ -30,27 +30,27 @@ interface TabConfig {
 const TABS: TabConfig[] = [
   {
     id: "employee",
-    label: "Employee Stats",
+    label: "Estadísticas de Empleados",
     icon: <Users className="w-4 h-4" />,
-    description: "View individual employee work statistics",
+    description: "Ver estadísticas de trabajo de empleados individuales",
   },
   {
     id: "department",
-    label: "Department Stats",
+    label: "Estadísticas de Departamentos",
     icon: <BarChart3 className="w-4 h-4" />,
-    description: "Department-wide performance analytics",
+    description: "Análisis de rendimiento por departamento",
   },
   {
     id: "entries",
-    label: "Time Entries",
+    label: "Registros de Tiempo",
     icon: <Clock className="w-4 h-4" />,
-    description: "Detailed time entry records and logs",
+    description: "Registros detallados de entradas de tiempo",
   },
   {
     id: "batch",
-    label: "Batch Process",
+    label: "Procesamiento por Lotes",
     icon: <RefreshCw className="w-4 h-4" />,
-    description: "Manual time entry generation (Admin only)",
+    description: "Generación manual de entradas de tiempo (Solo Admin)",
   },
 ];
 
@@ -91,11 +91,11 @@ export const AdminStatistics: React.FC = () => {
     try {
       const result = await triggerBatchProcess(batchDate);
       setBatchMessage(
-        `✓ Successfully processed ${result.estimated_entries} time entries for ${batchDate}`
+        `✓ Se procesaron exitosamente ${result.estimated_entries} entradas de tiempo para ${batchDate}`
       );
     } catch (error) {
       setBatchError(
-        error instanceof Error ? error.message : "Failed to trigger batch process"
+        error instanceof Error ? error.message : "Error al iniciar el procesamiento por lotes"
       );
     } finally {
       setBatchProcessing(false);
@@ -107,8 +107,8 @@ export const AdminStatistics: React.FC = () => {
       <div className="max-w-2xl mx-auto py-12">
         <Alert
           variant="error"
-          title="Access Denied"
-          message="You don't have permission to access this page. Admin or Moderador role required."
+          title="Acceso Denegado"
+          message="No tienes permiso para acceder a esta página. Se requiere rol de Administrador o Moderador."
         />
       </div>
     );
@@ -118,9 +118,9 @@ export const AdminStatistics: React.FC = () => {
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-4xl font-bold text-slate-900">Time Tracking Analytics</h1>
+        <h1 className="text-4xl font-bold text-slate-900">Análisis de Seguimiento de Tiempo</h1>
         <p className="text-slate-600">
-          Monitor work hours, employee productivity, and automatic time entry generation
+          Monitorea horas de trabajo, productividad de empleados y generación automática de entradas de tiempo
         </p>
       </div>
 
@@ -152,9 +152,9 @@ export const AdminStatistics: React.FC = () => {
           <div className="space-y-6">
             <Card className="bg-gradient-to-br from-indigo-50 to-slate-50 border border-indigo-100">
               <div className="p-6">
-                <h2 className="text-xl font-semibold text-slate-900 mb-2">Employee Statistics</h2>
+                <h2 className="text-xl font-semibold text-slate-900 mb-2">Estadísticas de Empleados</h2>
                 <p className="text-sm text-slate-600">
-                  Search for an employee to view their monthly work statistics
+                  Busca un empleado para ver sus estadísticas de trabajo mensuales
                 </p>
               </div>
             </Card>
@@ -173,10 +173,10 @@ export const AdminStatistics: React.FC = () => {
             <Card className="bg-gradient-to-br from-violet-50 to-slate-50 border border-violet-100">
               <div className="p-6">
                 <h2 className="text-xl font-semibold text-slate-900 mb-2">
-                  Department Analytics
+                  Análisis de Departamentos
                 </h2>
                 <p className="text-sm text-slate-600">
-                  View aggregated statistics by department
+                  Ver estadísticas agregadas por departamento
                 </p>
               </div>
             </Card>
@@ -194,9 +194,9 @@ export const AdminStatistics: React.FC = () => {
           <div className="space-y-6">
             <Card className="bg-gradient-to-br from-blue-50 to-slate-50 border border-blue-100">
               <div className="p-6">
-                <h2 className="text-xl font-semibold text-slate-900 mb-2">Time Entry Records</h2>
+                <h2 className="text-xl font-semibold text-slate-900 mb-2">Registros de Entradas de Tiempo</h2>
                 <p className="text-sm text-slate-600">
-                  Browse and filter all time entries by date, employee, or department
+                  Explora y filtra todas las entradas de tiempo por fecha, empleado o departamento
                 </p>
               </div>
             </Card>
@@ -206,12 +206,12 @@ export const AdminStatistics: React.FC = () => {
               <div className="p-6">
                 <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
                   <ChevronDown className="w-4 h-4" />
-                  Filters
+                  Filtros
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Start Date
+                      Fecha de Inicio
                     </label>
                     <input
                       type="date"
@@ -223,7 +223,7 @@ export const AdminStatistics: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      End Date
+                      Fecha de Fin
                     </label>
                     <input
                       type="date"
@@ -233,20 +233,20 @@ export const AdminStatistics: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Employee (Optional)
+                      Empleado (Opcional)
                     </label>
                     <input
                       type="text"
-                      placeholder="Name or DNI..."
+                      placeholder="Nombre o DNI..."
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Department
+                      Departamento
                     </label>
                     <select className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                      <option value="">All Departments</option>
+                      <option value="">Todos los Departamentos</option>
                       <option value="Cocina">Cocina</option>
                       <option value="Atención al Público">Atención al Público</option>
                       <option value="Barra">Barra</option>
@@ -271,8 +271,8 @@ export const AdminStatistics: React.FC = () => {
             {!isAdmin && (
               <Alert
                 variant="warning"
-                title="Admin Only"
-                message="Batch processing is restricted to Admin users. Your role: Moderador"
+                title="Solo Administrador"
+                message="El procesamiento por lotes está restringido a usuarios Administrador. Tu rol: Moderador"
               />
             )}
 
@@ -281,10 +281,10 @@ export const AdminStatistics: React.FC = () => {
                 <Card className="bg-gradient-to-br from-amber-50 to-slate-50 border border-amber-100">
                   <div className="p-6">
                     <h2 className="text-xl font-semibold text-slate-900 mb-2">
-                      Batch Processing
+                      Procesamiento por Lotes
                     </h2>
                     <p className="text-sm text-slate-600">
-                      Manually trigger automatic time entry generation for a specific date
+                      Genera manualmente entradas de tiempo automáticas para una fecha específica
                     </p>
                   </div>
                 </Card>
@@ -294,13 +294,13 @@ export const AdminStatistics: React.FC = () => {
                     {/* Info Alert */}
                     <Alert
                       variant="info"
-                      message="Time entries are normally generated daily at 1:00 AM. Use this to manually regenerate entries for a specific date."
+                      message="Las entradas de tiempo se generan normalmente diariamente a la 1:00 AM. Usa esto para regenerar manualmente entradas para una fecha específica."
                     />
 
                     {/* Date Selection */}
                     <div>
                       <label className="block text-sm font-semibold text-slate-900 mb-2">
-                        Process Date
+                        Fecha a Procesar
                       </label>
                       <input
                         type="date"
@@ -309,7 +309,7 @@ export const AdminStatistics: React.FC = () => {
                         className="w-full md:w-64 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                       <p className="text-xs text-slate-500 mt-2">
-                        Typically set to yesterday's date for completed shifts
+                        Típicamente se establece a la fecha de ayer para turnos completados
                       </p>
                     </div>
 
@@ -321,7 +321,7 @@ export const AdminStatistics: React.FC = () => {
                         className="flex items-center gap-2"
                       >
                         <RefreshCw className={`w-4 h-4 ${batchProcessing ? "animate-spin" : ""}`} />
-                        {batchProcessing ? "Processing..." : "Generate Entries"}
+                        {batchProcessing ? "Procesando..." : "Generar Entradas"}
                       </Button>
                     </div>
 
@@ -344,7 +344,7 @@ export const AdminStatistics: React.FC = () => {
       {/* Footer Info */}
       <div className="pt-6 border-t border-slate-200 text-sm text-slate-500">
         <p>
-          Last updated: {new Date().toLocaleDateString("en-US", {
+          Última actualización: {new Date().toLocaleDateString("es-ES", {
             weekday: "long",
             year: "numeric",
             month: "long",
