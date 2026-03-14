@@ -24,6 +24,10 @@ const SHIFT_TYPE_COLORS: Record<string, string> = {
   "Corrido": "#10b981",   // emerald
 };
 
+// UUID v4 validation regex
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isValidUUID = (uuid: string): boolean => UUID_REGEX.test(uuid);
+
 export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
   employeeId,
   employeeName = "Employee",
@@ -50,8 +54,11 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
       }
     };
 
-    if (employeeId) {
+    if (employeeId && isValidUUID(employeeId)) {
       fetchStats();
+    } else if (employeeId && !isValidUUID(employeeId)) {
+      setError("Invalid employee ID format. Please enter a valid UUID.");
+      setStats(null);
     }
   }, [employeeId, year, month, onDateChange]);
 

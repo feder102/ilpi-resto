@@ -195,16 +195,25 @@ def get_employee_statistics(
     import uuid
     import logging
     logger = logging.getLogger(__name__)
+
     try:
+        # Validate UUID format
+        try:
+            emp_uuid = uuid.UUID(employee_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid employee ID format: {employee_id}")
+
         stats = TimeTrackingService.get_employee_statistics(
             db=db,
             tenant_id=uuid.UUID(current_user.get("tenant_id", "")),
-            employee_id=uuid.UUID(employee_id),
+            employee_id=emp_uuid,
             year=year,
             month=month,
             include_manual=include_manual,
         )
         return stats
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Statistics calculation error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Statistics calculation failed: {str(e)}")
