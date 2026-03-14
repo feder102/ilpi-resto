@@ -161,6 +161,7 @@ from app.schemas.time_tracking import (
     DepartmentStatisticsResponse,
     TimeEntryListResponse,
 )
+from app.common.time_tracking_exceptions import NoShiftsFoundError
 
 
 def require_admin_or_moderator(current_user: CurrentUser):
@@ -308,6 +309,15 @@ def trigger_batch_process(
             status="completed",
             message=f"Successfully created {entries_created} time entries",
             estimated_entries=entries_created,
+        )
+    except NoShiftsFoundError as e:
+        # No shifts for this date is not an error - return 0 entries
+        logger.info(f"No shifts found for {request.process_date}: {str(e)}")
+        return BatchProcessResponse(
+            job_id=f"batch-{request.process_date.isoformat()}",
+            status="completed",
+            message=f"No shifts found for {request.process_date}",
+            estimated_entries=0,
         )
     except Exception as e:
         logger.error(f"Batch processing failed for date {request.process_date}: {str(e)}", exc_info=True)
