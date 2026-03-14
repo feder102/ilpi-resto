@@ -1,19 +1,25 @@
-"""Time Tracking Service for Feature 005: Employee Workspace Portal.
+"""Time Tracking Service for Features 005 & 008.
 
-Business logic for clock-in/out operations, time record management, and related queries.
+Feature 005: Clock-in/out operations, time record management, and related queries.
+Feature 008: Automatic time entry tracking from shifts and statistics queries.
 All operations enforce Row-Level Security (RLS) - employees can only access their own records.
 """
 
 import uuid
 from datetime import UTC, datetime, date as date_type, timedelta
-from typing import Optional
+from decimal import Decimal
+from typing import Any, Optional
 
-from sqlmodel import Session, select
+from sqlmodel import Session, func, select
 
 from app.common.exceptions import ValidationError, NotFoundError, ForbiddenError
+from app.common.time_tracking_exceptions import BatchProcessingError, NoShiftsFoundError, HoursCalculationError
 from app.models.time_record import TimeRecord
 from app.models.shift_record import ShiftRecord
-from app.schemas.time_tracking import TimeRecordResponse, ClockInResponse, ClockOutResponse
+from app.models.time_entry import TimeEntry
+from app.models.shift_type import ShiftType
+from app.models.employee import Employee
+from app.schemas.time_tracking import TimeRecordResponse, ClockInResponse, ClockOutResponse, EmployeeStatisticsResponse, DepartmentStatisticsResponse, TimeEntryListResponse
 
 
 def _check_employee_has_shift_today(
@@ -35,7 +41,7 @@ def _check_employee_has_shift_today(
 def _calculate_time_summary(
     clock_in: datetime,
     clock_out: Optional[datetime]
-) -> dict:
+) -> dict[str, Any]:
     """Calculate time summary between clock in and clock out."""
     # Handle timezone-aware vs naive datetimes
     if clock_in.tzinfo is None:
@@ -232,7 +238,7 @@ def get_today_status(
     tenant_id: uuid.UUID,
     current_user: dict,
     session: Session
-) -> dict:
+) -> dict[str, Any]:
     """Get current clock-in/out status for today.
 
     Returns status indicating if employee is currently clocked in, clocked out, or has no record.
@@ -310,7 +316,7 @@ def get_time_records(
     page: int = 1,
     size: int = 20,
     session: Session = None
-) -> dict:
+) -> dict[str, Any]:
     """Get employee's time records for a date range.
 
     Args:
@@ -382,3 +388,440 @@ def get_time_records(
         "size": size,
         "pages": pages,
     }
+
+
+# Feature 008: Automatic Time Tracking Service
+class TimeTrackingService:
+    """Service for automatic time entry generation and statistics tracking."""
+
+    @staticmethod
+    def _calculate_hours(start_time, end_time) -> Decimal:
+        """Calculate hours between two times, handling overnight shifts.
+
+        Args:
+            start_time: datetime.time object for shift start
+            end_time: datetime.time object for shift end
+
+        Returns:
+            Decimal: Hours worked (e.g., 8.0)
+
+        Raises:
+            HoursCalculationError: If calculation fails
+        """
+        try:
+            start_minutes = start_time.hour * 60 + start_time.minute
+            end_minutes = end_time.hour * 60 + end_time.minute
+
+            if end_minutes < start_minutes:
+                # Overnight shift: e.g., 22:00 to 06:00 = 8 hours
+                total_minutes = (24 * 60) - start_minutes + end_minutes
+            else:
+                total_minutes = end_minutes - start_minutes
+
+            hours = Decimal(total_minutes) / Decimal(60)
+            return hours.quantize(Decimal('0.00'))
+        except Exception as e:
+            raise HoursCalculationError(f"Failed to calculate hours: {str(e)}")
+
+    @staticmethod
+    def generate_time_entries_for_date(
+        db: Session,
+        tenant_id: uuid.UUID,
+        target_date: date_type,
+    ) -> int:
+        """Generate TimeEntry records for all shifts on a specific date.
+
+        Queries all ShiftRecord entries for the tenant on the target date,
+        then creates corresponding TimeEntry records if they don't already exist.
+        Idempotent: Running multiple times produces the same result (no duplicates).
+
+        Args:
+            db: Database session
+            tenant_id: Tenant UUID
+            target_date: Date to process (usually yesterday)
+
+        Returns:
+            int: Count of TimeEntry records created
+
+        Raises:
+            BatchProcessingError: If batch processing fails
+            NoShiftsFoundError: If no shifts found (non-fatal)
+        """
+        try:
+            # Get all shifts for the target date
+            shifts = db.exec(
+                select(ShiftRecord)
+                .where(
+                    ShiftRecord.tenant_id == tenant_id,
+                    ShiftRecord.date == target_date,
+                )
+            ).all()
+
+            if not shifts:
+                raise NoShiftsFoundError(f"No shifts found for {target_date}")
+
+            entries_created = 0
+
+            for shift in shifts:
+                if not shift.shift_type_id:
+                    continue  # Skip shifts without assigned shift type
+
+                # Get shift type for time windows
+                shift_type = db.exec(
+                    select(ShiftType).where(ShiftType.id == shift.shift_type_id)
+                ).first()
+
+                if not shift_type or not shift_type.time_windows:
+                    continue
+
+                # Get first time window (primary shift hours)
+                time_window = shift_type.time_windows[0] if isinstance(shift_type.time_windows, list) else shift_type.time_windows
+                # Parse time strings (format: "HH:MM")
+                from datetime import time as time_cls
+                start_str = time_window.get('start')
+                end_str = time_window.get('end')
+                start_time = datetime.strptime(start_str, "%H:%M").time() if start_str else None
+                end_time = datetime.strptime(end_str, "%H:%M").time() if end_str else None
+
+                if not start_time or not end_time:
+                    continue
+
+                # Calculate hours
+                hours_worked = TimeTrackingService._calculate_hours(start_time, end_time)
+
+                # Check for existing entry (idempotency)
+                existing = db.exec(
+                    select(TimeEntry).where(
+                        TimeEntry.tenant_id == tenant_id,
+                        TimeEntry.employee_id == shift.employee_id,
+                        TimeEntry.shift_date == target_date,
+                        TimeEntry.shift_type_id == shift.shift_type_id,
+                    )
+                ).first()
+
+                if existing:
+                    continue  # Skip if entry already exists
+
+                # Create TimeEntry
+                entry = TimeEntry(
+                    id=uuid.uuid4(),
+                    tenant_id=tenant_id,
+                    employee_id=shift.employee_id,
+                    shift_date=target_date,
+                    start_time=start_time,
+                    end_time=end_time,
+                    hours_worked=hours_worked,
+                    source="shift",
+                    shift_record_id=shift.id,
+                    shift_type_id=shift.shift_type_id,
+                )
+
+                db.add(entry)
+                entries_created += 1
+
+            db.commit()
+            return entries_created
+
+        except NoShiftsFoundError:
+            raise  # Re-raise without wrapping
+        except Exception as e:
+            db.rollback()
+            raise BatchProcessingError(f"Batch processing failed: {str(e)}")
+
+    @staticmethod
+    def get_employee_statistics(
+        db: Session,
+        tenant_id: uuid.UUID,
+        employee_id: uuid.UUID,
+        year: Optional[int] = None,
+        month: Optional[int] = None,
+        include_manual: bool = False,
+    ) -> EmployeeStatisticsResponse:
+        """Get work statistics for a specific employee.
+
+        Args:
+            db: Database session
+            tenant_id: Tenant UUID
+            employee_id: Employee UUID
+            year: Year to query (default: current year)
+            month: Month to query (1-12, default: current month)
+            include_manual: Include manual entries in statistics
+
+        Returns:
+            EmployeeStatisticsResponse with aggregated statistics
+        """
+        if year is None:
+            year = date_type.today().year
+        if month is None:
+            month = date_type.today().month
+
+        from app.models.time_entry import TimeEntrySource
+
+        query = select(TimeEntry).where(
+            TimeEntry.tenant_id == tenant_id,
+            TimeEntry.employee_id == employee_id,
+            TimeEntry.shift_date >= date_type(year, month, 1),
+        )
+
+        if month == 12:
+            end_date = date_type(year + 1, 1, 1) - timedelta(days=1)
+        else:
+            end_date = date_type(year, month + 1, 1) - timedelta(days=1)
+
+        query = query.where(TimeEntry.shift_date <= end_date)
+
+        if not include_manual:
+            query = query.where(TimeEntry.source == TimeEntrySource.SHIFT)
+
+        entries = db.exec(query).all()
+
+        total_hours = sum(e.hours_worked for e in entries)
+        days_worked = len(set(e.shift_date for e in entries))
+        avg_hours = total_hours / days_worked if days_worked > 0 else Decimal(0)
+
+        breakdown_by_shift = {}
+        for entry in entries:
+            shift_type_id = str(entry.shift_type_id) if entry.shift_type_id else "unknown"
+            if shift_type_id not in breakdown_by_shift:
+                breakdown_by_shift[shift_type_id] = Decimal(0)
+            breakdown_by_shift[shift_type_id] += entry.hours_worked
+
+        return EmployeeStatisticsResponse(
+            employee_id=employee_id,
+            period=f"{year}-{month:02d}",
+            total_hours=total_hours,
+            days_worked=days_worked,
+            avg_hours_per_day=avg_hours,
+            breakdown_by_shift_type=breakdown_by_shift,
+        )
+
+    @staticmethod
+    def get_department_statistics(
+        db: Session,
+        tenant_id: uuid.UUID,
+        year: Optional[int] = None,
+        month: Optional[int] = None,
+        department: Optional[str] = None,
+        include_manual: bool = False,
+    ) -> DepartmentStatisticsResponse:
+        """Get aggregated statistics for a department.
+
+        Args:
+            db: Database session
+            tenant_id: Tenant UUID
+            year: Year to query
+            month: Month to query
+            department: Department name filter
+            include_manual: Include manual entries
+
+        Returns:
+            DepartmentStatisticsResponse with department-level aggregations
+        """
+        if year is None:
+            year = date_type.today().year
+        if month is None:
+            month = date_type.today().month
+
+        if month == 12:
+            end_date = date_type(year + 1, 1, 1) - timedelta(days=1)
+        else:
+            end_date = date_type(year, month + 1, 1) - timedelta(days=1)
+
+        query = select(TimeEntry, Employee).where(
+            TimeEntry.tenant_id == tenant_id,
+            TimeEntry.employee_id == Employee.id,
+            TimeEntry.shift_date >= date_type(year, month, 1),
+            TimeEntry.shift_date <= end_date,
+        )
+
+        if department:
+            query = query.where(Employee.department == department)
+
+        if not include_manual:
+            from app.models.time_entry import TimeEntrySource
+            query = query.where(TimeEntry.source == TimeEntrySource.SHIFT)
+
+        results = db.exec(query).all()
+
+        total_hours = sum(r[0].hours_worked for r in results)
+        unique_employees = len(set(r[0].employee_id for r in results))
+
+        return DepartmentStatisticsResponse(
+            department=department or "all",
+            period=f"{year}-{month:02d}",
+            total_hours=total_hours,
+            unique_employees=unique_employees,
+            avg_hours_per_employee=total_hours / unique_employees if unique_employees > 0 else Decimal(0),
+        )
+
+    @staticmethod
+    def get_time_entries(
+        db: Session,
+        tenant_id: uuid.UUID,
+        start_date: Optional[date_type] = None,
+        end_date: Optional[date_type] = None,
+        employee_id: Optional[uuid.UUID] = None,
+        department: Optional[str] = None,
+        source: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> TimeEntryListResponse:
+        """Get paginated time entries with optional filters.
+
+        Args:
+            db: Database session
+            tenant_id: Tenant UUID
+            start_date: Start date filter
+            end_date: End date filter
+            employee_id: Filter by employee
+            department: Filter by department
+            source: Filter by source (shift/manual)
+            limit: Max results per page
+            offset: Page offset
+
+        Returns:
+            TimeEntryListResponse with paginated entries and metadata
+        """
+        if start_date is None:
+            start_date = date_type.today() - timedelta(days=30)
+        if end_date is None:
+            end_date = date_type.today()
+
+        query = select(TimeEntry).where(
+            TimeEntry.tenant_id == tenant_id,
+            TimeEntry.shift_date >= start_date,
+            TimeEntry.shift_date <= end_date,
+        )
+
+        if employee_id:
+            query = query.where(TimeEntry.employee_id == employee_id)
+
+        if source:
+            from app.models.time_entry import TimeEntrySource
+            # Convert string source to enum value
+            source_enum = TimeEntrySource[source.upper()]
+            query = query.where(TimeEntry.source == source_enum)
+
+        if department:
+            # Join with Employee to filter by department
+            query = (
+                select(TimeEntry)
+                .join(Employee)
+                .where(
+                    TimeEntry.tenant_id == tenant_id,
+                    TimeEntry.shift_date >= start_date,
+                    TimeEntry.shift_date <= end_date,
+                    Employee.department == department,
+                )
+            )
+            if employee_id:
+                query = query.where(TimeEntry.employee_id == employee_id)
+            if source:
+                from app.models.time_entry import TimeEntrySource
+                # Convert string source to enum value
+                source_enum = TimeEntrySource[source.upper()]
+                query = query.where(TimeEntry.source == source_enum)
+
+        # Count total
+        count_query = select(func.count(TimeEntry.id)).where(query.whereclause)
+        total = db.exec(count_query).one() or 0
+
+        # Get paginated results
+        entries = db.exec(query.order_by(TimeEntry.shift_date.desc()).offset(offset).limit(limit)).all()
+
+        return TimeEntryListResponse(
+            items=[e for e in entries],  # Direct conversion would need schema
+            total=total,
+            limit=limit,
+            offset=offset,
+        )
+
+
+# T021: Batch Job Wrapper for APScheduler
+def run_daily_batch_job(db: Session, tenant_id: uuid.UUID, process_date: Optional[date_type] = None) -> dict[str, Any]:
+    """Wrapper function called by APScheduler for daily automatic time entry generation.
+
+    Args:
+        db: Database session
+        tenant_id: Tenant UUID to process
+        process_date: Date to process (default: yesterday)
+
+    Returns:
+        Dictionary with job status: { tenant_id, entries_created, status, timestamp, message }
+
+    Raises:
+        Logs errors but does not raise to allow scheduler to continue
+    """
+    from datetime import datetime as dt_class
+    import json
+
+    if process_date is None:
+        process_date = date_type.today() - timedelta(days=1)
+
+    job_result = {
+        "tenant_id": str(tenant_id),
+        "process_date": process_date.isoformat(),
+        "entries_created": 0,
+        "status": "pending",
+        "timestamp": dt_class.utcnow().isoformat(),
+        "message": "",
+    }
+
+    try:
+        # Log batch start
+        print(json.dumps({
+            "timestamp": dt_class.utcnow().isoformat(),
+            "level": "INFO",
+            "action": "batch_start",
+            "tenant_id": str(tenant_id),
+            "process_date": process_date.isoformat(),
+        }))
+
+        # Execute batch processing
+        entries_created = TimeTrackingService.generate_time_entries_for_date(
+            db=db,
+            tenant_id=tenant_id,
+            target_date=process_date,
+        )
+
+        job_result["entries_created"] = entries_created
+        job_result["status"] = "completed"
+        job_result["message"] = f"Successfully created {entries_created} time entries"
+
+        # Log batch complete
+        print(json.dumps({
+            "timestamp": dt_class.utcnow().isoformat(),
+            "level": "INFO",
+            "action": "batch_complete",
+            "tenant_id": str(tenant_id),
+            "entries_created": entries_created,
+            "process_date": process_date.isoformat(),
+        }))
+
+    except NoShiftsFoundError as e:
+        job_result["status"] = "completed_no_shifts"
+        job_result["message"] = f"No shifts found for {process_date}"
+        # Log warning - this is not an error
+        print(json.dumps({
+            "timestamp": dt_class.utcnow().isoformat(),
+            "level": "DEBUG",
+            "action": "batch_no_shifts",
+            "tenant_id": str(tenant_id),
+            "process_date": process_date.isoformat(),
+        }))
+
+    except Exception as e:
+        job_result["status"] = "error"
+        job_result["message"] = f"Batch processing failed: {str(e)}"
+
+        # Log error
+        print(json.dumps({
+            "timestamp": dt_class.utcnow().isoformat(),
+            "level": "ERROR",
+            "action": "batch_error",
+            "tenant_id": str(tenant_id),
+            "process_date": process_date.isoformat(),
+            "error": str(e),
+        }))
+
+    return job_result

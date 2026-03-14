@@ -1,13 +1,13 @@
-"""Time Tracking Router for Feature 005: Employee Workspace Portal.
+"""Time Tracking Router for Features 005 & 008.
 
-Endpoints for clock-in/out and time record retrieval.
-All endpoints require Empleado role authentication.
+Feature 005: Clock-in/out and time record retrieval (Empleado access)
+Feature 008: Automatic shift-based tracking & statistics (Admin/Moderador access)
 """
 
-from typing import Optional
+from typing import Optional, Annotated
 from datetime import date as date_type
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlmodel import Session
 
 from app.common.exceptions import handle_exceptions
@@ -144,3 +144,167 @@ def get_time_records(
         size=size,
         session=session
     )
+
+
+# ========== Feature 008: Automatic Time Tracking Endpoints ==========
+# These endpoints provide statistics and reporting for automatic shift-based time tracking
+# Access: Admin and Moderador only
+
+from app.dependencies import get_current_user, CurrentUser, get_db
+from app.services.time_tracking_service import TimeTrackingService
+from app.schemas.time_tracking import (
+    StatisticsFilterRequest,
+    TimeEntryFilterRequest,
+    BatchProcessRequest,
+    BatchProcessResponse,
+    EmployeeStatisticsResponse,
+    DepartmentStatisticsResponse,
+    TimeEntryListResponse,
+)
+
+
+def require_admin_or_moderator(current_user: CurrentUser):
+    """Dependency: Require Admin or Moderator role."""
+    if current_user.get("role") not in ["Admin", "Moderador"]:
+        raise HTTPException(status_code=403, detail="Not authorized to view statistics")
+    return current_user
+
+
+def require_admin(current_user: CurrentUser):
+    """Dependency: Require Admin role only."""
+    if current_user.get("role") != "Admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    return current_user
+
+
+@router.get(
+    "/statistics/employee/{employee_id}",
+    response_model=EmployeeStatisticsResponse,
+    summary="Get employee monthly statistics",
+)
+def get_employee_statistics(
+    employee_id: str,
+    year: int = Query(..., ge=2020, le=2100),
+    month: int = Query(..., ge=1, le=12),
+    include_manual: bool = Query(False),
+    current_user: dict = Depends(require_admin_or_moderator),
+    db: Session = Depends(get_db),
+):
+    """Get monthly work statistics for a specific employee."""
+    import uuid
+    import logging
+    logger = logging.getLogger(__name__)
+    try:
+        stats = TimeTrackingService.get_employee_statistics(
+            db=db,
+            tenant_id=uuid.UUID(current_user.get("tenant_id", "")),
+            employee_id=uuid.UUID(employee_id),
+            year=year,
+            month=month,
+            include_manual=include_manual,
+        )
+        return stats
+    except Exception as e:
+        logger.error(f"Statistics calculation error: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Statistics calculation failed: {str(e)}")
+
+
+@router.get(
+    "/statistics/department",
+    response_model=DepartmentStatisticsResponse,
+    summary="Get department statistics",
+)
+def get_department_statistics(
+    year: int = Query(..., ge=2020, le=2100),
+    month: int = Query(..., ge=1, le=12),
+    department: Optional[str] = Query(None),
+    include_manual: bool = Query(False),
+    current_user: dict = Depends(require_admin_or_moderator),
+    db: Session = Depends(get_db),
+):
+    """Get monthly work statistics aggregated by department."""
+    import uuid
+    import logging
+    logger = logging.getLogger(__name__)
+    try:
+        stats = TimeTrackingService.get_department_statistics(
+            db=db,
+            tenant_id=uuid.UUID(current_user.get("tenant_id", "")),
+            year=year,
+            month=month,
+            department=department,
+            include_manual=include_manual,
+        )
+        return stats
+    except Exception as e:
+        logger.error(f"Department statistics error: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Statistics calculation failed: {str(e)}")
+
+
+@router.get(
+    "/entries",
+    response_model=TimeEntryListResponse,
+    summary="Get time entries with pagination",
+)
+def get_time_entries(
+    start_date: date_type = Query(...),
+    end_date: date_type = Query(...),
+    employee_id: Optional[str] = Query(None),
+    department: Optional[str] = Query(None),
+    source: str = Query("shift", regex="^(shift|manual)$"),
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    current_user: dict = Depends(require_admin_or_moderator),
+    db: Session = Depends(get_db),
+):
+    """Get detailed time entries with optional filtering."""
+    import uuid
+    import logging
+    logger = logging.getLogger(__name__)
+    try:
+        emp_id = uuid.UUID(employee_id) if employee_id else None
+        entries = TimeTrackingService.get_time_entries(
+            db=db,
+            tenant_id=uuid.UUID(current_user.get("tenant_id", "")),
+            start_date=start_date,
+            end_date=end_date,
+            employee_id=emp_id,
+            department=department,
+            source=source,
+            limit=limit,
+            offset=offset,
+        )
+        return entries
+    except Exception as e:
+        logger.error(f"Failed to get entries: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to get entries: {str(e)}")
+
+
+@router.post(
+    "/batch-process",
+    response_model=BatchProcessResponse,
+    status_code=202,
+    summary="Trigger manual batch processing",
+)
+def trigger_batch_process(
+    request: BatchProcessRequest,
+    current_user: dict = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Manually trigger automatic time entry generation for a specific date."""
+    import uuid
+    try:
+        entries_created = TimeTrackingService.generate_time_entries_for_date(
+            db=db,
+            tenant_id=uuid.UUID(current_user.get("tenant_id", "")),
+            target_date=request.process_date,
+        )
+
+        return BatchProcessResponse(
+            job_id=f"batch-{request.process_date.isoformat()}",
+            status="completed",
+            message=f"Successfully created {entries_created} time entries",
+            estimated_entries=entries_created,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Batch processing failed")
