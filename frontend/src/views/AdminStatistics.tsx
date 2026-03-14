@@ -107,8 +107,6 @@ export const AdminStatistics: React.FC = () => {
     );
   }
 
-  const activeTapConfig = TABS.find((tab) => tab.id === activeTab);
-
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* Header */}

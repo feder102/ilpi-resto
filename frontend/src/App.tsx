@@ -76,7 +76,7 @@ export default function App() {
         <Route path={ROUTES.REPORTS} element={<ProtectedRoute allowedRoles={ADMIN_MOD}><ReportsView /></ProtectedRoute>} />
         <Route path={ROUTES.SETTINGS} element={<ProtectedRoute allowedRoles={ADMIN_ONLY}><SettingsView /></ProtectedRoute>} />
         {/* Feature 008: Automatic Time Tracking Statistics - Admin Dashboard */}
-        <Route path="/admin/statistics" element={<ProtectedRoute allowedRoles={ADMIN_MOD}><AdminStatistics currentUser={undefined} /></ProtectedRoute>} />
+        <Route path="/admin/statistics" element={<ProtectedRoute allowedRoles={ADMIN_MOD}><AdminStatistics /></ProtectedRoute>} />
       </Route>
 
       {/* Feature 005: Employee Portal - CRITICAL SECURITY ROUTES */}
