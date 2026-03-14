@@ -17,7 +17,7 @@ export interface RadioOption {
   disabled?: boolean;
 }
 
-export interface RadioGroupProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
+export interface RadioGroupProps extends Omit<React.HTMLAttributes<HTMLFieldSetElement>, 'onChange'> {
   /**
    * Array of radio options
    */
@@ -71,7 +71,7 @@ export interface RadioGroupProps extends Omit<React.HTMLAttributes<HTMLDivElemen
  *   onChange={setSelected}
  * />
  */
-const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
+const RadioGroup = React.forwardRef<HTMLFieldSetElement, RadioGroupProps>(
   (
     {
       options,

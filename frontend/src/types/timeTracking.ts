@@ -3,10 +3,12 @@
  * Used by statistics service and admin components
  */
 
-export enum TimeEntrySourceEnum {
-  SHIFT = "shift",
-  MANUAL = "manual",
-}
+export const TimeEntrySourceEnum = {
+  SHIFT: "shift",
+  MANUAL: "manual",
+} as const;
+
+export type TimeEntrySourceEnum = typeof TimeEntrySourceEnum[keyof typeof TimeEntrySourceEnum];
 
 export interface TimeEntry {
   id: string;

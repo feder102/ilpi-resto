@@ -7,9 +7,9 @@ import React, { useEffect, useState } from "react";
 import Card from "../ui/Card";
 import Alert from "../ui/Alert";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { Calendar, Clock, AlertCircle } from "lucide-react";
+import { Calendar, Clock } from "lucide-react";
 import { getEmployeeStatistics } from "../../services/statisticsService";
-import { EmployeeStatistics } from "../../types/timeTracking";
+import type { EmployeeStatistics } from "../../types/timeTracking";
 
 interface EmployeeStatisticsCardProps {
   employeeId: string;
@@ -170,7 +170,7 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, value }) => `${value.toFixed(1)}h`}
+                      label={({ value }) => `${value.toFixed(1)}h`}
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"

@@ -87,7 +87,7 @@ export default function PasswordSetup() {
 
     setLoading(true);
     try {
-      const response = await setupPassword(token, password, passwordConfirm);
+      await setupPassword(token, password, passwordConfirm);
       setSuccess(true);
       setPassword('');
       setPasswordConfirm('');

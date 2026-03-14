@@ -16,7 +16,7 @@ from app.common.exceptions import ValidationError, NotFoundError, ForbiddenError
 from app.common.time_tracking_exceptions import BatchProcessingError, NoShiftsFoundError, HoursCalculationError
 from app.models.time_record import TimeRecord
 from app.models.shift_record import ShiftRecord
-from app.models.time_entry import TimeEntry
+from app.models.time_entry import TimeEntry, TimeEntrySource
 from app.models.shift_type import ShiftType
 from app.models.employee import Employee
 from app.schemas.time_tracking import TimeRecordResponse, ClockInResponse, ClockOutResponse, EmployeeStatisticsResponse, DepartmentStatisticsResponse, TimeEntryListResponse
@@ -458,7 +458,7 @@ class TimeTrackingService:
             ).all()
 
             if not shifts:
-                raise NoShiftsFoundError(f"No shifts found for {target_date}")
+                raise NoShiftsFoundError(target_date=target_date)
 
             entries_created = 0
 
@@ -511,7 +511,7 @@ class TimeTrackingService:
                     start_time=start_time,
                     end_time=end_time,
                     hours_worked=hours_worked,
-                    source="shift",
+                    source=TimeEntrySource.SHIFT,
                     shift_record_id=shift.id,
                     shift_type_id=shift.shift_type_id,
                 )

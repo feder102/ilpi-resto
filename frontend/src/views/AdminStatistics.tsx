@@ -5,12 +5,13 @@
  */
 
 import React, { useState } from "react";
-import { Alert, AlertDescription } from "../components/ui/alert";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import Alert from "../components/ui/Alert";
+import { RefreshCw } from "lucide-react";
 import { EmployeeStatisticsCard } from "../components/time-tracking/EmployeeStatisticsCard";
 import { DepartmentStatisticsCard } from "../components/time-tracking/DepartmentStatisticsCard";
 import { TimeEntriesTable } from "../components/time-tracking/TimeEntriesTable";
 import { triggerBatchProcess } from "../services/statisticsService";
+import { useAuth } from "../hooks/useAuth";
 
 interface AdminUser {
   id: string;
@@ -22,7 +23,9 @@ interface AdminStatisticsProps {
   currentUser?: AdminUser;
 }
 
-export const AdminStatistics: React.FC<AdminStatisticsProps> = ({ currentUser }) => {
+export const AdminStatistics: React.FC<AdminStatisticsProps> = ({ currentUser: propUser }) => {
+  const { user } = useAuth();
+  const currentUser = propUser || (user ? { id: user.id, role: user.role as "Admin" | "Moderador", tenant_id: user.tenant_id } : undefined);
   const [activeTab, setActiveTab] = useState<"employee" | "department" | "entries" | "batch">(
     "employee"
   );
@@ -60,12 +63,11 @@ export const AdminStatistics: React.FC<AdminStatisticsProps> = ({ currentUser })
   // Check authorization
   if (!currentUser || !["Admin", "Moderador"].includes(currentUser.role)) {
     return (
-      <Alert className="border-red-200 bg-red-50">
-        <AlertCircle className="h-4 w-4 text-red-600" />
-        <AlertDescription className="text-red-700">
-          You do not have permission to access this page. Admin or Moderador role required.
-        </AlertDescription>
-      </Alert>
+      <Alert
+        variant="error"
+        title="Access Denied"
+        message="You do not have permission to access this page. Admin or Moderador role required."
+      />
     );
   }
 
@@ -232,13 +234,11 @@ export const AdminStatistics: React.FC<AdminStatisticsProps> = ({ currentUser })
       {/* Batch Process Tab */}
       {activeTab === "batch" && currentUser?.role === "Admin" && (
         <div className="space-y-4">
-          <Alert className="bg-blue-50 border-blue-200">
-            <AlertCircle className="h-4 w-4 text-blue-600" />
-            <AlertDescription className="text-blue-700">
-              Manually trigger automatic time entry generation for a specific date. Normally runs
-              daily at 1:00 AM.
-            </AlertDescription>
-          </Alert>
+          <Alert
+            variant="info"
+            title="Batch Processing"
+            message="Manually trigger automatic time entry generation for a specific date. Normally runs daily at 1:00 AM."
+          />
 
           <div className="bg-white rounded-lg p-6 border border-gray-200">
             <div className="space-y-4">
@@ -269,17 +269,17 @@ export const AdminStatistics: React.FC<AdminStatisticsProps> = ({ currentUser })
               </div>
 
               {batchMessage && (
-                <Alert className="bg-green-50 border-green-200">
-                  <AlertCircle className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-700">{batchMessage}</AlertDescription>
-                </Alert>
+                <Alert
+                  variant="success"
+                  message={batchMessage}
+                />
               )}
 
               {batchError && (
-                <Alert className="bg-red-50 border-red-200">
-                  <AlertCircle className="h-4 w-4 text-red-600" />
-                  <AlertDescription className="text-red-700">{batchError}</AlertDescription>
-                </Alert>
+                <Alert
+                  variant="error"
+                  message={batchError}
+                />
               )}
             </div>
           </div>
@@ -287,12 +287,11 @@ export const AdminStatistics: React.FC<AdminStatisticsProps> = ({ currentUser })
       )}
 
       {activeTab === "batch" && currentUser?.role !== "Admin" && (
-        <Alert className="border-yellow-200 bg-yellow-50">
-          <AlertCircle className="h-4 w-4 text-yellow-600" />
-          <AlertDescription className="text-yellow-700">
-            Only Admin users can trigger batch processing. Your role: {currentUser.role}
-          </AlertDescription>
-        </Alert>
+        <Alert
+          variant="warning"
+          title="Admin Only"
+          message={`Only Admin users can trigger batch processing. Your role: ${currentUser.role}`}
+        />
       )}
     </div>
   );

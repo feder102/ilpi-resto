@@ -3,16 +3,14 @@
  * Fetches employee and department work statistics, time entries, and triggers batch processing
  */
 
-import axios from "axios";
-import {
+import apiClient from "./apiClient";
+import type {
   EmployeeStatistics,
   DepartmentStatistics,
   TimeEntryListResponse,
   BatchProcessResponse,
   TimeEntryFilterRequest,
 } from "../types/timeTracking";
-
-const API_BASE_URL = `/api/v1`;
 
 /**
  * Get monthly work statistics for a specific employee
@@ -29,8 +27,8 @@ export async function getEmployeeStatistics(
   includeManual: boolean = false
 ): Promise<EmployeeStatistics> {
   try {
-    const response = await axios.get(
-      `${API_BASE_URL}/employee/time-tracking/statistics/employee/${employeeId}`,
+    const response = await apiClient.get(
+      `/employee/time-tracking/statistics/employee/${employeeId}`,
       {
         params: {
           year,
@@ -62,8 +60,8 @@ export async function getDepartmentStatistics(
   includeManual: boolean = false
 ): Promise<DepartmentStatistics> {
   try {
-    const response = await axios.get(
-      `${API_BASE_URL}/employee/time-tracking/statistics/department`,
+    const response = await apiClient.get(
+      `/employee/time-tracking/statistics/department`,
       {
         params: {
           year,
@@ -90,7 +88,7 @@ export async function getTimeEntries(
   filters: TimeEntryFilterRequest
 ): Promise<TimeEntryListResponse> {
   try {
-    const response = await axios.get(`${API_BASE_URL}/employee/time-tracking/entries`, {
+    const response = await apiClient.get(`/employee/time-tracking/entries`, {
       params: {
         start_date: filters.start_date,
         end_date: filters.end_date,
@@ -121,8 +119,9 @@ export async function triggerBatchProcess(
   overwriteExisting: boolean = false
 ): Promise<BatchProcessResponse> {
   try {
-    const response = await axios.post(
-      `${API_BASE_URL}/employee/time-tracking/batch-process`,
+    console.log('[Statistics Service] Triggering batch process for date:', processDate);
+    const response = await apiClient.post(
+      `/employee/time-tracking/batch-process`,
       {
         process_date: processDate,
         overwrite_existing: overwriteExisting,
@@ -130,6 +129,7 @@ export async function triggerBatchProcess(
     );
     return response.data;
   } catch (error) {
+    console.error('[Statistics Service] Batch process error:', error);
     throw new Error(
       `Failed to trigger batch process: ${error instanceof Error ? error.message : String(error)}`
     );

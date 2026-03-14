@@ -11,8 +11,6 @@ RUN npm install
 # Copy app
 COPY . .
 
-# Build
-RUN npm run build
-
-# Start dev server
+# For development: run dev server with source files
+# The dev server handles bundling on-the-fly
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]

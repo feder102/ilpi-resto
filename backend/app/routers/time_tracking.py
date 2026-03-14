@@ -293,6 +293,9 @@ def trigger_batch_process(
 ):
     """Manually trigger automatic time entry generation for a specific date."""
     import uuid
+    import logging
+    logger = logging.getLogger(__name__)
+
     try:
         entries_created = TimeTrackingService.generate_time_entries_for_date(
             db=db,
@@ -307,4 +310,5 @@ def trigger_batch_process(
             estimated_entries=entries_created,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Batch processing failed")
+        logger.error(f"Batch processing failed for date {request.process_date}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Batch processing failed: {str(e)}")

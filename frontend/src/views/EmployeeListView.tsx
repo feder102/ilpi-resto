@@ -300,7 +300,7 @@ export default function EmployeeListView() {
                       isAdmin && (
                         <Button
                           onClick={() => { setReactivateId(emp.id); setReactivateName(`${emp.first_name} ${emp.last_name}`); }}
-                          variant="success"
+                          variant="primary"
                           size="sm"
                           className="flex-1 flex items-center justify-center gap-1"
                         >
@@ -539,7 +539,7 @@ export default function EmployeeListView() {
               Cancelar
             </Button>
             <Button
-              variant="success"
+              variant="primary"
               loading={reactivating}
               onClick={handleReactivate}
             >

@@ -7,9 +7,9 @@ import React, { useEffect, useState } from "react";
 import Card from "../ui/Card";
 import Alert from "../ui/Alert";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Users, Clock, AlertCircle } from "lucide-react";
+import { Users, Clock } from "lucide-react";
 import { getDepartmentStatistics } from "../../services/statisticsService";
-import { DepartmentStatistics } from "../../types/timeTracking";
+import type { DepartmentStatistics } from "../../types/timeTracking";
 
 interface DepartmentStatisticsCardProps {
   department?: string;

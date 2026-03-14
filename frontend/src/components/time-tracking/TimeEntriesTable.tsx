@@ -6,9 +6,10 @@
 import React, { useEffect, useState } from "react";
 import Card from "../ui/Card";
 import Alert from "../ui/Alert";
-import { ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getTimeEntries } from "../../services/statisticsService";
-import { TimeEntry, TimeEntryListResponse } from "../../types/timeTracking";
+import type { TimeEntry, TimeEntryListResponse } from "../../types/timeTracking";
+import { TimeEntrySourceEnum } from "../../types/timeTracking";
 
 interface TimeEntriesTableProps {
   filters?: {
@@ -40,7 +41,7 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
     end_date: filters.end_date || today,
     employee_id: filters.employee_id,
     department: filters.department,
-    source: filters.source || "shift",
+    source: (filters.source as typeof TimeEntrySourceEnum[keyof typeof TimeEntrySourceEnum]) || TimeEntrySourceEnum.SHIFT,
   };
 
   useEffect(() => {
