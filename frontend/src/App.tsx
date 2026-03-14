@@ -75,6 +75,8 @@ export default function App() {
         <Route path={ROUTES.VACATIONS} element={<ProtectedRoute allowedRoles={ALL_ROLES}><VacationView /></ProtectedRoute>} />
         <Route path={ROUTES.REPORTS} element={<ProtectedRoute allowedRoles={ADMIN_MOD}><ReportsView /></ProtectedRoute>} />
         <Route path={ROUTES.SETTINGS} element={<ProtectedRoute allowedRoles={ADMIN_ONLY}><SettingsView /></ProtectedRoute>} />
+        {/* Feature 008: Automatic Time Tracking Statistics - Admin Dashboard */}
+        <Route path="/admin/statistics" element={<ProtectedRoute allowedRoles={ADMIN_MOD}><AdminStatistics currentUser={undefined} /></ProtectedRoute>} />
       </Route>
 
       {/* Feature 005: Employee Portal - CRITICAL SECURITY ROUTES */}
@@ -179,17 +181,6 @@ export default function App() {
           <ModeratorRoute>
             <ModeratorReports />
           </ModeratorRoute>
-        }
-      />
-
-      {/* Feature 008: Automatic Time Tracking Statistics - Admin Dashboard */}
-      {/* SECURITY: Requires Admin or Moderador role + is_active=true */}
-      <Route
-        path="/admin/statistics"
-        element={
-          <ProtectedRoute allowedRoles={ADMIN_MOD}>
-            <AdminStatistics currentUser={undefined} />
-          </ProtectedRoute>
         }
       />
 
