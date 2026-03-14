@@ -40,26 +40,31 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
   const [month, setMonth] = useState(new Date().getMonth() + 1);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await getEmployeeStatistics(employeeId, year, month);
-        setStats(data);
-        onDateChange?.(year, month);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load statistics");
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Debounce to avoid API calls while user is still typing
+    const timer = setTimeout(() => {
+      const fetchStats = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          const data = await getEmployeeStatistics(employeeId, year, month);
+          setStats(data);
+          onDateChange?.(year, month);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Failed to load statistics");
+        } finally {
+          setLoading(false);
+        }
+      };
 
-    if (employeeId && isValidUUID(employeeId)) {
-      fetchStats();
-    } else if (employeeId && !isValidUUID(employeeId)) {
-      setError("Invalid employee ID format. Please enter a valid UUID.");
-      setStats(null);
-    }
+      if (employeeId && isValidUUID(employeeId)) {
+        fetchStats();
+      } else if (employeeId && !isValidUUID(employeeId)) {
+        setError("Invalid employee ID format. Please enter a valid UUID.");
+        setStats(null);
+      }
+    }, 500); // Wait 500ms after user stops typing
+
+    return () => clearTimeout(timer);
   }, [employeeId, year, month, onDateChange]);
 
   const handlePrevMonth = () => {
