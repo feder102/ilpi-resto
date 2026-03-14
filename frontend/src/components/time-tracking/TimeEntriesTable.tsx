@@ -1,28 +1,47 @@
 /**
- * TimeEntriesTable - Displays paginated table of time entry records
- * Allows filtering by employee, department, date range, and source (shift/manual)
+ * TimeEntriesTable - Displays paginated time entries with filtering
+ * Shows date, employee, hours worked, shift type, and source
  */
 
 import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Alert, AlertDescription } from "../ui/alert";
-import { AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import Card from "../ui/Card";
+import Alert from "../ui/Alert";
+import { ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
 import { getTimeEntries } from "../../services/statisticsService";
-import { TimeEntry, TimeEntryListResponse, TimeEntryFilterRequest } from "../../types/timeTracking";
+import { TimeEntry, TimeEntryListResponse } from "../../types/timeTracking";
 
 interface TimeEntriesTableProps {
-  filters: Omit<TimeEntryFilterRequest, "limit" | "offset">;
+  filters?: {
+    start_date?: string;
+    end_date?: string;
+    employee_id?: string;
+    department?: string;
+    source?: "shift" | "manual";
+  };
   pageSize?: number;
 }
 
 export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
-  filters,
+  filters = {},
   pageSize = 20,
 }) => {
-  const [data, setData] = useState<TimeEntryListResponse | null>(null);
+  const [entries, setEntries] = useState<TimeEntryListResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const today = new Date().toISOString().split("T")[0];
+  const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+
+  const finalFilters = {
+    start_date: filters.start_date || monthAgo,
+    end_date: filters.end_date || today,
+    employee_id: filters.employee_id,
+    department: filters.department,
+    source: filters.source || "shift",
+  };
 
   useEffect(() => {
     const fetchEntries = async () => {
@@ -30,182 +49,149 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
       setError(null);
       try {
         const offset = (currentPage - 1) * pageSize;
-        const response = await getTimeEntries({
-          ...filters,
+        const data = await getTimeEntries({
+          ...finalFilters,
           limit: pageSize,
           offset,
         });
-        setData(response);
+        setEntries(data);
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch time entries"
-        );
+        setError(err instanceof Error ? err.message : "Failed to load entries");
       } finally {
         setLoading(false);
       }
     };
 
     fetchEntries();
-  }, [filters, currentPage, pageSize]);
+  }, [finalFilters, currentPage, pageSize]);
 
-  const totalPages = data ? Math.ceil(data.total / pageSize) : 0;
-
-  const formatTime = (timeStr: string): string => {
-    if (!timeStr) return "-";
-    // Handle HH:MM format
-    return timeStr.substring(0, 5);
-  };
-
-  const formatDate = (dateStr: string): string => {
-    if (!dateStr) return "-";
-    return new Date(dateStr).toLocaleDateString("es-ES", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  const getSourceBadge = (source: string) => {
-    if (source === "shift") {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-          Shift
-        </span>
-      );
-    } else if (source === "manual") {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-          Manual
-        </span>
-      );
-    }
-    return <span className="text-gray-500">-</span>;
-  };
+  const totalPages = entries ? Math.ceil(entries.total / pageSize) : 1;
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold">Time Entries</CardTitle>
-      </CardHeader>
+    <div className="space-y-4">
+      {/* Filters Summary */}
+      <Card className="bg-white">
+        <div className="p-4 text-sm text-gray-600">
+          <span className="font-medium">Filters:</span> {finalFilters.start_date} to{" "}
+          {finalFilters.end_date}
+          {finalFilters.employee_id && ` | Employee: ${finalFilters.employee_id}`}
+          {finalFilters.department && ` | Department: ${finalFilters.department}`}
+          {finalFilters.source && ` | Source: ${finalFilters.source}`}
+        </div>
+      </Card>
 
-      <CardContent className="space-y-4">
-        {loading && (
-          <div className="flex items-center justify-center h-40 bg-gray-50 rounded">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          </div>
-        )}
-
-        {error && (
-          <Alert className="border-red-200 bg-red-50">
-            <AlertCircle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-700">{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {data && !loading && (
-          <>
-            {/* Table */}
+      {/* Table */}
+      {loading ? (
+        <Card className="bg-white">
+          <div className="p-4 text-center text-gray-500">Loading...</div>
+        </Card>
+      ) : error ? (
+        <Alert variant="error" message={error} />
+      ) : entries && entries.items.length > 0 ? (
+        <>
+          <Card className="bg-white">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Date</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Time</th>
-                    <th className="px-4 py-3 text-center font-semibold text-gray-700">Hours</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Shift Type</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Source</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-900">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-900">
+                      Employee
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-900">
+                      Start Time
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-900">
+                      End Time
+                    </th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-900">
+                      Hours
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-900">
+                      Source
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
-                  {data.items && data.items.length > 0 ? (
-                    data.items.map((entry: TimeEntry) => (
-                      <tr
-                        key={entry.id}
-                        className="border-b border-gray-200 hover:bg-gray-50 transition"
-                      >
-                        <td className="px-4 py-3 text-gray-800 font-medium">
-                          {formatDate(entry.shift_date)}
-                        </td>
-                        <td className="px-4 py-3 text-gray-700">
-                          {formatTime(entry.start_time)} - {formatTime(entry.end_time)}
-                        </td>
-                        <td className="px-4 py-3 text-center font-semibold text-gray-800">
-                          {Number(entry.hours_worked).toFixed(1)}h
-                        </td>
-                        <td className="px-4 py-3 text-gray-700">
-                          {entry.shift_type_id || "-"}
-                        </td>
-                        <td className="px-4 py-3">
-                          {getSourceBadge(entry.source || "shift")}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="px-4 py-6 text-center text-gray-500 font-medium"
-                      >
-                        No time entries found
+                <tbody className="divide-y divide-gray-200">
+                  {entries.items.map((entry: TimeEntry) => (
+                    <tr key={entry.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-gray-900">{entry.shift_date}</td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {entry.employee_id.substring(0, 8)}...
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">{entry.start_time}</td>
+                      <td className="px-4 py-3 text-gray-600">{entry.end_time}</td>
+                      <td className="px-4 py-3 text-right font-medium text-gray-900">
+                        {typeof entry.hours_worked === 'string'
+                          ? parseFloat(entry.hours_worked).toFixed(2)
+                          : entry.hours_worked.toFixed(2)}
+                        h
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                          {entry.source}
+                        </span>
                       </td>
                     </tr>
-                  )}
+                  ))}
                 </tbody>
               </table>
             </div>
+          </Card>
 
-            {/* Pagination Info */}
-            <div className="flex items-center justify-between text-xs text-gray-600 px-2">
-              <span>
-                Showing {data.items.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{" "}
-                {Math.min(currentPage * pageSize, data.total)} of {data.total} entries
-              </span>
-              <span className="font-medium">
-                Page {currentPage} of {totalPages}
-              </span>
-            </div>
-
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2">
+          {/* Pagination */}
+          <Card className="bg-white">
+            <div className="p-4 flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Showing {(currentPage - 1) * pageSize + 1} to{" "}
+                {Math.min(currentPage * pageSize, entries.total)} of {entries.total}{" "}
+                entries
+              </div>
+              <div className="flex gap-2">
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Previous page"
                 >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
+                  <ChevronLeft className="w-5 h-5" />
                 </button>
-
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2 px-2">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 text-sm font-medium rounded transition ${
-                        currentPage === page
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      className={`px-3 py-1 rounded text-sm ${
+                        page === currentPage
+                          ? "bg-blue-600 text-white"
+                          : "border border-gray-300 hover:bg-gray-50"
                       }`}
                     >
                       {page}
                     </button>
                   ))}
                 </div>
-
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Next page"
                 >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
-            )}
-          </>
-        )}
-      </CardContent>
-    </Card>
+            </div>
+          </Card>
+        </>
+      ) : (
+        <Card className="bg-white">
+          <div className="p-4 text-center text-gray-500">
+            No time entries found for the selected filters
+          </div>
+        </Card>
+      )}
+    </div>
   );
 };

@@ -4,8 +4,8 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Alert, AlertDescription } from "../ui/alert";
+import Card from "../ui/Card";
+import Alert from "../ui/Alert";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Calendar, Clock, AlertCircle } from "lucide-react";
 import { getEmployeeStatistics } from "../../services/statisticsService";
@@ -32,7 +32,6 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
   const [stats, setStats] = useState<EmployeeStatistics | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth() + 1);
 
@@ -43,175 +42,156 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
       try {
         const data = await getEmployeeStatistics(employeeId, year, month);
         setStats(data);
+        onDateChange?.(year, month);
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch statistics"
-        );
+        setError(err instanceof Error ? err.message : "Failed to load statistics");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStats();
-  }, [employeeId, year, month]);
-
-  const handleMonthChange = (newMonth: number) => {
-    let newYear = year;
-    if (newMonth > 12) {
-      newYear = year + 1;
-      newMonth = 1;
-    } else if (newMonth < 1) {
-      newYear = year - 1;
-      newMonth = 12;
+    if (employeeId) {
+      fetchStats();
     }
-    setYear(newYear);
-    setMonth(newMonth);
-    if (onDateChange) {
-      onDateChange(newYear, newMonth);
+  }, [employeeId, year, month, onDateChange]);
+
+  const handlePrevMonth = () => {
+    if (month === 1) {
+      setMonth(12);
+      setYear(year - 1);
+    } else {
+      setMonth(month - 1);
     }
   };
 
-  const pieData =
-    stats && stats.breakdown_by_shift_type
-      ? Object.entries(stats.breakdown_by_shift_type).map(([shiftTypeId, hours]) => ({
-          name: shiftTypeId,
-          value: Number(hours.toFixed(2)),
-        }))
-      : [];
+  const handleNextMonth = () => {
+    if (month === 12) {
+      setMonth(1);
+      setYear(year + 1);
+    } else {
+      setMonth(month + 1);
+    }
+  };
+
+  const chartData = stats?.breakdown_by_shift_type
+    ? Object.entries(stats.breakdown_by_shift_type).map(([shiftId, hours]) => ({
+        name: shiftId,
+        value: typeof hours === 'string' ? parseFloat(hours) : hours,
+        color: Object.values(SHIFT_TYPE_COLORS)[Object.keys(stats.breakdown_by_shift_type).indexOf(shiftId)] || "#8b5cf6",
+      }))
+    : [];
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-2xl font-bold">{employeeName}</CardTitle>
-            <p className="text-sm text-gray-500">Work Statistics</p>
+    <div className="space-y-4">
+      {/* Month Navigator */}
+      <Card className="bg-white">
+        <div className="flex items-center justify-between p-4">
+          <h3 className="font-semibold text-gray-900">
+            {employeeName} - Statistics
+          </h3>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrevMonth}
+              className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
+            >
+              ← Prev
+            </button>
+            <span className="text-sm font-medium text-gray-600 min-w-[100px] text-center">
+              {year}-{String(month).padStart(2, "0")}
+            </span>
+            <button
+              onClick={handleNextMonth}
+              className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
+            >
+              Next →
+            </button>
           </div>
-          <Calendar className="h-6 w-6 text-gray-400" />
         </div>
-      </CardHeader>
+      </Card>
 
-      <CardContent className="space-y-4">
-        {/* Month/Year Picker */}
-        <div className="flex items-center justify-between rounded-lg bg-gray-100 p-3">
-          <button
-            onClick={() => handleMonthChange(month - 1)}
-            className="px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded"
-          >
-            ←
-          </button>
-          <span className="text-sm font-semibold">
-            {new Date(year, month - 1).toLocaleDateString("es-ES", {
-              month: "long",
-              year: "numeric",
-            })}
-          </span>
-          <button
-            onClick={() => handleMonthChange(month + 1)}
-            className="px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded"
-          >
-            →
-          </button>
-        </div>
-
-        {loading && (
-          <div className="flex items-center justify-center h-40 bg-gray-50 rounded">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          </div>
-        )}
-
-        {error && (
-          <Alert className="border-red-200 bg-red-50">
-            <AlertCircle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-700">{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {stats && !loading && (
-          <>
-            {/* Main Statistics Grid */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Total Hours - Large Display */}
-              <div className="col-span-2 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-4 border border-blue-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-700 font-medium">Total Hours</p>
-                    <p className="text-4xl font-bold text-blue-700">
-                      {stats.total_hours.toFixed(1)}
-                      <span className="text-lg ml-1">h</span>
-                    </p>
-                  </div>
-                  <Clock className="h-12 w-12 text-blue-300" />
+      {/* Stats Display */}
+      {loading ? (
+        <Card className="bg-white">
+          <div className="p-4 text-center text-gray-500">Loading...</div>
+        </Card>
+      ) : error ? (
+        <Alert variant="error" message={error} />
+      ) : stats ? (
+        <>
+          {/* Stats Summary */}
+          <Card className="bg-white">
+            <div className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-600">
+                  {typeof stats.total_hours === 'string'
+                    ? parseFloat(stats.total_hours)
+                    : stats.total_hours}
+                </div>
+                <div className="text-sm text-gray-600 flex items-center justify-center gap-1 mt-1">
+                  <Clock className="w-4 h-4" />
+                  Total Hours
                 </div>
               </div>
-
-              {/* Days Worked */}
-              <div className="rounded-lg bg-gray-50 p-4 border border-gray-200">
-                <p className="text-xs text-gray-600 font-medium">Days Worked</p>
-                <p className="text-3xl font-bold text-gray-800 mt-1">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-green-600">
                   {stats.days_worked}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">days</p>
+                </div>
+                <div className="text-sm text-gray-600 flex items-center justify-center gap-1 mt-1">
+                  <Calendar className="w-4 h-4" />
+                  Days Worked
+                </div>
               </div>
-
-              {/* Average Hours per Day */}
-              <div className="rounded-lg bg-gray-50 p-4 border border-gray-200">
-                <p className="text-xs text-gray-600 font-medium">Average/Day</p>
-                <p className="text-3xl font-bold text-gray-800 mt-1">
-                  {stats.avg_hours_per_day.toFixed(1)}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">hours</p>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-purple-600">
+                  {typeof stats.avg_hours_per_day === 'string'
+                    ? parseFloat(stats.avg_hours_per_day).toFixed(2)
+                    : stats.avg_hours_per_day.toFixed(2)}
+                </div>
+                <div className="text-sm text-gray-600">Avg/Day</div>
+              </div>
+              <div className="text-center">
+                <div className="text-sm text-gray-500">
+                  {stats.period}
+                </div>
+                <div className="text-sm text-gray-600 mt-2">Period</div>
               </div>
             </div>
+          </Card>
 
-            {/* Breakdown by Shift Type */}
-            {pieData.length > 0 && (
-              <div className="rounded-lg border border-gray-200 p-4">
-                <p className="text-sm font-semibold text-gray-800 mb-3">Shift Type Breakdown</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 h-32">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={pieData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={40}
-                          outerRadius={60}
-                          dataKey="value"
-                          startAngle={90}
-                          endAngle={450}
-                        >
-                          {pieData.map((entry, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={SHIFT_TYPE_COLORS[entry.name] || "#6b7280"}
-                            />
-                          ))}
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="ml-4 space-y-2">
-                    {pieData.map((entry) => (
-                      <div key={entry.name} className="flex items-center text-xs">
-                        <div
-                          className="w-3 h-3 rounded-full mr-2"
-                          style={{
-                            backgroundColor: SHIFT_TYPE_COLORS[entry.name] || "#6b7280",
-                          }}
-                        ></div>
-                        <span className="font-medium text-gray-700">{entry.name}</span>
-                        <span className="ml-2 text-gray-500">{entry.value}h</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+          {/* Chart */}
+          {chartData.length > 0 && (
+            <Card className="bg-white">
+              <div className="p-4">
+                <h4 className="font-semibold text-gray-900 mb-4">Breakdown by Shift Type</h4>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value }) => `${value.toFixed(1)}h`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {chartData.map((entry) => (
+                        <Cell key={`cell-${entry.name}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
-            )}
-          </>
-        )}
-      </CardContent>
-    </Card>
+            </Card>
+          )}
+        </>
+      ) : (
+        <Card className="bg-white">
+          <div className="p-4 text-center text-gray-500">
+            No data available
+          </div>
+        </Card>
+      )}
+    </div>
   );
 };
