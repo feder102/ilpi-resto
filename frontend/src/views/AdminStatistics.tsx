@@ -76,6 +76,13 @@ export const AdminStatistics: React.FC = () => {
   const isAuthorized = currentUser && ["Admin", "Moderador"].includes(currentUser.role);
   const isAdmin = currentUser?.role === "Admin";
 
+  const timeEntriesFilters = useMemo(() => ({
+    start_date: new Date(filterYear, filterMonth - 1, 1)
+      .toISOString()
+      .split("T")[0],
+    end_date: new Date().toISOString().split("T")[0],
+  }), [filterYear, filterMonth]);
+
   const handleBatchProcess = async () => {
     setBatchProcessing(true);
     setBatchMessage(null);
@@ -252,12 +259,7 @@ export const AdminStatistics: React.FC = () => {
 
             {/* Time Entries Table */}
             <TimeEntriesTable
-              filters={{
-                start_date: new Date(filterYear, filterMonth - 1, 1)
-                  .toISOString()
-                  .split("T")[0],
-                end_date: new Date().toISOString().split("T")[0],
-              }}
+              filters={timeEntriesFilters}
               pageSize={20}
             />
           </div>

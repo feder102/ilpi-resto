@@ -3,7 +3,7 @@
  * Shows date, employee, hours worked, shift type, and source
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Card from "../ui/Card";
 import Alert from "../ui/Alert";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -36,13 +36,13 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
     .toISOString()
     .split("T")[0];
 
-  const finalFilters = {
+  const finalFilters = useMemo(() => ({
     start_date: filters.start_date || monthAgo,
     end_date: filters.end_date || today,
     employee_id: filters.employee_id,
     department: filters.department,
     source: (filters.source as typeof TimeEntrySourceEnum[keyof typeof TimeEntrySourceEnum]) || TimeEntrySourceEnum.SHIFT,
-  };
+  }), [filters.start_date, filters.end_date, filters.employee_id, filters.department, filters.source, monthAgo, today]);
 
   useEffect(() => {
     const fetchEntries = async () => {
