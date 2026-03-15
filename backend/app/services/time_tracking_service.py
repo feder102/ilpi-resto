@@ -421,7 +421,7 @@ class TimeTrackingService:
             hours = Decimal(total_minutes) / Decimal(60)
             return hours.quantize(Decimal('0.00'))
         except Exception as e:
-            raise HoursCalculationError(f"Failed to calculate hours: {str(e)}")
+            raise HoursCalculationError(start_time, end_time, f"Failed to calculate hours: {str(e)}")
 
     @staticmethod
     def generate_time_entries_for_date(
