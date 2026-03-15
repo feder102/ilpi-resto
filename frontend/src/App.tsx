@@ -29,6 +29,8 @@ import EmployeeVacationView from './views/EmployeeVacationView';
 import EmployeeTimeTracking from './views/EmployeeTimeTracking';
 // Feature 007: Password Recovery
 import PasswordReset from './views/PasswordReset';
+// Feature 008: Automatic Time Tracking Statistics
+import AdminStatistics from './views/AdminStatistics';
 import { ROUTES } from './config/constants';
 import { Role } from './types';
 
@@ -73,6 +75,8 @@ export default function App() {
         <Route path={ROUTES.VACATIONS} element={<ProtectedRoute allowedRoles={ALL_ROLES}><VacationView /></ProtectedRoute>} />
         <Route path={ROUTES.REPORTS} element={<ProtectedRoute allowedRoles={ADMIN_MOD}><ReportsView /></ProtectedRoute>} />
         <Route path={ROUTES.SETTINGS} element={<ProtectedRoute allowedRoles={ADMIN_ONLY}><SettingsView /></ProtectedRoute>} />
+        {/* Feature 008: Automatic Time Tracking Statistics - Admin Dashboard */}
+        <Route path="/admin/statistics" element={<ProtectedRoute allowedRoles={ADMIN_MOD}><AdminStatistics /></ProtectedRoute>} />
       </Route>
 
       {/* Feature 005: Employee Portal - CRITICAL SECURITY ROUTES */}

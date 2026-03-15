@@ -26,21 +26,23 @@ export interface ErrorInfo {
 /**
  * Error codes from backend
  */
-export enum ErrorCode {
+export const ErrorCode = {
   // Shift conflicts
-  SHIFT_CONFLICT_001 = 'SHIFT_CONFLICT_001',
-  SHIFT_CONFLICT_VACATION = 'SHIFT_CONFLICT_VACATION',
+  SHIFT_CONFLICT_001: 'SHIFT_CONFLICT_001',
+  SHIFT_CONFLICT_VACATION: 'SHIFT_CONFLICT_VACATION',
 
   // Common errors
-  DUPLICATE = 'DUPLICATE',
-  CONFLICT = 'CONFLICT',
-  NOT_FOUND = 'NOT_FOUND',
-  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  DUPLICATE: 'DUPLICATE',
+  CONFLICT: 'CONFLICT',
+  NOT_FOUND: 'NOT_FOUND',
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
 
   // Auth/Permission
-  UNAUTHORIZED = 'UNAUTHORIZED',
-  FORBIDDEN = 'FORBIDDEN',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  FORBIDDEN: 'FORBIDDEN',
 
   // Balance/Quota
-  BALANCE_EXCEEDED = 'BALANCE_EXCEEDED',
-}
+  BALANCE_EXCEEDED: 'BALANCE_EXCEEDED',
+} as const;
+
+export type ErrorCode = typeof ErrorCode[keyof typeof ErrorCode];

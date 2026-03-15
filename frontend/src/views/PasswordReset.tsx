@@ -15,7 +15,7 @@
  * 6. Redirect to login
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ForgotPasswordForm from '../components/password-reset/ForgotPasswordForm';
 import ResetTokenVerification from '../components/password-reset/ResetTokenVerification';

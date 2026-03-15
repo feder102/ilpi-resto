@@ -35,6 +35,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Control Horario', path: ROUTES.ATTENDANCE, icon: <Clock size={20} />, roles: [Role.ADMIN, Role.MODERADOR, Role.EMPLEADO] },
   { label: 'Vacaciones', path: ROUTES.VACATIONS, icon: <Palmtree size={20} />, roles: [Role.ADMIN, Role.MODERADOR, Role.EMPLEADO] },
   { label: 'Informes', path: ROUTES.REPORTS, icon: <BarChart3 size={20} />, roles: [Role.ADMIN, Role.MODERADOR] },
+  { label: 'Estadísticas Tiempo', path: '/admin/statistics', icon: <BarChart3 size={20} />, roles: [Role.ADMIN, Role.MODERADOR] },
   { label: 'Tipos de Turno', path: ROUTES.SHIFT_CONFIGURATION, icon: <Zap size={20} />, roles: [Role.ADMIN] },
   { label: 'Configuración', path: ROUTES.SETTINGS, icon: <Settings size={20} />, roles: [Role.ADMIN] },
 ];
@@ -67,7 +68,7 @@ export default function Layout() {
           <button
             onClick={() => setSidebarOpen(false)}
             className="md:hidden text-white hover:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 rounded p-1"
-            aria-label="Close sidebar"
+            aria-label="Cerrar barra lateral"
           >
             <X size={20} />
           </button>
@@ -114,7 +115,7 @@ export default function Layout() {
           <button
             onClick={() => setSidebarOpen(true)}
             className="md:hidden text-slate-700 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 rounded p-1 mr-4"
-            aria-label="Open sidebar"
+            aria-label="Abrir barra lateral"
           >
             <Menu size={24} />
           </button>
