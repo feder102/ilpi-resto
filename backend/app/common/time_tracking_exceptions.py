@@ -5,6 +5,8 @@ Handles errors specific to automatic shift-based time tracking
 and work statistics calculations.
 """
 
+import uuid
+from datetime import date, time
 from typing import Optional
 
 
@@ -15,7 +17,7 @@ class TimeTrackingException(Exception):
 
 class InvalidShiftError(TimeTrackingException):
     """Raised when a shift configuration is invalid."""
-    def __init__(self, message: str, shift_id: Optional[int] = None):
+    def __init__(self, message: str, shift_id: Optional[uuid.UUID] = None):
         self.message = message
         self.shift_id = shift_id
         super().__init__(message)
@@ -23,7 +25,7 @@ class InvalidShiftError(TimeTrackingException):
 
 class DuplicateTimeEntryError(TimeTrackingException):
     """Raised when attempting to create a duplicate time entry."""
-    def __init__(self, employee_id: int, shift_date, shift_type_id: int):
+    def __init__(self, employee_id: uuid.UUID, shift_date: date, shift_type_id: uuid.UUID):
         self.employee_id = employee_id
         self.shift_date = shift_date
         self.shift_type_id = shift_type_id
@@ -33,7 +35,7 @@ class DuplicateTimeEntryError(TimeTrackingException):
 
 class StatisticsCalculationError(TimeTrackingException):
     """Raised when statistics calculation fails."""
-    def __init__(self, message: str, employee_id: Optional[int] = None, period: Optional[str] = None):
+    def __init__(self, message: str, employee_id: Optional[uuid.UUID] = None, period: Optional[str] = None):
         self.message = message
         self.employee_id = employee_id
         self.period = period
@@ -42,7 +44,7 @@ class StatisticsCalculationError(TimeTrackingException):
 
 class NoShiftsFoundError(TimeTrackingException):
     """Raised when no shifts are found for a given employee or date."""
-    def __init__(self, employee_id: Optional[int] = None, target_date = None):
+    def __init__(self, employee_id: Optional[uuid.UUID] = None, target_date: Optional[date] = None):
         self.employee_id = employee_id
         self.target_date = target_date
         message = f"No shifts found for employee {employee_id} on {target_date}"
@@ -51,7 +53,7 @@ class NoShiftsFoundError(TimeTrackingException):
 
 class HoursCalculationError(TimeTrackingException):
     """Raised when hours calculation fails (e.g., invalid start/end times)."""
-    def __init__(self, start_time, end_time, message: Optional[str] = None):
+    def __init__(self, start_time: time, end_time: time, message: Optional[str] = None):
         self.start_time = start_time
         self.end_time = end_time
         default_msg = f"Failed to calculate hours between {start_time} and {end_time}"
@@ -60,7 +62,7 @@ class HoursCalculationError(TimeTrackingException):
 
 class BatchProcessingError(TimeTrackingException):
     """Raised when batch processing encounters an error."""
-    def __init__(self, message: str, target_date = None, entries_processed: int = 0):
+    def __init__(self, message: str, target_date: Optional[date] = None, entries_processed: int = 0):
         self.message = message
         self.target_date = target_date
         self.entries_processed = entries_processed

@@ -5,8 +5,8 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    // Disable HMR when running behind reverse proxy (nginx gateway)
-    // Client-side changes will require manual refresh, but no WebSocket errors
-    hmr: false,
+    // Disable HMR only when running behind reverse proxy (nginx in Docker)
+    // Set VITE_DISABLE_HMR=true in .env to disable WebSocket HMR
+    hmr: process.env.VITE_DISABLE_HMR === 'true' ? false : undefined,
   },
 })

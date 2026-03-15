@@ -23,7 +23,9 @@ services:
       - db
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      target: development
     ports:
       - "5173:5173"
     environment:

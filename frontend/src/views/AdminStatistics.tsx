@@ -64,6 +64,14 @@ export const AdminStatistics: React.FC = () => {
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
 
+  // Time Entries tab filter state
+  const today = new Date().toISOString().split("T")[0];
+  const monthAgoDefault = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const [entriesStartDate, setEntriesStartDate] = useState(monthAgoDefault);
+  const [entriesEndDate, setEntriesEndDate] = useState(today);
+  const [entriesEmployee, setEntriesEmployee] = useState("");
+  const [entriesDepartment, setEntriesDepartment] = useState("");
+
   const currentUser = useMemo<AdminUser | null>(() => {
     if (!user) return null;
     return {
@@ -77,11 +85,11 @@ export const AdminStatistics: React.FC = () => {
   const isAdmin = currentUser?.role === "Admin";
 
   const timeEntriesFilters = useMemo(() => ({
-    start_date: new Date(filterYear, filterMonth - 1, 1)
-      .toISOString()
-      .split("T")[0],
-    end_date: new Date().toISOString().split("T")[0],
-  }), [filterYear, filterMonth]);
+    start_date: entriesStartDate,
+    end_date: entriesEndDate,
+    employee_id: entriesEmployee || undefined,
+    department: entriesDepartment || undefined,
+  }), [entriesStartDate, entriesEndDate, entriesEmployee, entriesDepartment]);
 
   const handleBatchProcess = async () => {
     setBatchProcessing(true);
@@ -215,9 +223,8 @@ export const AdminStatistics: React.FC = () => {
                     </label>
                     <input
                       type="date"
-                      defaultValue={new Date(filterYear, filterMonth - 1, 1)
-                        .toISOString()
-                        .split("T")[0]}
+                      value={entriesStartDate}
+                      onChange={(e) => setEntriesStartDate(e.target.value)}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
@@ -227,7 +234,8 @@ export const AdminStatistics: React.FC = () => {
                     </label>
                     <input
                       type="date"
-                      defaultValue={new Date().toISOString().split("T")[0]}
+                      value={entriesEndDate}
+                      onChange={(e) => setEntriesEndDate(e.target.value)}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
@@ -237,7 +245,9 @@ export const AdminStatistics: React.FC = () => {
                     </label>
                     <input
                       type="text"
-                      placeholder="Nombre o DNI..."
+                      value={entriesEmployee}
+                      onChange={(e) => setEntriesEmployee(e.target.value)}
+                      placeholder="ID del empleado..."
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
@@ -245,7 +255,11 @@ export const AdminStatistics: React.FC = () => {
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Departamento
                     </label>
-                    <select className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <select
+                      value={entriesDepartment}
+                      onChange={(e) => setEntriesDepartment(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
                       <option value="">Todos los Departamentos</option>
                       <option value="Cocina">Cocina</option>
                       <option value="Atención al Público">Atención al Público</option>

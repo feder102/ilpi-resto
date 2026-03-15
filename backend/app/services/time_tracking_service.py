@@ -5,6 +5,7 @@ Feature 008: Automatic time entry tracking from shifts and statistics queries.
 All operations enforce Row-Level Security (RLS) - employees can only access their own records.
 """
 
+import logging
 import uuid
 from datetime import UTC, datetime, date as date_type, timedelta
 from decimal import Decimal
@@ -474,20 +475,27 @@ class TimeTrackingService:
                 if not shift_type or not shift_type.time_windows:
                     continue
 
-                # Get first time window (primary shift hours)
-                time_window = shift_type.time_windows[0] if isinstance(shift_type.time_windows, list) else shift_type.time_windows
-                # Parse time strings (format: "HH:MM")
-                from datetime import time as time_cls
-                start_str = time_window.get('start')
-                end_str = time_window.get('end')
-                start_time = datetime.strptime(start_str, "%H:%M").time() if start_str else None
-                end_time = datetime.strptime(end_str, "%H:%M").time() if end_str else None
+                # Parse time windows (supports single window or list of windows)
+                windows = shift_type.time_windows if isinstance(shift_type.time_windows, list) else [shift_type.time_windows]
+
+                # Use first window for start_time, last window for end_time
+                first_start_str = windows[0].get('start') if windows else None
+                last_end_str = windows[-1].get('end') if windows else None
+                start_time = datetime.strptime(first_start_str, "%H:%M").time() if first_start_str else None
+                end_time = datetime.strptime(last_end_str, "%H:%M").time() if last_end_str else None
 
                 if not start_time or not end_time:
                     continue
 
-                # Calculate hours
-                hours_worked = TimeTrackingService._calculate_hours(start_time, end_time)
+                # Calculate total hours across all time windows
+                hours_worked = Decimal(0)
+                for window in windows:
+                    w_start = window.get('start')
+                    w_end = window.get('end')
+                    if w_start and w_end:
+                        w_start_time = datetime.strptime(w_start, "%H:%M").time()
+                        w_end_time = datetime.strptime(w_end, "%H:%M").time()
+                        hours_worked += TimeTrackingService._calculate_hours(w_start_time, w_end_time)
 
                 # Check for existing entry (idempotency)
                 existing = db.exec(
@@ -579,12 +587,21 @@ class TimeTrackingService:
         days_worked = len(set(e.shift_date for e in entries))
         avg_hours = total_hours / days_worked if days_worked > 0 else Decimal(0)
 
-        breakdown_by_shift = {}
+        # Build breakdown keyed by shift type name for readability
+        shift_type_ids = {e.shift_type_id for e in entries if e.shift_type_id}
+        shift_type_names: dict[uuid.UUID, str] = {}
+        if shift_type_ids:
+            shift_types = db.exec(
+                select(ShiftType).where(ShiftType.id.in_(shift_type_ids))  # type: ignore[attr-defined]
+            ).all()
+            shift_type_names = {st.id: st.name for st in shift_types}
+
+        breakdown_by_shift: dict[str, Decimal] = {}
         for entry in entries:
-            shift_type_id = str(entry.shift_type_id) if entry.shift_type_id else "unknown"
-            if shift_type_id not in breakdown_by_shift:
-                breakdown_by_shift[shift_type_id] = Decimal(0)
-            breakdown_by_shift[shift_type_id] += entry.hours_worked
+            key = shift_type_names.get(entry.shift_type_id, "Sin tipo") if entry.shift_type_id else "Sin tipo"
+            if key not in breakdown_by_shift:
+                breakdown_by_shift[key] = Decimal(0)
+            breakdown_by_shift[key] += entry.hours_worked
 
         return EmployeeStatisticsResponse(
             employee_id=employee_id,
@@ -757,6 +774,9 @@ class TimeTrackingService:
 
 
 # T021: Batch Job Wrapper for APScheduler
+logger = logging.getLogger(__name__)
+
+
 def run_daily_batch_job(db: Session, tenant_id: uuid.UUID, process_date: Optional[date_type] = None) -> dict[str, Any]:
     """Wrapper function called by APScheduler for daily automatic time entry generation.
 
@@ -771,30 +791,23 @@ def run_daily_batch_job(db: Session, tenant_id: uuid.UUID, process_date: Optiona
     Raises:
         Logs errors but does not raise to allow scheduler to continue
     """
-    from datetime import datetime as dt_class
-    import json
-
     if process_date is None:
         process_date = date_type.today() - timedelta(days=1)
 
-    job_result = {
+    job_result: dict[str, Any] = {
         "tenant_id": str(tenant_id),
         "process_date": process_date.isoformat(),
         "entries_created": 0,
         "status": "pending",
-        "timestamp": dt_class.utcnow().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "message": "",
     }
 
     try:
-        # Log batch start
-        print(json.dumps({
-            "timestamp": dt_class.utcnow().isoformat(),
-            "level": "INFO",
-            "action": "batch_start",
-            "tenant_id": str(tenant_id),
-            "process_date": process_date.isoformat(),
-        }))
+        logger.info(
+            "Batch processing started",
+            extra={"action": "batch_start", "tenant_id": str(tenant_id), "process_date": process_date.isoformat()},
+        )
 
         # Execute batch processing
         entries_created = TimeTrackingService.generate_time_entries_for_date(
@@ -807,40 +820,36 @@ def run_daily_batch_job(db: Session, tenant_id: uuid.UUID, process_date: Optiona
         job_result["status"] = "completed"
         job_result["message"] = f"Successfully created {entries_created} time entries"
 
-        # Log batch complete
-        print(json.dumps({
-            "timestamp": dt_class.utcnow().isoformat(),
-            "level": "INFO",
-            "action": "batch_complete",
-            "tenant_id": str(tenant_id),
-            "entries_created": entries_created,
-            "process_date": process_date.isoformat(),
-        }))
+        logger.info(
+            "Batch processing completed",
+            extra={
+                "action": "batch_complete",
+                "tenant_id": str(tenant_id),
+                "entries_created": entries_created,
+                "process_date": process_date.isoformat(),
+            },
+        )
 
-    except NoShiftsFoundError as e:
+    except NoShiftsFoundError:
         job_result["status"] = "completed_no_shifts"
         job_result["message"] = f"No shifts found for {process_date}"
-        # Log warning - this is not an error
-        print(json.dumps({
-            "timestamp": dt_class.utcnow().isoformat(),
-            "level": "DEBUG",
-            "action": "batch_no_shifts",
-            "tenant_id": str(tenant_id),
-            "process_date": process_date.isoformat(),
-        }))
+        logger.debug(
+            "No shifts found for batch processing",
+            extra={"action": "batch_no_shifts", "tenant_id": str(tenant_id), "process_date": process_date.isoformat()},
+        )
 
     except Exception as e:
         job_result["status"] = "error"
         job_result["message"] = f"Batch processing failed: {str(e)}"
-
-        # Log error
-        print(json.dumps({
-            "timestamp": dt_class.utcnow().isoformat(),
-            "level": "ERROR",
-            "action": "batch_error",
-            "tenant_id": str(tenant_id),
-            "process_date": process_date.isoformat(),
-            "error": str(e),
-        }))
+        logger.error(
+            "Batch processing failed",
+            exc_info=True,
+            extra={
+                "action": "batch_error",
+                "tenant_id": str(tenant_id),
+                "process_date": process_date.isoformat(),
+                "error": str(e),
+            },
+        )
 
     return job_result

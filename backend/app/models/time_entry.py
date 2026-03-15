@@ -6,7 +6,7 @@ Designed to support both automatic (shift-based) and future manual tracking.
 """
 
 import uuid
-from datetime import datetime, date, time
+from datetime import UTC, datetime, date, time
 from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING, Optional, List
@@ -52,8 +52,8 @@ class TimeEntry(SQLModel, table=True):
     source: TimeEntrySource = Field(default=TimeEntrySource.SHIFT)
 
     # Timestamps
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Foreign Keys (optional for relationships)
     shift_record_id: Optional[uuid.UUID] = Field(default=None, foreign_key="shift_record.id", nullable=True)

@@ -12,19 +12,16 @@ export type TimeEntrySourceEnum = typeof TimeEntrySourceEnum[keyof typeof TimeEn
 
 export interface TimeEntry {
   id: string;
-  tenant_id: string;
   employee_id: string;
   employee_name: string;
   employee_dni: string;
   shift_date: string; // YYYY-MM-DD
   start_time: string; // HH:MM
   end_time: string; // HH:MM
-  hours_worked: number;
+  hours_worked: number | string; // Backend Decimal may serialize as string
   source: TimeEntrySourceEnum;
-  shift_record_id?: string;
   shift_type_id?: string;
   created_at: string;
-  updated_at: string;
 }
 
 export interface EmployeeStatistics {
