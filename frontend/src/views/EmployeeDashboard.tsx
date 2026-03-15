@@ -72,7 +72,7 @@ export default function EmployeeDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-                Bienvenido, {user?.email?.split('@')[0] || 'Empleado'}
+                Bienvenido, {user?.name || 'Empleado'}
               </h1>
               <p className="text-sm text-slate-600 mt-1">
                 {user?.email}

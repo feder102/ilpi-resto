@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { moderatorService } from '../services/moderatorService';
 import { extractErrorMessage } from '../utils/errorHandler';
 
 /**
@@ -72,8 +73,8 @@ export function useVacationBalance(employeeId?: string, year?: number) {
     setIsLoading(true);
     setError(null);
     try {
+      const currentYear = year || new Date().getFullYear();
       // TODO: In Phase 3, implement backend endpoint GET /moderator/vacations/{employee_id}/balance
-      // const currentYear = year || new Date().getFullYear();
       // const response = await moderatorService.getVacationBalance(employeeId, currentYear);
       // setBalance(response);
       setBalance(null);

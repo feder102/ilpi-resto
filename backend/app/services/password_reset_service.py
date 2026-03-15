@@ -265,10 +265,8 @@ class PasswordResetService:
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         hashed_password = pwd_context.hash(new_password)
 
-        # Step 5: Update User password and activate account
+        # Step 5: Update User password
         user.hashed_password = hashed_password
-        if not user.is_active:
-            user.is_active = True
         self.db.add(user)
 
         # Step 6: Mark token as used

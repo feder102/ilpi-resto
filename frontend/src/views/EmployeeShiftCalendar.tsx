@@ -156,6 +156,11 @@ export default function EmployeeShiftCalendar() {
     setCurrentDate(new Date());
   };
 
+  // Get shift type display info - use shift_type_name from API response
+  const getShiftTypeLabel = (shiftTypeName: string | null): string => {
+    return shiftTypeName || 'Sin tipo de turno';
+  };
+
   // Get shift type colors for visual distinction
   const getShiftTypeColor = (shiftTypeName: string | null): string => {
     if (!shiftTypeName) return 'bg-slate-100 text-slate-700';

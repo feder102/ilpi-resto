@@ -8,12 +8,8 @@ Updated for Feature 004: Shift Roster Calendar
 
 import uuid
 from datetime import UTC, datetime, date as date_type
-from typing import TYPE_CHECKING, Optional
 
-from sqlmodel import Field, SQLModel, Relationship
-
-if TYPE_CHECKING:
-    from app.models.time_entry import TimeEntry
+from sqlmodel import Field, SQLModel
 
 
 class ShiftRecord(SQLModel, table=True):
@@ -32,6 +28,3 @@ class ShiftRecord(SQLModel, table=True):
     created_by: uuid.UUID | None = Field(default=None, foreign_key="user.id")  # Who assigned the shift
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC), index=True)
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-
-    # Relationships
-    time_entry: Optional["TimeEntry"] = Relationship(back_populates="shift_record")

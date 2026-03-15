@@ -47,30 +47,6 @@ def create_app() -> FastAPI:
     async def health_check() -> dict[str, str]:
         return {"status": "ok"}
 
-    # Initialize background scheduler for automatic time tracking (Feature 008)
-    @app.on_event("startup")
-    async def startup_scheduler() -> None:
-        try:
-            from app.jobs import start_scheduler
-            start_scheduler(
-                batch_hour=settings.batch_time_tracking_hour,
-                batch_minute=settings.batch_time_tracking_minute,
-            )
-            logger.info("Background scheduler initialized for automatic time tracking")
-        except ImportError as e:
-            logger.warning(f"APScheduler not available, skipping background scheduler: {str(e)}")
-        except Exception as e:
-            logger.error(f"Failed to initialize scheduler: {str(e)}")
-
-    @app.on_event("shutdown")
-    async def shutdown_scheduler() -> None:
-        from app.jobs import stop_scheduler
-        try:
-            stop_scheduler()
-            logger.info("Background scheduler stopped")
-        except Exception as e:
-            logger.error(f"Error stopping scheduler: {str(e)}")
-
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 

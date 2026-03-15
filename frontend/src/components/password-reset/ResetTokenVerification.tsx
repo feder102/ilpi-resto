@@ -5,7 +5,7 @@
  * Displays error with "Solicitar nuevo enlace" option if token invalid/expired.
  */
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { passwordResetService } from '../../services/passwordResetService';
 import PasswordResetForm from './PasswordResetForm';
 
@@ -28,7 +28,7 @@ export default function ResetTokenVerification({ token }: ResetTokenVerification
 
         // Token is valid
         setState('valid');
-        setExpiresAt(response.expires_at || null);
+        setExpiresAt(response.expires_at);
       } catch (err) {
         const error = err as { error?: { code?: string; message?: string } };
         // Check error type to determine state
