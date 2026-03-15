@@ -7,7 +7,7 @@ Processes all shifts for previous day and creates TimeEntry records.
 
 import logging
 import uuid
-from datetime import datetime, timedelta, date
+from datetime import timedelta, date
 
 try:
     from apscheduler.schedulers.background import BackgroundScheduler
@@ -22,8 +22,8 @@ from sqlmodel import select
 
 from app.database import SessionLocal
 from app.models.tenant import Tenant
-from app.services.time_tracking_service import TimeTrackingService, run_daily_batch_job as batch_wrapper
-from app.common.time_tracking_exceptions import BatchProcessingError, NoShiftsFoundError
+from app.services.time_tracking_service import run_daily_batch_job as batch_wrapper
+from app.common.time_tracking_exceptions import NoShiftsFoundError
 
 logger = logging.getLogger(__name__)
 

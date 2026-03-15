@@ -1,4 +1,4 @@
-﻿# ILPI Spec Development Guidelines
+# ILPI Spec Development Guidelines
 
 **Project**: Kitchen Staff Management MVP (Kitchen Staff, Vacations, Shift Rostering)
 **Methodology**: Spec-Development-Driven using **spec-kit**

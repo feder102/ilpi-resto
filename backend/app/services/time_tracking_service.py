@@ -461,17 +461,40 @@ class TimeTrackingService:
             if not shifts:
                 raise NoShiftsFoundError(target_date=target_date)
 
+            # Preload all shift types for this tenant (avoids N+1)
+            shift_type_ids = {s.shift_type_id for s in shifts if s.shift_type_id}
+            shift_types_map: dict[uuid.UUID, ShiftType] = {}
+            if shift_type_ids:
+                shift_types_list = db.exec(
+                    select(ShiftType).where(
+                        ShiftType.id.in_(shift_type_ids),  # type: ignore[attr-defined]
+                        ShiftType.tenant_id == tenant_id,
+                    )
+                ).all()
+                shift_types_map = {st.id: st for st in shift_types_list}
+
+            # Preload existing entries for this date (avoids N+1)
+            existing_entries = db.exec(
+                select(TimeEntry).where(
+                    TimeEntry.tenant_id == tenant_id,
+                    TimeEntry.shift_date == target_date,
+                )
+            ).all()
+            existing_keys = {
+                (e.employee_id, e.shift_type_id) for e in existing_entries
+            }
+
             entries_created = 0
 
             for shift in shifts:
                 if not shift.shift_type_id:
-                    continue  # Skip shifts without assigned shift type
+                    continue
 
-                # Get shift type for time windows
-                shift_type = db.exec(
-                    select(ShiftType).where(ShiftType.id == shift.shift_type_id)
-                ).first()
+                # Check for existing entry (idempotency) using preloaded set
+                if (shift.employee_id, shift.shift_type_id) in existing_keys:
+                    continue
 
+                shift_type = shift_types_map.get(shift.shift_type_id)
                 if not shift_type or not shift_type.time_windows:
                     continue
 
@@ -496,19 +519,6 @@ class TimeTrackingService:
                         w_start_time = datetime.strptime(w_start, "%H:%M").time()
                         w_end_time = datetime.strptime(w_end, "%H:%M").time()
                         hours_worked += TimeTrackingService._calculate_hours(w_start_time, w_end_time)
-
-                # Check for existing entry (idempotency)
-                existing = db.exec(
-                    select(TimeEntry).where(
-                        TimeEntry.tenant_id == tenant_id,
-                        TimeEntry.employee_id == shift.employee_id,
-                        TimeEntry.shift_date == target_date,
-                        TimeEntry.shift_type_id == shift.shift_type_id,
-                    )
-                ).first()
-
-                if existing:
-                    continue  # Skip if entry already exists
 
                 # Create TimeEntry
                 entry = TimeEntry(
@@ -563,6 +573,17 @@ class TimeTrackingService:
         if month is None:
             month = date_type.today().month
 
+        # Validate employee exists and belongs to tenant
+        employee = db.exec(
+            select(Employee).where(
+                Employee.id == employee_id,
+                Employee.tenant_id == tenant_id,
+            )
+        ).first()
+        if not employee:
+            from app.common.exceptions import NotFoundError
+            raise NotFoundError(f"Empleado no encontrado")
+
         from app.models.time_entry import TimeEntrySource
 
         query = select(TimeEntry).where(
@@ -583,7 +604,7 @@ class TimeTrackingService:
 
         entries = db.exec(query).all()
 
-        total_hours = sum(e.hours_worked for e in entries)
+        total_hours = sum((e.hours_worked for e in entries), Decimal(0))
         days_worked = len(set(e.shift_date for e in entries))
         avg_hours = total_hours / days_worked if days_worked > 0 else Decimal(0)
 
@@ -660,7 +681,7 @@ class TimeTrackingService:
 
         results = db.exec(query).all()
 
-        total_hours = sum(r[0].hours_worked for r in results)
+        total_hours = sum((r[0].hours_worked for r in results), Decimal(0))
         unique_employees = len(set(r[0].employee_id for r in results))
 
         return DepartmentStatisticsResponse(

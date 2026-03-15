@@ -77,7 +77,7 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
           {finalFilters.end_date}
           {finalFilters.employee_id && ` | Empleado: ${finalFilters.employee_id}`}
           {finalFilters.department && ` | Departamento: ${finalFilters.department}`}
-          {finalFilters.source && ` | Origen: ${finalFilters.source}`}
+          {finalFilters.source && ` | Origen: ${finalFilters.source === "shift" ? "Turno" : "Manual"}`}
         </div>
       </Card>
 
@@ -138,7 +138,7 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
                       </td>
                       <td className="px-4 py-3">
                         <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                          {entry.source}
+                          {entry.source === "shift" ? "Turno" : "Manual"}
                         </span>
                       </td>
                     </tr>
