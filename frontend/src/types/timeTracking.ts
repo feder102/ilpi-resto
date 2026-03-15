@@ -14,6 +14,8 @@ export interface TimeEntry {
   id: string;
   tenant_id: string;
   employee_id: string;
+  employee_name: string;
+  employee_dni: string;
   shift_date: string; // YYYY-MM-DD
   start_time: string; // HH:MM
   end_time: string; // HH:MM

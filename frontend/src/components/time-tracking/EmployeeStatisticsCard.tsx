@@ -82,7 +82,7 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
           setStats(data);
           onDateChange?.(year, month);
         } catch (err) {
-          setError(err instanceof Error ? err.message : "Failed to load statistics");
+          setError(err instanceof Error ? err.message : "Error al cargar estadísticas");
         } finally {
           setLoading(false);
         }
@@ -142,7 +142,7 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
       <Card className="bg-white">
         <div className="p-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Search Employee by Name or DNI
+            Buscar Empleado por Nombre o DNI
           </label>
           <div className="relative">
             <div className="flex items-center gap-2">
@@ -150,18 +150,18 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Enter name or DNI..."
+                  placeholder="Ingresa nombre o DNI..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full px-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                {searching && <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">Searching...</span>}
+                {searching && <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">Buscando...</span>}
               </div>
               {selectedEmployee && (
                 <button
                   onClick={handleClearSelection}
                   className="p-2 text-gray-400 hover:text-gray-600"
-                  title="Clear selection"
+                  title="Limpiar selección"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -192,7 +192,7 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
 
             {showDropdown && searchResults.length === 0 && searchQuery.length >= 2 && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-4 text-center text-sm text-gray-500">
-                No employees found
+                No se encontraron empleados
               </div>
             )}
           </div>
@@ -201,7 +201,7 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
             <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
               <div className="text-sm">
                 <span className="font-medium text-gray-900">
-                  Selected: {selectedEmployee.first_name} {selectedEmployee.last_name}
+                  Seleccionado: {selectedEmployee.first_name} {selectedEmployee.last_name}
                 </span>
                 <span className="text-gray-600 ml-2">
                   ({selectedEmployee.dni})
@@ -218,14 +218,14 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
       <Card className="bg-white">
         <div className="flex items-center justify-between p-4">
           <h3 className="font-semibold text-gray-900">
-            {selectedEmployee.first_name} {selectedEmployee.last_name} - Statistics
+            {selectedEmployee.first_name} {selectedEmployee.last_name} - Estadísticas
           </h3>
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrevMonth}
               className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
             >
-              ← Prev
+              ← Anterior
             </button>
             <span className="text-sm font-medium text-gray-600 min-w-[100px] text-center">
               {year}-{String(month).padStart(2, "0")}
@@ -234,7 +234,7 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
               onClick={handleNextMonth}
               className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
             >
-              Next →
+              Siguiente →
             </button>
           </div>
         </div>
@@ -243,7 +243,7 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
       {/* Stats Display */}
       {loading ? (
         <Card className="bg-white">
-          <div className="p-4 text-center text-gray-500">Loading...</div>
+          <div className="p-4 text-center text-gray-500">Cargando...</div>
         </Card>
       ) : error ? (
         <Alert variant="error" message={error} />
@@ -260,7 +260,7 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
                 </div>
                 <div className="text-sm text-gray-600 flex items-center justify-center gap-1 mt-1">
                   <Clock className="w-4 h-4" />
-                  Total Hours
+                  Horas Totales
                 </div>
               </div>
               <div className="text-center">
@@ -269,7 +269,7 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
                 </div>
                 <div className="text-sm text-gray-600 flex items-center justify-center gap-1 mt-1">
                   <Calendar className="w-4 h-4" />
-                  Days Worked
+                  Días Trabajados
                 </div>
               </div>
               <div className="text-center">
@@ -278,13 +278,13 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
                     ? parseFloat(stats.avg_hours_per_day).toFixed(2)
                     : stats.avg_hours_per_day.toFixed(2)}
                 </div>
-                <div className="text-sm text-gray-600">Avg/Day</div>
+                <div className="text-sm text-gray-600">Promedio/Día</div>
               </div>
               <div className="text-center">
                 <div className="text-sm text-gray-500">
                   {stats.period}
                 </div>
-                <div className="text-sm text-gray-600 mt-2">Period</div>
+                <div className="text-sm text-gray-600 mt-2">Período</div>
               </div>
             </div>
           </Card>
@@ -293,7 +293,7 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
           {chartData.length > 0 && (
             <Card className="bg-white">
               <div className="p-4">
-                <h4 className="font-semibold text-gray-900 mb-4">Breakdown by Shift Type</h4>
+                <h4 className="font-semibold text-gray-900 mb-4">Desglose por Tipo de Turno</h4>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
@@ -319,7 +319,7 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
       ) : (
         <Card className="bg-white">
           <div className="p-4 text-center text-gray-500">
-            No data available
+            No hay datos disponibles
           </div>
         </Card>
       )}
@@ -328,7 +328,7 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
       {!selectedEmployee && (
         <Card className="bg-white">
           <div className="p-4 text-center text-gray-500">
-            Search and select an employee to view their statistics
+            Busca y selecciona un empleado para ver sus estadísticas
           </div>
         </Card>
       )}

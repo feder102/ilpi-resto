@@ -90,6 +90,8 @@ class TimeEntryResponse(BaseModel):
     """Single time entry response."""
     id: uuid.UUID
     employee_id: uuid.UUID
+    employee_name: str
+    employee_dni: str
     shift_date: date
     start_time: time
     end_time: time

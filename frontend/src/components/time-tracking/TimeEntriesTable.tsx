@@ -57,7 +57,7 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
         });
         setEntries(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load entries");
+        setError(err instanceof Error ? err.message : "Error al cargar registros");
       } finally {
         setLoading(false);
       }
@@ -73,18 +73,18 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
       {/* Filters Summary */}
       <Card className="bg-white">
         <div className="p-4 text-sm text-gray-600">
-          <span className="font-medium">Filters:</span> {finalFilters.start_date} to{" "}
+          <span className="font-medium">Filtros:</span> {finalFilters.start_date} a{" "}
           {finalFilters.end_date}
-          {finalFilters.employee_id && ` | Employee: ${finalFilters.employee_id}`}
-          {finalFilters.department && ` | Department: ${finalFilters.department}`}
-          {finalFilters.source && ` | Source: ${finalFilters.source}`}
+          {finalFilters.employee_id && ` | Empleado: ${finalFilters.employee_id}`}
+          {finalFilters.department && ` | Departamento: ${finalFilters.department}`}
+          {finalFilters.source && ` | Origen: ${finalFilters.source}`}
         </div>
       </Card>
 
       {/* Table */}
       {loading ? (
         <Card className="bg-white">
-          <div className="p-4 text-center text-gray-500">Loading...</div>
+          <div className="p-4 text-center text-gray-500">Cargando...</div>
         </Card>
       ) : error ? (
         <Alert variant="error" message={error} />
@@ -96,22 +96,25 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-4 py-3 text-left font-semibold text-gray-900">
-                      Date
+                      Fecha
                     </th>
                     <th className="px-4 py-3 text-left font-semibold text-gray-900">
-                      Employee
+                      Empleado
                     </th>
                     <th className="px-4 py-3 text-left font-semibold text-gray-900">
-                      Start Time
+                      DNI
                     </th>
                     <th className="px-4 py-3 text-left font-semibold text-gray-900">
-                      End Time
+                      Hora Inicio
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-900">
+                      Hora Fin
                     </th>
                     <th className="px-4 py-3 text-right font-semibold text-gray-900">
-                      Hours
+                      Horas
                     </th>
                     <th className="px-4 py-3 text-left font-semibold text-gray-900">
-                      Source
+                      Origen
                     </th>
                   </tr>
                 </thead>
@@ -119,8 +122,11 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
                   {entries.items.map((entry: TimeEntry) => (
                     <tr key={entry.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-gray-900">{entry.shift_date}</td>
+                      <td className="px-4 py-3 text-gray-900 font-medium">
+                        {entry.employee_name}
+                      </td>
                       <td className="px-4 py-3 text-gray-600">
-                        {entry.employee_id.substring(0, 8)}...
+                        {entry.employee_dni}
                       </td>
                       <td className="px-4 py-3 text-gray-600">{entry.start_time}</td>
                       <td className="px-4 py-3 text-gray-600">{entry.end_time}</td>
@@ -146,16 +152,16 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
           <Card className="bg-white">
             <div className="p-4 flex items-center justify-between">
               <div className="text-sm text-gray-600">
-                Showing {(currentPage - 1) * pageSize + 1} to{" "}
-                {Math.min(currentPage * pageSize, entries.total)} of {entries.total}{" "}
-                entries
+                Mostrando {(currentPage - 1) * pageSize + 1} a{" "}
+                {Math.min(currentPage * pageSize, entries.total)} de {entries.total}{" "}
+                registros
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   className="p-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label="Previous page"
+                  aria-label="Página anterior"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -178,7 +184,7 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
                   className="p-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label="Next page"
+                  aria-label="Página siguiente"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -189,7 +195,7 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
       ) : (
         <Card className="bg-white">
           <div className="p-4 text-center text-gray-500">
-            No time entries found for the selected filters
+            No hay registros de tiempo para los filtros seleccionados
           </div>
         </Card>
       )}

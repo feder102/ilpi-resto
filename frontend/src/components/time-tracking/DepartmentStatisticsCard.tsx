@@ -35,7 +35,7 @@ export const DepartmentStatisticsCard: React.FC<DepartmentStatisticsCardProps> =
         setStats(data);
         onDateChange?.(year, month);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load statistics");
+        setError(err instanceof Error ? err.message : "Error al cargar estadísticas");
       } finally {
         setLoading(false);
       }
@@ -66,10 +66,10 @@ export const DepartmentStatisticsCard: React.FC<DepartmentStatisticsCardProps> =
     ? [
         {
           name: stats.department,
-          "Total Hours": typeof stats.total_hours === 'string'
+          "Horas Totales": typeof stats.total_hours === 'string'
             ? parseFloat(stats.total_hours)
             : stats.total_hours,
-          "Avg per Employee": typeof stats.avg_hours_per_employee === 'string'
+          "Promedio por Empleado": typeof stats.avg_hours_per_employee === 'string'
             ? parseFloat(stats.avg_hours_per_employee)
             : stats.avg_hours_per_employee,
         },
@@ -82,14 +82,14 @@ export const DepartmentStatisticsCard: React.FC<DepartmentStatisticsCardProps> =
       <Card className="bg-white">
         <div className="flex items-center justify-between p-4">
           <h3 className="font-semibold text-gray-900">
-            {department ? `${department} ` : ""}Department Statistics
+            {department ? `${department} ` : ""}Estadísticas del Departamento
           </h3>
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrevMonth}
               className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
             >
-              ← Prev
+              ← Anterior
             </button>
             <span className="text-sm font-medium text-gray-600 min-w-[100px] text-center">
               {year}-{String(month).padStart(2, "0")}
@@ -98,7 +98,7 @@ export const DepartmentStatisticsCard: React.FC<DepartmentStatisticsCardProps> =
               onClick={handleNextMonth}
               className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
             >
-              Next →
+              Siguiente →
             </button>
           </div>
         </div>
@@ -107,7 +107,7 @@ export const DepartmentStatisticsCard: React.FC<DepartmentStatisticsCardProps> =
       {/* Stats Display */}
       {loading ? (
         <Card className="bg-white">
-          <div className="p-4 text-center text-gray-500">Loading...</div>
+          <div className="p-4 text-center text-gray-500">Cargando...</div>
         </Card>
       ) : error ? (
         <Alert variant="error" message={error} />
@@ -124,7 +124,7 @@ export const DepartmentStatisticsCard: React.FC<DepartmentStatisticsCardProps> =
                 </div>
                 <div className="text-sm text-gray-600 flex items-center justify-center gap-1 mt-1">
                   <Clock className="w-4 h-4" />
-                  Total Hours
+                  Horas Totales
                 </div>
               </div>
               <div className="text-center">
@@ -133,7 +133,7 @@ export const DepartmentStatisticsCard: React.FC<DepartmentStatisticsCardProps> =
                 </div>
                 <div className="text-sm text-gray-600 flex items-center justify-center gap-1 mt-1">
                   <Users className="w-4 h-4" />
-                  Employees
+                  Empleados
                 </div>
               </div>
               <div className="text-center">
@@ -142,7 +142,7 @@ export const DepartmentStatisticsCard: React.FC<DepartmentStatisticsCardProps> =
                     ? parseFloat(stats.avg_hours_per_employee).toFixed(2)
                     : stats.avg_hours_per_employee.toFixed(2)}
                 </div>
-                <div className="text-sm text-gray-600">Avg/Employee</div>
+                <div className="text-sm text-gray-600">Promedio/Empleado</div>
               </div>
             </div>
           </Card>
@@ -151,15 +151,15 @@ export const DepartmentStatisticsCard: React.FC<DepartmentStatisticsCardProps> =
           {chartData.length > 0 && (
             <Card className="bg-white">
               <div className="p-4">
-                <h4 className="font-semibold text-gray-900 mb-4">Hours Breakdown</h4>
+                <h4 className="font-semibold text-gray-900 mb-4">Desglose de Horas</h4>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="Total Hours" fill="#3b82f6" />
-                    <Bar dataKey="Avg per Employee" fill="#10b981" />
+                    <Bar dataKey="Horas Totales" fill="#3b82f6" />
+                    <Bar dataKey="Promedio por Empleado" fill="#10b981" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -169,7 +169,7 @@ export const DepartmentStatisticsCard: React.FC<DepartmentStatisticsCardProps> =
       ) : (
         <Card className="bg-white">
           <div className="p-4 text-center text-gray-500">
-            No data available
+            No hay datos disponibles
           </div>
         </Card>
       )}

@@ -19,7 +19,7 @@ from app.models.shift_record import ShiftRecord
 from app.models.time_entry import TimeEntry, TimeEntrySource
 from app.models.shift_type import ShiftType
 from app.models.employee import Employee
-from app.schemas.time_tracking import TimeRecordResponse, ClockInResponse, ClockOutResponse, EmployeeStatisticsResponse, DepartmentStatisticsResponse, TimeEntryListResponse
+from app.schemas.time_tracking import TimeRecordResponse, ClockInResponse, ClockOutResponse, EmployeeStatisticsResponse, DepartmentStatisticsResponse, TimeEntryResponse, TimeEntryListResponse
 
 
 def _check_employee_has_shift_today(
@@ -687,10 +687,14 @@ class TimeTrackingService:
         if end_date is None:
             end_date = date_type.today()
 
-        query = select(TimeEntry).where(
-            TimeEntry.tenant_id == tenant_id,
-            TimeEntry.shift_date >= start_date,
-            TimeEntry.shift_date <= end_date,
+        query = (
+            select(TimeEntry, Employee.first_name, Employee.last_name, Employee.dni)
+            .join(Employee, TimeEntry.employee_id == Employee.id)
+            .where(
+                TimeEntry.tenant_id == tenant_id,
+                TimeEntry.shift_date >= start_date,
+                TimeEntry.shift_date <= end_date,
+            )
         )
 
         if employee_id:
@@ -698,39 +702,54 @@ class TimeTrackingService:
 
         if source:
             from app.models.time_entry import TimeEntrySource
-            # Convert string source to enum value
             source_enum = TimeEntrySource[source.upper()]
             query = query.where(TimeEntry.source == source_enum)
 
         if department:
-            # Join with Employee to filter by department
-            query = (
-                select(TimeEntry)
-                .join(Employee)
-                .where(
-                    TimeEntry.tenant_id == tenant_id,
-                    TimeEntry.shift_date >= start_date,
-                    TimeEntry.shift_date <= end_date,
-                    Employee.department == department,
-                )
-            )
-            if employee_id:
-                query = query.where(TimeEntry.employee_id == employee_id)
-            if source:
-                from app.models.time_entry import TimeEntrySource
-                # Convert string source to enum value
-                source_enum = TimeEntrySource[source.upper()]
-                query = query.where(TimeEntry.source == source_enum)
+            query = query.where(Employee.department == department)
 
         # Count total
-        count_query = select(func.count(TimeEntry.id)).where(query.whereclause)
+        count_query = (
+            select(func.count(TimeEntry.id))
+            .join(Employee, TimeEntry.employee_id == Employee.id)
+            .where(
+                TimeEntry.tenant_id == tenant_id,
+                TimeEntry.shift_date >= start_date,
+                TimeEntry.shift_date <= end_date,
+            )
+        )
+        if employee_id:
+            count_query = count_query.where(TimeEntry.employee_id == employee_id)
+        if source:
+            from app.models.time_entry import TimeEntrySource
+            source_enum = TimeEntrySource[source.upper()]
+            count_query = count_query.where(TimeEntry.source == source_enum)
+        if department:
+            count_query = count_query.where(Employee.department == department)
         total = db.exec(count_query).one() or 0
 
         # Get paginated results
-        entries = db.exec(query.order_by(TimeEntry.shift_date.desc()).offset(offset).limit(limit)).all()
+        rows = db.exec(query.order_by(TimeEntry.shift_date.desc()).offset(offset).limit(limit)).all()
+
+        items = [
+            TimeEntryResponse(
+                id=entry.id,
+                employee_id=entry.employee_id,
+                employee_name=f"{first_name} {last_name}",
+                employee_dni=dni,
+                shift_date=entry.shift_date,
+                start_time=entry.start_time,
+                end_time=entry.end_time,
+                hours_worked=entry.hours_worked,
+                source=entry.source,
+                shift_type_id=entry.shift_type_id,
+                created_at=entry.created_at,
+            )
+            for entry, first_name, last_name, dni in rows
+        ]
 
         return TimeEntryListResponse(
-            items=[e for e in entries],  # Direct conversion would need schema
+            items=items,
             total=total,
             limit=limit,
             offset=offset,
