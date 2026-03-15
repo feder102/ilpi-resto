@@ -131,6 +131,15 @@ export default function RosterCalendar({
     return shifts.filter(s => s.date === dateStr);
   };
 
+  /**
+   * Format date for display
+   */
+  const formatDate = (day: number) => {
+    return new Date(year, month - 1, day).toLocaleDateString('es-ES', {
+      weekday: 'short',
+    });
+  };
+
   const days = getDaysInMonth();
   const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 

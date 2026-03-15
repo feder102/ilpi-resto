@@ -9,7 +9,8 @@
 
 import React, { useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from 'date-fns';
-import type { ShiftRecord } from '../types/models';
+import { es } from 'date-fns/locale';
+import type { ShiftRecord } from '../types/shift';
 
 interface CalendarGridProps {
   shifts: ShiftRecord[];

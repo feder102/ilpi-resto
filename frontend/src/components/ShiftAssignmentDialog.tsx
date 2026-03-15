@@ -9,9 +9,8 @@ import React, { useState, useEffect } from 'react';
 import { shiftService, createRosterShift, updateRosterShift } from '../services/shiftService';
 import { getEmployees } from '../services/employeeService';
 import { Modal, Button, Spinner } from '../components/ui';
-import { extractErrorMessage } from '../utils/errorHandler';
-import type { ShiftRecord } from '../types/models';
-import type { ShiftType } from '../types/shift';
+import { extractErrorMessage, getErrorSeverity } from '../utils/errorHandler';
+import type { ShiftRecord, ShiftType } from '../types/shift';
 import apiClient from '../services/apiClient';
 
 interface ShiftAssignmentDialogProps {

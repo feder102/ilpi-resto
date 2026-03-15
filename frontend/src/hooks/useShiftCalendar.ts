@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { shiftService } from '../services/shiftService';
-import type { ShiftRecord } from '../types/models';
+import type { ShiftRecord } from '../types/shift';
 
 interface UseShiftCalendarReturn {
   shifts: ShiftRecord[];

@@ -10,7 +10,6 @@ Updated for Feature 004: Shift Roster Calendar
 import uuid
 from calendar import monthrange
 from datetime import UTC, date, datetime
-from typing import Any
 
 from sqlmodel import Session, func, select
 
@@ -125,7 +124,7 @@ def list_shifts(
     date_to: date | None = None,
     page: int = 1,
     size: int = 20,
-) -> dict[str, Any]:
+) -> dict:
     query = select(ShiftRecord).where(ShiftRecord.tenant_id == tenant_id)
 
     if employee_id:
@@ -215,7 +214,7 @@ def get_shifts_for_month(
     month: str,
     employee_id: uuid.UUID | None = None,
     current_user: dict | None = None,
-) -> dict[str, Any]:
+) -> dict:
     """
     Get all shifts for a given month (for roster calendar).
 
@@ -296,7 +295,7 @@ def create_shift(
     shift_date: date,
     shift_type_id: uuid.UUID,
     created_by: uuid.UUID,
-) -> dict[str, Any]:
+) -> dict:
     """
     Create a new shift assignment.
 
@@ -402,7 +401,7 @@ def update_shift(
     shift_id: uuid.UUID,
     shift_type_id: uuid.UUID,
     updated_by: uuid.UUID,
-) -> dict[str, Any]:
+) -> dict:
     """
     Update an existing shift's type.
 
@@ -503,7 +502,7 @@ def get_employee_month_shifts(
     year: int,
     month: int,
     session: Session,
-) -> dict[str, Any]:
+) -> dict:
     """
     Get employee's shifts for a specific month.
 
@@ -574,7 +573,7 @@ def get_employee_shifts(
     page: int = 1,
     size: int = 50,
     session: Session | None = None,
-) -> dict[str, Any]:
+) -> dict:
     """
     Get employee's shifts for a date range (paginated).
 
@@ -698,7 +697,7 @@ def get_employee_upcoming_shifts(
     employee_id: uuid.UUID,
     days: int = 7,
     session: Session | None = None,
-) -> dict[str, Any]:
+) -> dict:
     """
     Get employee's upcoming shifts (next N days).
 

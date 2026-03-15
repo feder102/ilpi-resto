@@ -1,6 +1,6 @@
 // T032: Login view - refactored to use UI component library
 import { useState, useEffect, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Button, Input, Card, Alert } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { ROUTES } from '../config/constants';

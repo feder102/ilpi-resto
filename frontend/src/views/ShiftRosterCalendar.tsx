@@ -6,15 +6,15 @@
  * Users can navigate months, view shifts, and (if authorized) assign/edit shifts.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import CalendarGrid from '../components/CalendarGrid';
 import ShiftAssignmentDialog from '../components/ShiftAssignmentDialog';
 import { useShiftCalendar } from '../hooks/useShiftCalendar';
 import { Spinner } from '../components/ui';
-import { format, addMonths, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
-import type { ShiftRecord } from '../types/models';
+import type { ShiftRecord } from '../types/shift';
 
 interface ShiftRosterCalendarProps {
   // Optional: pre-filter by employee (if employee viewing their own schedule)
@@ -68,7 +68,7 @@ export const ShiftRosterCalendar: React.FC<ShiftRosterCalendarProps> = ({ employ
     }
     setSelectedShift(shift);
     // Parse date string in local time (not UTC) to avoid day offset
-    const dateStr = shift.date as string;
+    const dateStr = shift.date instanceof Date ? shift.date.toISOString().split('T')[0] : shift.date;
     const [year, month, day] = dateStr.split('-').map(Number);
     const localDate = new Date(year, month - 1, day);
     setSelectedDate(localDate);

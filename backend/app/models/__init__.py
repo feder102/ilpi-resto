@@ -7,7 +7,6 @@ from app.models.shift_type import ShiftType
 from app.models.team import Team
 from app.models.tenant import Tenant
 from app.models.time_record import TimeRecord
-from app.models.time_entry import TimeEntry
 from app.models.user import User
 from app.models.vacation_balance import VacationBalance
 from app.models.vacation_request import VacationRequest
@@ -19,7 +18,6 @@ __all__ = [
     "Team",
     "ShiftRecord",
     "TimeRecord",
-    "TimeEntry",
     "VacationRequest",
     "VacationBalance",
     "ShiftType",

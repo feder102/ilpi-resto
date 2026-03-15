@@ -8,7 +8,7 @@
 
 import { useState } from 'react';
 import { Clock } from 'lucide-react';
-import { Card } from '../components/ui';
+import { Card, Button } from '../components/ui';
 import TimeClock from '../components/time-tracking/TimeClock';
 
 export default function EmployeeTimeTracking() {
@@ -33,7 +33,7 @@ export default function EmployeeTimeTracking() {
       {/* Clock In/Out Widget */}
       <Card className="p-8">
         <div className="flex justify-center">
-          <TimeClock onStatusChange={() => handleStatusUpdate()} />
+          <TimeClock onStatusUpdate={handleStatusUpdate} />
         </div>
       </Card>
 

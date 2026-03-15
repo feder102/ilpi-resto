@@ -11,25 +11,11 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "http://localhost:5173"
     LOG_LEVEL: str = "INFO"
 
-    # Feature 008: Automatic Time Tracking
-    BATCH_TIME_TRACKING_HOUR: int = 1  # Hour of day (0-23) for batch job (default: 01:00 AM)
-    BATCH_TIME_TRACKING_MINUTE: int = 0  # Minute of hour (0-59) for batch job
-
     model_config = {"env_file": ".env", "extra": "ignore"}
 
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
-
-    @property
-    def batch_time_tracking_hour(self) -> int:
-        """Hour of day for batch time tracking job (0-23)."""
-        return self.BATCH_TIME_TRACKING_HOUR
-
-    @property
-    def batch_time_tracking_minute(self) -> int:
-        """Minute of hour for batch time tracking job (0-59)."""
-        return self.BATCH_TIME_TRACKING_MINUTE
 
 
 settings = Settings()
