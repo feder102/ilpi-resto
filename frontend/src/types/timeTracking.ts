@@ -27,18 +27,18 @@ export interface TimeEntry {
 export interface EmployeeStatistics {
   employee_id: string;
   period: string; // YYYY-MM
-  total_hours: number;
+  total_hours: number | string; // Backend Decimal may serialize as string
   days_worked: number;
-  avg_hours_per_day: number;
-  breakdown_by_shift_type: Record<string, number>; // { shift_type_id: hours }
+  avg_hours_per_day: number | string;
+  breakdown_by_shift_type: Record<string, number | string>;
 }
 
 export interface DepartmentStatistics {
   department: string;
   period: string; // YYYY-MM
-  total_hours: number;
+  total_hours: number | string;
   unique_employees: number;
-  avg_hours_per_employee: number;
+  avg_hours_per_employee: number | string;
 }
 
 export interface TimeEntryListResponse {

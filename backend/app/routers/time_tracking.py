@@ -4,22 +4,19 @@ Feature 005: Clock-in/out and time record retrieval (Empleado access)
 Feature 008: Automatic shift-based tracking & statistics (Admin/Moderador access)
 """
 
-import logging
 import uuid
 from typing import Optional
 from datetime import date as date_type
 
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
 
 from app.common.exceptions import handle_exceptions, ForbiddenError, ValidationError
-from app.dependencies import DbSession, require_role_and_active, get_current_user, CurrentUser, get_db
+from app.dependencies import DbSession, require_role_and_active, CurrentUser, get_db
 from app.services import time_tracking_service
 from app.services.time_tracking_service import TimeTrackingService
 from app.schemas.time_tracking import (
     ClockInResponse, ClockOutResponse, TimeRecordListResponse,
-    StatisticsFilterRequest,
-    TimeEntryFilterRequest,
     BatchProcessRequest,
     BatchProcessResponse,
     EmployeeStatisticsResponse,
@@ -27,8 +24,6 @@ from app.schemas.time_tracking import (
     TimeEntryListResponse,
 )
 from app.common.time_tracking_exceptions import NoShiftsFoundError
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/employee/time-tracking", tags=["time-tracking"])
 

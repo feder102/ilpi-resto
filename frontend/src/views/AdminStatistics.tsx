@@ -61,8 +61,6 @@ export const AdminStatistics: React.FC = () => {
   const [batchMessage, setBatchMessage] = useState<string | null>(null);
   const [batchError, setBatchError] = useState<string | null>(null);
   const [batchDate, setBatchDate] = useState(new Date().toISOString().split("T")[0]);
-  const [filterYear, setFilterYear] = useState(new Date().getFullYear());
-  const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
 
   // Time Entries tab filter state
   const today = new Date().toISOString().split("T")[0];
@@ -166,12 +164,7 @@ export const AdminStatistics: React.FC = () => {
                 </p>
               </div>
             </Card>
-            <EmployeeStatisticsCard
-              onDateChange={(year, month) => {
-                setFilterYear(year);
-                setFilterMonth(month);
-              }}
-            />
+            <EmployeeStatisticsCard />
           </div>
         )}
 
@@ -188,12 +181,7 @@ export const AdminStatistics: React.FC = () => {
                 </p>
               </div>
             </Card>
-            <DepartmentStatisticsCard
-              onDateChange={(year, month) => {
-                setFilterYear(year);
-                setFilterMonth(month);
-              }}
-            />
+            <DepartmentStatisticsCard />
           </div>
         )}
 

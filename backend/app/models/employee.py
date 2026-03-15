@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import UTC, date, datetime
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, List
 
 from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, SQLModel, Relationship

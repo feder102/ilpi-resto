@@ -52,7 +52,7 @@ def run_daily_batch_job() -> None:
         )
 
         # Get all active tenants from database
-        tenants = db.exec(select(Tenant)).all()
+        tenants = db.exec(select(Tenant).where(Tenant.is_active == True)).all()  # noqa: E712
 
         if not tenants:
             logger.warning(
@@ -138,7 +138,7 @@ def run_daily_batch_job() -> None:
         if db:
             try:
                 db.close()
-            except:
+            except Exception:
                 pass
 
 

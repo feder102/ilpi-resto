@@ -58,4 +58,6 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_time_entries_shift_date'), table_name='time_entries')
     op.drop_index(op.f('ix_time_entries_employee_id'), table_name='time_entries')
     op.drop_table('time_entries')
+    # Drop the enum type created by the table
+    sa.Enum(name='timeentrysource').drop(op.get_bind(), checkfirst=True)
     # ### end Alembic commands ###

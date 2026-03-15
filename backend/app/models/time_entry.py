@@ -9,9 +9,9 @@ import uuid
 from datetime import UTC, datetime, date, time
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, Optional
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import Enum as SQLEnum, UniqueConstraint
+from sqlalchemy import UniqueConstraint
 
 if TYPE_CHECKING:
     from app.models.employee import Employee
