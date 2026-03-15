@@ -177,9 +177,13 @@ export default function AttendanceView() {
                       </td>
                       <td className="px-2 py-3">{s.date}</td>
                       <td className="px-2 py-3">
-                        <Badge variant="success" className="bg-green-100 text-green-700">
-                          {formatTime(s.entry_time)}
-                        </Badge>
+                        {s.entry_time ? (
+                          <Badge variant="success" className="bg-green-100 text-green-700">
+                            {formatTime(s.entry_time)}
+                          </Badge>
+                        ) : (
+                          <span className="text-slate-600 text-xs">-</span>
+                        )}
                       </td>
                       <td className="px-2 py-3">
                         {s.exit_time ? (

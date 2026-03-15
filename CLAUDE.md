@@ -2,7 +2,7 @@
 
 **Project**: Kitchen Staff Management MVP (Kitchen Staff, Vacations, Shift Rostering)
 **Methodology**: Spec-Development-Driven using **spec-kit**
-**Last Updated**: 2026-03-09
+**Last Updated**: 2026-03-13
 
 ---
 
