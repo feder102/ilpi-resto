@@ -2,9 +2,6 @@
  * T044 (Phase 5 - US3): ResetSuccess Component
  *
  * Success confirmation message and redirect to login.
- * Placeholder for Dev B to implement in Phase 5.
- *
- * Dev B: Implement success message and redirect logic
  */
 
 import React from 'react';
@@ -37,18 +34,18 @@ export default function ResetSuccess({ onLoginClick }: ResetSuccessProps) {
   }, [onLoginClick, redirected]);
 
   return (
-    <div className="reset-success">
-      <div className="success-icon">✓</div>
-      <h2>Contraseña restablecida exitosamente</h2>
-      <p className="success-message">
+    <div className="text-center space-y-4">
+      <div className="text-5xl text-success">✓</div>
+      <h2 className="text-2xl font-bold text-base-content">Contraseña restablecida exitosamente</h2>
+      <p className="text-base-content/70">
         Tu contraseña ha sido actualizada y ahora puedes iniciar sesión con tu nueva contraseña.
       </p>
 
-      <button className="btn-primary" onClick={onLoginClick}>
+      <button className="btn btn-primary w-full" onClick={onLoginClick}>
         Ir a Iniciar Sesión
       </button>
 
-      <p className="redirect-info">
+      <p className="text-sm text-base-content/50">
         Te redireccionaremos automáticamente en {countdown} segundos...
       </p>
     </div>

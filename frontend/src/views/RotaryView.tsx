@@ -121,7 +121,7 @@ export default function RotaryView() {
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 m-0">Rotación de Equipos</h1>
+        <h1 className="text-3xl font-bold text-base-content m-0">Rotación de Equipos</h1>
         {isAdminOrMod && (
           <Button
             onClick={() => {
@@ -136,16 +136,12 @@ export default function RotaryView() {
         )}
       </div>
 
-      <div className="flex gap-1 mb-8 border-b-2 border-slate-200 pb-0">
+      <div className="tabs tabs-bordered mb-8">
         {DEPARTMENTS.map((dept) => (
           <button
             key={dept}
             onClick={() => setActiveDept(dept)}
-            className={`px-5 py-2.5 border-b-2 -mb-0.5 text-sm font-semibold transition-colors ${
-              activeDept === dept
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-slate-600 hover:text-slate-900'
-            }`}
+            className={`tab ${activeDept === dept ? 'tab-active' : ''}`}
           >
             {dept}
           </button>
@@ -155,23 +151,23 @@ export default function RotaryView() {
       {error && <Alert variant="error" message={error} className="mb-4" />}
 
       {loading ? (
-        <p className="text-center text-slate-600 mt-10">Cargando...</p>
+        <p className="text-center text-base-content/60 mt-10">Cargando...</p>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             {teams.length === 0 ? (
-              <p className="text-slate-600">No hay equipos en {activeDept}</p>
+              <p className="text-base-content/60">No hay equipos en {activeDept}</p>
             ) : (
               <div className="space-y-4">
                 {teams.map((team) => (
                   <Card key={team.id}>
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                        <h3 className="font-semibold text-base-content flex items-center gap-2">
                           <Users size={16} />
                           {team.name}
                         </h3>
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-1 text-xs text-base-content/60">
                           {team.shift_type?.name || 'Sin tipo de turno'}
                           {team.shift_type?.time_windows?.length
                             ? ` · ${team.shift_type.time_windows.map((window) => `${window.start} - ${window.end}`).join(' / ')}`
@@ -195,7 +191,7 @@ export default function RotaryView() {
                     {addingToTeam === team.id && (
                       <div className="flex gap-2 mb-3">
                         <select
-                          className="flex-1 px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                          className="select select-bordered select-sm flex-1"
                           value={selectedEmpId}
                           onChange={(e) => setSelectedEmpId(e.target.value)}
                         >
@@ -211,7 +207,7 @@ export default function RotaryView() {
                         </Button>
                         <button
                           onClick={() => setAddingToTeam(null)}
-                          className="px-2 py-2 border border-slate-200 rounded-md hover:bg-slate-50"
+                          className="btn btn-outline btn-sm"
                         >
                           <X size={16} />
                         </button>
@@ -220,14 +216,14 @@ export default function RotaryView() {
 
                     <div className="flex flex-wrap gap-2">
                       {team.members.length === 0 ? (
-                        <p className="text-xs text-slate-400">Sin miembros asignados</p>
+                        <p className="text-xs text-base-content/40">Sin miembros asignados</p>
                       ) : (
                         team.members.map((m) => (
                           <div
                             key={m.id}
-                            className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-full text-xs"
+                            className="flex items-center gap-2 px-3 py-1.5 bg-base-200 rounded-full text-xs"
                           >
-                            <div className="w-7 h-7 rounded-full bg-slate-300 flex items-center justify-center overflow-hidden">
+                            <div className="w-7 h-7 rounded-full bg-base-300 flex items-center justify-center overflow-hidden">
                               {m.profile_image ? (
                                 <img
                                   src={m.profile_image}
@@ -235,7 +231,7 @@ export default function RotaryView() {
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <User size={14} className="text-slate-400" />
+                                <User size={14} className="text-base-content/40" />
                               )}
                             </div>
                             <span>
@@ -244,7 +240,7 @@ export default function RotaryView() {
                             {isAdminOrMod && (
                               <button
                                 onClick={() => handleRemoveMember(team.id, m.id)}
-                                className="ml-1 hover:text-red-600"
+                                className="ml-1 hover:text-error"
                               >
                                 <X size={14} />
                               </button>
@@ -260,17 +256,17 @@ export default function RotaryView() {
           </div>
 
           <Card className="lg:col-span-1 h-fit sticky top-6">
-            <h3 className="font-semibold text-slate-900 mb-3">Disponibles</h3>
+            <h3 className="font-semibold text-base-content mb-3">Disponibles</h3>
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {availableEmployees.length === 0 ? (
-                <p className="text-xs text-slate-400">Todos asignados</p>
+                <p className="text-xs text-base-content/40">Todos asignados</p>
               ) : (
                 availableEmployees.map((emp) => (
                   <div
                     key={emp.id}
-                    className="flex items-center gap-2 pb-2 border-b border-slate-100 last:border-0"
+                    className="flex items-center gap-2 pb-2 border-b border-base-200 last:border-0"
                   >
-                    <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-base-200 flex items-center justify-center overflow-hidden flex-shrink-0">
                       {emp.profile_image ? (
                         <img
                           src={emp.profile_image}
@@ -278,10 +274,10 @@ export default function RotaryView() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <User size={16} className="text-slate-400" />
+                        <User size={16} className="text-base-content/40" />
                       )}
                     </div>
-                    <span className="text-xs font-medium text-slate-700">
+                    <span className="text-xs font-medium text-base-content/80">
                       {emp.first_name} {emp.last_name}
                     </span>
                   </div>
@@ -311,24 +307,24 @@ export default function RotaryView() {
         {formError && <Alert variant="error" message={formError} className="mb-4" />}
 
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Nombre *
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Nombre *</span>
             </label>
             <input
-              className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              className="input input-bordered w-full"
               value={teamName}
               onChange={(e) => setTeamName(e.target.value)}
               placeholder="Ej: Equipo A"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Tipo de turno
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Tipo de turno</span>
             </label>
             <select
-              className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              className="select select-bordered w-full"
               value={selectedShiftTypeId}
               onChange={(e) => setSelectedShiftTypeId(e.target.value)}
             >

@@ -12,7 +12,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { passwordResetService } from '../../services/passwordResetService';
-import './ForgotPasswordForm.css';
 
 interface ForgotPasswordFormProps {
   onSuccess?: (email: string) => void;
@@ -96,26 +95,26 @@ export default function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProp
   };
 
   return (
-    <div className="forgot-password-form">
-      <h2>¿Olvidaste tu contraseña?</h2>
-      <p className="form-description">
+    <div>
+      <h2 className="text-2xl font-bold text-base-content mb-2">¿Olvidaste tu contraseña?</h2>
+      <p className="text-base-content/60 mb-6">
         Ingresa tu correo electrónico y te enviaremos un enlace para recuperar tu
         contraseña.
       </p>
 
       {success ? (
-        <div className="success-message">
-          <div className="success-icon">✓</div>
-          <h3>Correo enviado</h3>
-          <p>
+        <div className="text-center space-y-4">
+          <div className="text-5xl text-success">✓</div>
+          <h3 className="text-lg font-semibold text-base-content">Correo enviado</h3>
+          <p className="text-base-content/70">
             Si {submittedEmail} está registrado en nuestro sistema, recibirás un enlace de
             recuperación en breve.
           </p>
-          <p className="success-subtext">
+          <p className="text-sm text-base-content/50">
             Revisa tu bandeja de entrada (incluida la carpeta de spam).
           </p>
           <button
-            className="btn-secondary"
+            className="btn btn-secondary btn-outline w-full"
             onClick={() => {
               setSuccess(false);
               setEmail('');
@@ -126,16 +125,18 @@ export default function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProp
           </button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="error-message">
-              <span className="error-icon">⚠</span>
+            <div className="alert alert-error">
+              <span>⚠</span>
               <span>{error}</span>
             </div>
           )}
 
-          <div className="form-group">
-            <label htmlFor="email">Correo electrónico</label>
+          <div className="form-control">
+            <label htmlFor="email" className="label">
+              <span className="label-text">Correo electrónico</span>
+            </label>
             <input
               id="email"
               type="email"
@@ -143,15 +144,15 @@ export default function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProp
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading || retryAfter !== null}
-              className={error ? 'input-error' : ''}
+              className={`input input-bordered w-full ${error ? 'input-error' : ''}`}
               aria-label="Correo electrónico"
               required
             />
           </div>
 
           {retryAfter && (
-            <div className="retry-timer">
-              <span className="timer-icon">⏱</span>
+            <div className="alert alert-warning">
+              <span>⏱</span>
               <span>Intenta de nuevo en {retryAfter} segundos</span>
             </div>
           )}
@@ -159,14 +160,21 @@ export default function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProp
           <button
             type="submit"
             disabled={loading || retryAfter !== null}
-            className="btn-primary"
+            className="btn btn-primary w-full"
             aria-busy={loading}
           >
-            {loading ? 'Enviando...' : 'Solicitar enlace'}
+            {loading ? (
+              <>
+                <span className="loading loading-spinner loading-sm"></span>
+                Enviando...
+              </>
+            ) : (
+              'Solicitar enlace'
+            )}
           </button>
 
-          <p className="form-footer">
-            ¿Recuerdas tu contraseña? <a href="/login">Inicia sesión</a>
+          <p className="text-center text-sm text-base-content/60">
+            ¿Recuerdas tu contraseña? <a href="/login" className="link link-primary">Inicia sesión</a>
           </p>
         </form>
       )}

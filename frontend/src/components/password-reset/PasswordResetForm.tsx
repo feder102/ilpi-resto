@@ -11,7 +11,6 @@ import { useNavigate } from 'react-router-dom';
 import { passwordResetService } from '../../services/passwordResetService';
 import type { PasswordValidationRequirement } from '../../types';
 import ResetSuccess from './ResetSuccess';
-import './PasswordResetForm.css';
 
 interface PasswordResetFormProps {
   token: string;
@@ -102,22 +101,24 @@ export default function PasswordResetForm({ token }: PasswordResetFormProps) {
   }
 
   return (
-    <div className="password-reset-form">
-      <h2>Crear nueva contraseña</h2>
-      <p className="form-description">
+    <div>
+      <h2 className="text-2xl font-bold text-base-content mb-2">Crear nueva contraseña</h2>
+      <p className="text-base-content/60 mb-6">
         Ingresa una contraseña nueva y segura que cumpla con todos los requisitos.
       </p>
 
       {error && (
-        <div className="error-message">
-          <span className="error-icon">⚠</span>
+        <div className="alert alert-error mb-4">
+          <span>⚠</span>
           <span>{error}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="password">Nueva contraseña</label>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="form-control">
+          <label htmlFor="password" className="label">
+            <span className="label-text">Nueva contraseña</span>
+          </label>
           <input
             id="password"
             type="password"
@@ -125,22 +126,20 @@ export default function PasswordResetForm({ token }: PasswordResetFormProps) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={loading}
-            className="password-input"
+            className="input input-bordered w-full"
             aria-label="Nueva contraseña"
             autoComplete="new-password"
           />
         </div>
 
         {/* Password Requirements Checker */}
-        <div className="requirements-checker">
-          <p className="requirements-title">Requisitos de contraseña:</p>
-          <ul className="requirements-list">
+        <div className="bg-base-200 p-4 rounded-lg space-y-2">
+          <p className="text-sm font-medium text-base-content">Requisitos de contraseña:</p>
+          <ul className="space-y-1 text-sm">
             {requirements.map((req) => (
-              <li key={req.requirement} className={req.satisfied ? 'met' : 'unmet'}>
-                <span className="requirement-icon">
-                  {req.satisfied ? '✓' : '○'}
-                </span>
-                <span className="requirement-label">{req.message}</span>
+              <li key={req.requirement} className={`flex items-center gap-2 ${req.satisfied ? 'text-success' : 'text-base-content/40'}`}>
+                <span>{req.satisfied ? '✓' : '○'}</span>
+                <span>{req.message}</span>
               </li>
             ))}
           </ul>
@@ -150,14 +149,21 @@ export default function PasswordResetForm({ token }: PasswordResetFormProps) {
         <button
           type="submit"
           disabled={!allRequirementsMet || loading}
-          className="btn-primary"
+          className="btn btn-primary w-full"
           aria-busy={loading}
         >
-          {loading ? 'Restableciendo contraseña...' : 'Restablecer contraseña'}
+          {loading ? (
+            <>
+              <span className="loading loading-spinner loading-sm"></span>
+              Restableciendo contraseña...
+            </>
+          ) : (
+            'Restablecer contraseña'
+          )}
         </button>
 
-        <p className="form-footer">
-          ¿Cambió de opinión? <a href="/login">Volver a iniciar sesión</a>
+        <p className="text-center text-sm text-base-content/60">
+          ¿Cambió de opinión? <a href="/login" className="link link-primary">Volver a iniciar sesión</a>
         </p>
       </form>
     </div>

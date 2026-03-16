@@ -8,8 +8,8 @@ import { PasswordSetupRoute } from './components/PasswordSetupRoute';
 import LoginView from './views/LoginView';
 import DashboardView from './views/DashboardView';
 import EmployeeListView from './views/EmployeeListView';
-import RotaryView from './views/RotaryView';
-import AttendanceView from './views/AttendanceView';
+// import RotaryView from './views/RotaryView'; // TODO: Enable Teams/Rotary view
+// import AttendanceView from './views/AttendanceView'; // TODO: Enable Attendance view
 import VacationView from './views/VacationView';
 import ReportsView from './views/ReportsView';
 import SettingsView from './views/SettingsView';
@@ -68,10 +68,10 @@ export default function App() {
       >
         <Route path={ROUTES.DASHBOARD} element={<ProtectedRoute allowedRoles={ADMIN_MOD}><DashboardView /></ProtectedRoute>} />
         <Route path={ROUTES.EMPLOYEES} element={<ProtectedRoute allowedRoles={ALL_ROLES}><EmployeeListView /></ProtectedRoute>} />
-        <Route path={ROUTES.TEAMS} element={<ProtectedRoute allowedRoles={ADMIN_MOD}><RotaryView /></ProtectedRoute>} />
+        {/* <Route path={ROUTES.TEAMS} element={<ProtectedRoute allowedRoles={ADMIN_MOD}><RotaryView /></ProtectedRoute>} /> TODO: Enable Teams/Rotary */}
         <Route path={ROUTES.SHIFT_ROSTER} element={<ProtectedRoute allowedRoles={ALL_ROLES}><ShiftRosterCalendar /></ProtectedRoute>} />
         <Route path={ROUTES.SHIFT_CONFIGURATION} element={<ProtectedRoute allowedRoles={ADMIN_ONLY}><ShiftConfiguration /></ProtectedRoute>} />
-        <Route path={ROUTES.ATTENDANCE} element={<ProtectedRoute allowedRoles={ALL_ROLES}><AttendanceView /></ProtectedRoute>} />
+        {/* <Route path={ROUTES.ATTENDANCE} element={<ProtectedRoute allowedRoles={ALL_ROLES}><AttendanceView /></ProtectedRoute>} /> TODO: Enable Attendance */}
         <Route path={ROUTES.VACATIONS} element={<ProtectedRoute allowedRoles={ALL_ROLES}><VacationView /></ProtectedRoute>} />
         <Route path={ROUTES.REPORTS} element={<ProtectedRoute allowedRoles={ADMIN_MOD}><ReportsView /></ProtectedRoute>} />
         <Route path={ROUTES.SETTINGS} element={<ProtectedRoute allowedRoles={ADMIN_ONLY}><SettingsView /></ProtectedRoute>} />

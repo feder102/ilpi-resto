@@ -23,10 +23,10 @@ export default function EmployeeTimeTracking() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Clock className="w-8 h-8 text-blue-600" />
+        <Clock className="w-8 h-8 text-primary" />
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Control de Fichaje</h1>
-          <p className="text-gray-600">Registra tu entrada y salida del trabajo</p>
+          <h1 className="text-3xl font-bold text-base-content">Control de Fichaje</h1>
+          <p className="text-base-content/60">Registra tu entrada y salida del trabajo</p>
         </div>
       </div>
 
@@ -39,8 +39,8 @@ export default function EmployeeTimeTracking() {
 
       {/* Time Records Section */}
       <Card className="p-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-900">Historial de Fichajes</h2>
-        <p className="text-gray-600">
+        <h2 className="text-2xl font-bold mb-4 text-base-content">Historial de Fichajes</h2>
+        <p className="text-base-content/60">
           Los registros de fichaje se mostrarán aquí una vez implementado el historial completo.
         </p>
       </Card>

@@ -41,20 +41,20 @@ interface VacationRequestListProps {
 }
 
 /**
- * Get status badge color
+ * Get status badge class
  */
-function getStatusBadgeColor(status: string): string {
+function getStatusBadgeClass(status: string): string {
   switch (status) {
     case 'Pendiente':
-      return 'bg-yellow-100 text-yellow-800';
+      return 'badge badge-warning';
     case 'Aprobado':
-      return 'bg-green-100 text-green-800';
+      return 'badge badge-success';
     case 'Rechazado':
-      return 'bg-red-100 text-red-800';
+      return 'badge badge-error';
     case 'Cancelado':
-      return 'bg-gray-100 text-gray-800';
+      return 'badge badge-ghost';
     default:
-      return 'bg-gray-100 text-gray-800';
+      return 'badge badge-ghost';
   }
 }
 
@@ -108,24 +108,24 @@ export default function VacationRequestList({
   );
 
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className="card bg-base-100 shadow-sm">
       {/* Filters */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-base-300">
         <div className="space-y-4">
           {/* Status Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Estado
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Estado</span>
             </label>
             <div className="flex gap-2 flex-wrap">
               {['Pendiente', 'Aprobado', 'Rechazado', 'Cancelado'].map(status => (
                 <button
                   key={status}
                   onClick={() => onStatusFilterChange(status)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition ${
+                  className={`btn btn-sm ${
                     statusFilter === status
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? 'btn-primary'
+                      : 'btn-ghost'
                   }`}
                 >
                   {status}
@@ -135,48 +135,52 @@ export default function VacationRequestList({
           </div>
 
           {/* Employee Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Buscar empleado
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Buscar empleado</span>
             </label>
             <input
               type="text"
               placeholder="Nombre del empleado..."
               value={searchInput}
               onChange={e => handleSearchChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="input input-bordered w-full"
             />
           </div>
 
           {/* Advanced Filters Toggle */}
           <button
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            className="btn btn-ghost btn-sm text-primary"
           >
-            {showAdvancedFilters ? '▼ Ocultar filtros avanzados' : '▶ Mostrar filtros avanzados'}
+            {showAdvancedFilters ? 'Ocultar filtros avanzados' : 'Mostrar filtros avanzados'}
           </button>
 
           {/* Advanced Filters */}
           {showAdvancedFilters && (
-            <div className="pt-2 border-t border-gray-200 space-y-3">
-              <p className="text-sm font-medium text-gray-700">Rango de Fechas</p>
+            <div className="pt-2 border-t border-base-300 space-y-3">
+              <p className="text-sm font-medium text-base-content">Rango de Fechas</p>
               <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs text-gray-600 block mb-1">Desde</label>
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text-alt">Desde</span>
+                  </label>
                   <input
                     type="date"
                     value={dateFromFilter}
                     onChange={e => setDateFromFilter(e.target.value)}
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                    className="input input-bordered input-sm w-full"
                   />
                 </div>
-                <div>
-                  <label className="text-xs text-gray-600 block mb-1">Hasta</label>
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text-alt">Hasta</span>
+                  </label>
                   <input
                     type="date"
                     value={dateToFilter}
                     onChange={e => setDateToFilter(e.target.value)}
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                    className="input input-bordered input-sm w-full"
                   />
                 </div>
               </div>
@@ -186,7 +190,7 @@ export default function VacationRequestList({
                     setDateFromFilter('');
                     setDateToFilter('');
                   }}
-                  className="text-xs text-gray-500 hover:text-gray-700 underline"
+                  className="btn btn-ghost btn-xs"
                 >
                   Limpiar fechas
                 </button>
@@ -197,17 +201,17 @@ export default function VacationRequestList({
       </div>
 
       {/* Request List */}
-      <div className="divide-y divide-gray-200">
+      <div className="divide-y divide-base-300">
         {isLoading && (
           <div className="p-8 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            <p className="mt-2 text-gray-600 text-sm">Cargando solicitudes...</p>
+            <span className="loading loading-spinner loading-lg text-primary"></span>
+            <p className="mt-2 text-base-content/60 text-sm">Cargando solicitudes...</p>
           </div>
         )}
 
         {!isLoading && filteredRequests.length === 0 && (
           <div className="p-8 text-center">
-            <p className="text-gray-500">
+            <p className="text-base-content/60">
               {requests.length === 0
                 ? 'No hay solicitudes de vacaciones'
                 : 'No se encontraron solicitudes con los filtros especificados'}
@@ -220,38 +224,34 @@ export default function VacationRequestList({
             <div
               key={request.id}
               onClick={() => onSelectRequest(request.id)}
-              className={`p-4 cursor-pointer hover:bg-gray-50 transition ${
-                selectedRequestId === request.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+              className={`p-4 cursor-pointer hover:bg-base-200 transition ${
+                selectedRequestId === request.id ? 'bg-primary/10 border-l-4 border-primary' : ''
               }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   {/* Employee Name */}
-                  <h3 className="font-semibold text-gray-900">{request.employee_name}</h3>
+                  <h3 className="font-semibold text-base-content">{request.employee_name}</h3>
 
                   {/* Dates */}
-                  <p className="text-sm text-gray-600 mt-1">
-                    📅 {formatDate(request.start_date)} - {formatDate(request.end_date)}
+                  <p className="text-sm text-base-content/60 mt-1">
+                    {formatDate(request.start_date)} - {formatDate(request.end_date)}
                   </p>
 
                   {/* Days Requested */}
-                  <p className="text-sm text-gray-600">
-                    📊 {request.requested_days} día{request.requested_days !== 1 ? 's' : ''}
+                  <p className="text-sm text-base-content/60">
+                    {request.requested_days} día{request.requested_days !== 1 ? 's' : ''}
                   </p>
 
                   {/* Created Date */}
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-base-content/60 mt-2">
                     Solicitado: {formatDate(request.created_at)}
                   </p>
                 </div>
 
                 {/* Status Badge */}
                 <div className="ml-4">
-                  <span
-                    className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(
-                      request.status
-                    )}`}
-                  >
+                  <span className={getStatusBadgeClass(request.status)}>
                     {request.status}
                   </span>
                 </div>
@@ -259,7 +259,7 @@ export default function VacationRequestList({
 
               {/* Reviewed Info */}
               {request.reviewed_by && (
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-base-content/60 mt-2">
                   Revisado: {formatDate(request.reviewed_at || '')}
                 </p>
               )}
@@ -269,7 +269,7 @@ export default function VacationRequestList({
 
       {/* Summary */}
       {!isLoading && filteredRequests.length > 0 && (
-        <div className="p-4 bg-gray-50 border-t border-gray-200 text-sm text-gray-600">
+        <div className="p-4 bg-base-200 border-t border-base-300 text-sm text-base-content/60">
           Mostrando {filteredRequests.length} de {requests.length} solicitud
           {requests.length !== 1 ? 'es' : ''}
         </div>

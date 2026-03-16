@@ -99,10 +99,10 @@ export function ShiftConfiguration() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-base-content">
             Configuración de Turnos
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-base-content/60 mt-1">
             Define los horarios predefinidos para los turnos de tu cocina
           </p>
         </div>
@@ -111,7 +111,7 @@ export function ShiftConfiguration() {
             setEditingShift(null);
             setShowForm(true);
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="btn btn-primary flex items-center gap-2"
         >
           <Plus className="w-5 h-5" />
           Nuevo Turno
@@ -120,11 +120,11 @@ export function ShiftConfiguration() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          {error}
+        <div className="alert alert-error">
+          <span>{error}</span>
           <button
             onClick={() => setError(null)}
-            className="ml-2 text-red-600 hover:text-red-800 font-semibold"
+            className="btn btn-sm btn-ghost"
           >
             Descartar
           </button>
@@ -134,109 +134,99 @@ export function ShiftConfiguration() {
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <Loader className="w-8 h-8 text-blue-600 animate-spin" />
+          <span className="loading loading-spinner loading-lg text-primary"></span>
         </div>
       )}
 
       {/* Shift Types Table */}
       {!loading && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="card bg-base-100 shadow-sm overflow-hidden">
           {shiftTypes.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">
+              <p className="text-base-content/60 text-lg">
                 No hay turnos configurados
               </p>
-              <p className="text-gray-400 text-sm">
+              <p className="text-base-content/40 text-sm">
                 Crea tu primer turno haciendo clic en "Nuevo Turno"
               </p>
             </div>
           ) : (
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Nombre
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Tipo
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Horarios
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Horas
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Estado
-                  </th>
-                  <th className="px-6 py-3 text-right text-sm font-semibold text-gray-700">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {shiftTypes.map((shift) => (
-                  <tr key={shift.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {shift.name}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">
-                        {shiftTypeLabels[shift.type]}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      <div className="space-y-1">
-                        {shift.time_windows.map((window, idx) => (
-                          <div key={idx} className="font-mono">
-                            {window.start} - {window.end}
-                          </div>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 font-semibold">
-                      {shift.total_hours}h
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      {shift.is_active ? (
-                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">
-                          Activo
-                        </span>
-                      ) : (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-semibold">
-                          Inactivo
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right text-sm space-x-2">
-                      <button
-                        onClick={() => {
-                          setEditingShift(shift);
-                          setShowForm(true);
-                        }}
-                        disabled={deleting === shift.id}
-                        className="inline-flex items-center gap-1 px-3 py-1 text-blue-600 hover:bg-blue-50 rounded disabled:opacity-50"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(shift.id)}
-                        disabled={deleting === shift.id}
-                        className="inline-flex items-center gap-1 px-3 py-1 text-red-600 hover:bg-red-50 rounded disabled:opacity-50"
-                      >
-                        {deleting === shift.id ? (
-                          <Loader className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="w-4 h-4" />
-                        )}
-                        {deleting === shift.id ? 'Eliminando...' : 'Eliminar'}
-                      </button>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="table table-zebra w-full">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Horarios</th>
+                    <th>Horas</th>
+                    <th>Estado</th>
+                    <th className="text-right">Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {shiftTypes.map((shift) => (
+                    <tr key={shift.id} className="hover">
+                      <td className="font-medium text-base-content">
+                        {shift.name}
+                      </td>
+                      <td>
+                        <span className="badge badge-info badge-sm">
+                          {shiftTypeLabels[shift.type]}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="space-y-1">
+                          {shift.time_windows.map((window, idx) => (
+                            <div key={idx} className="font-mono text-sm">
+                              {window.start} - {window.end}
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="font-semibold">
+                        {shift.total_hours}h
+                      </td>
+                      <td>
+                        {shift.is_active ? (
+                          <span className="badge badge-success badge-sm">
+                            Activo
+                          </span>
+                        ) : (
+                          <span className="badge badge-neutral badge-sm">
+                            Inactivo
+                          </span>
+                        )}
+                      </td>
+                      <td className="text-right space-x-2">
+                        <button
+                          onClick={() => {
+                            setEditingShift(shift);
+                            setShowForm(true);
+                          }}
+                          disabled={deleting === shift.id}
+                          className="btn btn-ghost btn-sm text-primary"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(shift.id)}
+                          disabled={deleting === shift.id}
+                          className="btn btn-ghost btn-sm text-error"
+                        >
+                          {deleting === shift.id ? (
+                            <Loader className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                          {deleting === shift.id ? 'Eliminando...' : 'Eliminar'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
@@ -244,22 +234,22 @@ export function ShiftConfiguration() {
       {/* Pagination */}
       {!loading && shiftTypes.length > 0 && (
         <div className="flex justify-between items-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-base-content/60">
             Mostrando {shiftTypes.length} de {total} turnos
           </p>
-          <div className="flex gap-2">
+          <div className="join">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50"
+              className="join-item btn btn-sm"
             >
               Anterior
             </button>
-            <span className="px-3 py-1 text-sm">Página {page}</span>
+            <span className="join-item btn btn-sm btn-disabled">Página {page}</span>
             <button
               onClick={() => setPage((p) => p + 1)}
               disabled={shiftTypes.length < 20}
-              className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50"
+              className="join-item btn btn-sm"
             >
               Siguiente
             </button>

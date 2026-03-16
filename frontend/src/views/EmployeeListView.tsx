@@ -236,8 +236,8 @@ export default function EmployeeListView() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 m-0">Empleados</h1>
-          <p className="text-sm text-slate-600 mt-1">{total} empleados registrados</p>
+          <h1 className="text-3xl font-bold text-base-content m-0">Empleados</h1>
+          <p className="text-sm text-base-content/60 mt-1">{total} empleados registrados</p>
         </div>
         {isAdmin && (
           <Button
@@ -264,38 +264,38 @@ export default function EmployeeListView() {
       )}
 
       {loading ? (
-        <p className="text-center text-slate-600 mt-10">Cargando...</p>
+        <p className="text-center text-base-content/60 mt-10">Cargando...</p>
       ) : employees.length === 0 ? (
-        <p className="text-center text-slate-600 mt-10">No se encontraron empleados</p>
+        <p className="text-center text-base-content/60 mt-10">No se encontraron empleados</p>
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
             {employees.map((emp) => (
               <Card key={emp.id} className="flex flex-col">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <div className="w-12 h-12 rounded-full bg-base-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {emp.profile_image ? (
                       <img src={emp.profile_image} alt={emp.first_name} className="w-full h-full object-cover" />
                     ) : (
-                      <User size={24} className="text-slate-400" />
+                      <User size={24} className="text-base-content/40" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-slate-900">
+                    <h3 className="font-semibold text-base-content">
                       {emp.first_name} {emp.last_name}
                     </h3>
-                    <p className="text-xs text-slate-600">{emp.department}</p>
+                    <p className="text-xs text-base-content/60">{emp.department}</p>
                   </div>
                   <Badge variant={getStatusVariant(emp.status)}>{emp.status}</Badge>
                 </div>
 
-                <div className="text-sm text-slate-700 space-y-1 mb-3">
+                <div className="text-sm text-base-content/80 space-y-1 mb-3">
                   <p>DNI: {emp.dni}</p>
                   <p>{emp.email}</p>
                 </div>
 
                 {isAdminOrMod && (
-                  <div className="flex gap-2 mt-auto pt-3 border-t border-slate-200">
+                  <div className="flex gap-2 mt-auto pt-3 border-t border-base-300">
                     {emp.status === 'Inactivo' ? (
                       isAdmin && (
                         <Button
@@ -346,7 +346,7 @@ export default function EmployeeListView() {
               >
                 Anterior
               </Button>
-              <span className="text-sm text-slate-600">
+              <span className="text-sm text-base-content/60">
                 Página {page} de {pages}
               </span>
               <Button
@@ -392,108 +392,108 @@ export default function EmployeeListView() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Personal Info */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Nombre {formErrors.first_name && <span className="text-red-600">*</span>}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Nombre {formErrors.first_name && <span className="text-error">*</span>}</span>
             </label>
-            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.first_name} onChange={(e) => updateField('first_name', e.target.value)} />
-            {formErrors.first_name && <p className="mt-1 text-xs text-red-600">{formErrors.first_name}</p>}
+            <input className="input input-bordered w-full" value={form.first_name} onChange={(e) => updateField('first_name', e.target.value)} />
+            {formErrors.first_name && <p className="mt-1 text-xs text-error">{formErrors.first_name}</p>}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Apellidos {formErrors.last_name && <span className="text-red-600">*</span>}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Apellidos {formErrors.last_name && <span className="text-error">*</span>}</span>
             </label>
-            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.last_name} onChange={(e) => updateField('last_name', e.target.value)} />
-            {formErrors.last_name && <p className="mt-1 text-xs text-red-600">{formErrors.last_name}</p>}
+            <input className="input input-bordered w-full" value={form.last_name} onChange={(e) => updateField('last_name', e.target.value)} />
+            {formErrors.last_name && <p className="mt-1 text-xs text-error">{formErrors.last_name}</p>}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Email {formErrors.email && <span className="text-red-600">*</span>}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Email {formErrors.email && <span className="text-error">*</span>}</span>
             </label>
-            <input type="email" className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.email} onChange={(e) => updateField('email', e.target.value)} />
-            {formErrors.email && <p className="mt-1 text-xs text-red-600">{formErrors.email}</p>}
+            <input type="email" className="input input-bordered w-full" value={form.email} onChange={(e) => updateField('email', e.target.value)} />
+            {formErrors.email && <p className="mt-1 text-xs text-error">{formErrors.email}</p>}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Teléfono
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Teléfono</span>
             </label>
-            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.phone || ''} onChange={(e) => updateField('phone', e.target.value)} />
+            <input className="input input-bordered w-full" value={form.phone || ''} onChange={(e) => updateField('phone', e.target.value)} />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              DNI {formErrors.dni && <span className="text-red-600">*</span>}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">DNI {formErrors.dni && <span className="text-error">*</span>}</span>
             </label>
-            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.dni} onChange={(e) => updateField('dni', e.target.value)} />
-            {formErrors.dni && <p className="mt-1 text-xs text-red-600">{formErrors.dni}</p>}
+            <input className="input input-bordered w-full" value={form.dni} onChange={(e) => updateField('dni', e.target.value)} />
+            {formErrors.dni && <p className="mt-1 text-xs text-error">{formErrors.dni}</p>}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Fecha de nacimiento
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Fecha de nacimiento</span>
             </label>
-            <input type="date" className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.birth_date || ''} onChange={(e) => updateField('birth_date', e.target.value)} />
+            <input type="date" className="input input-bordered w-full" value={form.birth_date || ''} onChange={(e) => updateField('birth_date', e.target.value)} />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Dirección
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Dirección</span>
             </label>
-            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.address || ''} onChange={(e) => updateField('address', e.target.value)} />
+            <input className="input input-bordered w-full" value={form.address || ''} onChange={(e) => updateField('address', e.target.value)} />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Género
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Género</span>
             </label>
-            <select className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.gender || ''} onChange={(e) => updateField('gender', e.target.value)}>
+            <select className="select select-bordered w-full" value={form.gender || ''} onChange={(e) => updateField('gender', e.target.value)}>
               <option value="">Seleccionar...</option>
               {Object.values(Gender).map((g) => <option key={g} value={g}>{g}</option>)}
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Estado civil
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Estado civil</span>
             </label>
-            <select className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.marital_status || ''} onChange={(e) => updateField('marital_status', e.target.value)}>
+            <select className="select select-bordered w-full" value={form.marital_status || ''} onChange={(e) => updateField('marital_status', e.target.value)}>
               <option value="">Seleccionar...</option>
               {Object.values(MaritalStatus).map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
 
           {/* Company Info */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Departamento {formErrors.department && <span className="text-red-600">*</span>}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Departamento {formErrors.department && <span className="text-error">*</span>}</span>
             </label>
-            <select className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.department} onChange={(e) => updateField('department', e.target.value)}>
+            <select className="select select-bordered w-full" value={form.department} onChange={(e) => updateField('department', e.target.value)}>
               {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
-            {formErrors.department && <p className="mt-1 text-xs text-red-600">{formErrors.department}</p>}
+            {formErrors.department && <p className="mt-1 text-xs text-error">{formErrors.department}</p>}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Rol {formErrors.role && <span className="text-red-600">*</span>}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Rol {formErrors.role && <span className="text-error">*</span>}</span>
             </label>
-            <select className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.role} onChange={(e) => updateField('role', e.target.value)}>
+            <select className="select select-bordered w-full" value={form.role} onChange={(e) => updateField('role', e.target.value)}>
               {Object.values(Role).map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
-            {formErrors.role && <p className="mt-1 text-xs text-red-600">{formErrors.role}</p>}
+            {formErrors.role && <p className="mt-1 text-xs text-error">{formErrors.role}</p>}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Fecha de contratación {formErrors.hire_date && <span className="text-red-600">*</span>}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Fecha de contratación {formErrors.hire_date && <span className="text-error">*</span>}</span>
             </label>
-            <input type="date" className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.hire_date} onChange={(e) => updateField('hire_date', e.target.value)} />
-            {formErrors.hire_date && <p className="mt-1 text-xs text-red-600">{formErrors.hire_date}</p>}
+            <input type="date" className="input input-bordered w-full" value={form.hire_date} onChange={(e) => updateField('hire_date', e.target.value)} />
+            {formErrors.hire_date && <p className="mt-1 text-xs text-error">{formErrors.hire_date}</p>}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Contacto de emergencia
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Contacto de emergencia</span>
             </label>
-            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.emergency_contact || ''} onChange={(e) => updateField('emergency_contact', e.target.value)} />
+            <input className="input input-bordered w-full" value={form.emergency_contact || ''} onChange={(e) => updateField('emergency_contact', e.target.value)} />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              URL imagen de perfil
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">URL imagen de perfil</span>
             </label>
-            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={form.profile_image || ''} onChange={(e) => updateField('profile_image', e.target.value)} />
+            <input className="input input-bordered w-full" value={form.profile_image || ''} onChange={(e) => updateField('profile_image', e.target.value)} />
           </div>
         </div>
       </Modal>
@@ -520,7 +520,7 @@ export default function EmployeeListView() {
           </div>
         }
       >
-        <p className="text-slate-700">
+        <p className="text-base-content/80">
           ¿Está seguro de que desea eliminar a {deleteName}? Esta acción desactivará al empleado y rechazará sus solicitudes de vacaciones pendientes.
         </p>
       </Modal>
@@ -548,7 +548,7 @@ export default function EmployeeListView() {
           </div>
         }
       >
-        <p className="text-slate-700">
+        <p className="text-base-content/80">
           ¿Está seguro de que desea reactivar a {reactivateName}? El empleado podrá volver a iniciar sesión y acceder al sistema.
         </p>
       </Modal>

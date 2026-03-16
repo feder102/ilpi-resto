@@ -54,17 +54,17 @@ export default function LoginView() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-700 px-4">
-      <Card className="w-full max-w-md bg-white shadow-2xl">
+    <div className="min-h-screen flex items-center justify-center bg-base-200 px-4">
+      <Card className="w-full max-w-md bg-base-100 shadow-2xl">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">ILPI Staff</h1>
-          <p className="text-sm text-slate-600">Gestión de Personal</p>
+          <h1 className="text-3xl font-bold text-base-content mb-2">ILPI Staff</h1>
+          <p className="text-sm text-base-content/60">Gestión de Personal</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
-              Correo electrónico
+          <div className="form-control">
+            <label htmlFor="email" className="label">
+              <span className="label-text">Correo electrónico</span>
             </label>
             <Input
               id="email"
@@ -76,9 +76,9 @@ export default function LoginView() {
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
-              Contraseña
+          <div className="form-control">
+            <label htmlFor="password" className="label">
+              <span className="label-text">Contraseña</span>
             </label>
             <Input
               id="password"
@@ -104,10 +104,10 @@ export default function LoginView() {
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </Button>
 
-          <div className="text-center text-sm text-slate-600 mt-4">
+          <div className="text-center text-sm text-base-content/60 mt-4">
             <a
               href="/password-reset"
-              className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+              className="link link-primary font-medium"
             >
               ¿Olvidaste tu contraseña?
             </a>

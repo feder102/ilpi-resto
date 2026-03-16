@@ -6,8 +6,8 @@
  *
  * Features:
  * - Monthly grid layout (react-big-calendar format)
- * - Shift color-coding by type (Mañana=yellow, Noche=blue)
- * - Vacation status badges (Aprobado=🏖️, Pendiente=⏳)
+ * - Shift color-coding by type
+ * - Vacation status badges
  * - Responsive grid layout
  * - Loading and error state handling
  */
@@ -40,12 +40,12 @@ interface RosterCalendarProps {
  */
 function getShiftColor(shiftTypeName: string): string {
   if (shiftTypeName?.toLowerCase().includes('mañana')) {
-    return 'bg-yellow-300';
+    return 'bg-warning text-warning-content';
   }
   if (shiftTypeName?.toLowerCase().includes('noche')) {
-    return 'bg-blue-500';
+    return 'bg-info text-info-content';
   }
-  return 'bg-gray-400';
+  return 'bg-neutral text-neutral-content';
 }
 
 /**
@@ -135,14 +135,14 @@ export default function RosterCalendar({
   const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="card bg-base-100 shadow-sm overflow-hidden">
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-0 border border-gray-200">
+      <div className="grid grid-cols-7 gap-0 border border-base-300">
         {/* Day headers */}
         {dayNames.map(dayName => (
           <div
             key={dayName}
-            className="bg-gray-100 p-3 text-center font-semibold text-sm border-r border-b border-gray-200"
+            className="bg-base-200 p-3 text-center font-semibold text-sm border-r border-b border-base-300"
           >
             {dayName}
           </div>
@@ -152,15 +152,15 @@ export default function RosterCalendar({
         {days.map((day, idx) => (
           <div
             key={`day-${idx}`}
-            className={`min-h-32 p-2 border-r border-b border-gray-200 ${
-              day ? 'bg-white' : 'bg-gray-50'
+            className={`min-h-32 p-2 border-r border-b border-base-300 ${
+              day ? 'bg-base-100' : 'bg-base-200'
             }`}
           >
             {day && (
               <div>
                 {/* Day number */}
                 <div className="text-right mb-1">
-                  <span className="text-sm font-semibold text-gray-700">{day}</span>
+                  <span className="text-sm font-semibold text-base-content">{day}</span>
                 </div>
 
                 {/* Shifts for this day */}
@@ -178,20 +178,20 @@ export default function RosterCalendar({
                       <div
                         className={`${getShiftColor(
                           shift.shift_type_name
-                        )} text-white px-2 py-1 rounded text-xs font-medium truncate cursor-pointer hover:shadow transition`}
+                        )} px-2 py-1 rounded text-xs font-medium truncate cursor-pointer hover:shadow transition`}
                         title={`${shift.employee_name} - ${shift.shift_type_name}`}
                       >
                         {shift.shift_type_name}
                       </div>
 
                       {/* Employee name (truncated) */}
-                      <div className="text-gray-600 px-1 mt-1 text-xs truncate">
+                      <div className="text-base-content/60 px-1 mt-1 text-xs truncate">
                         {shift.employee_name.split(' ')[0]}
                       </div>
 
                       {/* Clock times if available */}
                       {(shift.entry_time || shift.exit_time) && (
-                        <div className="text-gray-500 text-xs px-1">
+                        <div className="text-base-content/60 text-xs px-1">
                           {shift.entry_time && (
                             <span>
                               {new Date(`2000-01-01T${shift.entry_time}`).toLocaleTimeString(
@@ -214,7 +214,7 @@ export default function RosterCalendar({
       {/* Empty state */}
       {shifts.length === 0 && !isLoading && (
         <div className="p-12 text-center">
-          <p className="text-gray-500">No hay turnos asignados para este mes</p>
+          <p className="text-base-content/60">No hay turnos asignados para este mes</p>
         </div>
       )}
     </div>

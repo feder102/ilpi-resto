@@ -131,10 +131,10 @@ export default function VacationRequestDetail({
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow p-6 h-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
-          <p className="text-gray-600 text-sm">Cargando detalles...</p>
+      <div className="card bg-base-100 shadow-sm h-full">
+        <div className="card-body items-center justify-center">
+          <span className="loading loading-spinner loading-lg text-primary"></span>
+          <p className="text-base-content/60 text-sm mt-2">Cargando detalles...</p>
         </div>
       </div>
     );
@@ -142,9 +142,9 @@ export default function VacationRequestDetail({
 
   if (!detail) {
     return (
-      <div className="bg-white rounded-lg shadow p-6 h-full flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-500">Selecciona una solicitud para ver los detalles</p>
+      <div className="card bg-base-100 shadow-sm h-full">
+        <div className="card-body items-center justify-center">
+          <p className="text-base-content/60">Selecciona una solicitud para ver los detalles</p>
         </div>
       </div>
     );
@@ -153,13 +153,13 @@ export default function VacationRequestDetail({
   const isApprovedOrRejected = detail.status !== 'Pendiente';
 
   return (
-    <div className="bg-white rounded-lg shadow h-full flex flex-col">
+    <div className="card bg-base-100 shadow-sm h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+      <div className="p-4 border-b border-base-300 flex items-center justify-between">
         <h3 className="font-bold text-lg">Detalles de la Solicitud</h3>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 text-xl font-bold"
+          className="btn btn-ghost btn-sm"
         >
           ✕
         </button>
@@ -169,18 +169,18 @@ export default function VacationRequestDetail({
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Error */}
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-            {error}
+          <div role="alert" className="alert alert-error">
+            <span>{error}</span>
           </div>
         )}
 
         {/* Employee Info */}
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <p className="text-sm text-gray-600 mb-1">Empleado</p>
-          <p className="font-bold text-lg text-gray-900">{detail.employee.name}</p>
-          <p className="text-sm text-gray-600">{detail.employee.department}</p>
+        <div className="bg-primary/10 p-4 rounded-lg">
+          <p className="text-sm text-base-content/60 mb-1">Empleado</p>
+          <p className="font-bold text-lg text-base-content">{detail.employee.name}</p>
+          <p className="text-sm text-base-content/60">{detail.employee.department}</p>
           {detail.employee.hire_date && (
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-base-content/60 mt-2">
               Contratado: {formatDate(detail.employee.hire_date)}
             </p>
           )}
@@ -188,15 +188,15 @@ export default function VacationRequestDetail({
 
         {/* Dates */}
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Fechas Solicitadas</p>
-          <div className="bg-gray-50 p-3 rounded text-sm">
-            <p className="text-gray-900">
+          <p className="text-sm font-medium text-base-content mb-2">Fechas Solicitadas</p>
+          <div className="bg-base-200 p-3 rounded text-sm">
+            <p className="text-base-content">
               <span className="font-semibold">De:</span> {formatDate(detail.start_date)}
             </p>
-            <p className="text-gray-900">
+            <p className="text-base-content">
               <span className="font-semibold">Hasta:</span> {formatDate(detail.end_date)}
             </p>
-            <p className="text-gray-900 mt-2">
+            <p className="text-base-content mt-2">
               <span className="font-semibold">Total:</span> {detail.requested_days} día
               {detail.requested_days !== 1 ? 's' : ''}
             </p>
@@ -205,59 +205,59 @@ export default function VacationRequestDetail({
 
         {/* Vacation Balance */}
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Saldo de Vacaciones {detail.balance.year}</p>
-          <div className="bg-gray-50 p-3 rounded text-sm space-y-2">
+          <p className="text-sm font-medium text-base-content mb-2">Saldo de Vacaciones {detail.balance.year}</p>
+          <div className="bg-base-200 p-3 rounded text-sm space-y-2">
             <div className="flex justify-between">
-              <span className="text-gray-600">Días totales:</span>
-              <span className="font-semibold text-gray-900">{detail.balance.total_days}</span>
+              <span className="text-base-content/60">Días totales:</span>
+              <span className="font-semibold text-base-content">{detail.balance.total_days}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Días usados:</span>
-              <span className="font-semibold text-orange-600">{detail.balance.used_days}</span>
+              <span className="text-base-content/60">Días usados:</span>
+              <span className="font-semibold text-warning">{detail.balance.used_days}</span>
             </div>
-            <div className="border-t border-gray-200 pt-2 flex justify-between">
-              <span className="text-gray-600">Días disponibles:</span>
-              <span className="font-bold text-green-600">{detail.balance.remaining_days}</span>
+            <div className="border-t border-base-300 pt-2 flex justify-between">
+              <span className="text-base-content/60">Días disponibles:</span>
+              <span className="font-bold text-success">{detail.balance.remaining_days}</span>
             </div>
           </div>
 
           {/* Balance Check */}
           {detail.requested_days > detail.balance.remaining_days && (
-            <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-              ⚠️ Saldo insuficiente ({detail.requested_days} días solicitados vs{' '}
-              {detail.balance.remaining_days} disponibles)
+            <div role="alert" className="alert alert-error mt-2 py-2">
+              <span className="text-sm">
+                Saldo insuficiente ({detail.requested_days} días solicitados vs{' '}
+                {detail.balance.remaining_days} disponibles)
+              </span>
             </div>
           )}
         </div>
 
         {/* Status */}
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Estado</p>
-          <div className="inline-block px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
-            {detail.status}
-          </div>
+          <p className="text-sm font-medium text-base-content mb-2">Estado</p>
+          <span className="badge badge-warning">{detail.status}</span>
         </div>
       </div>
 
       {/* Actions */}
-      <div className="p-4 border-t border-gray-200 space-y-2">
+      <div className="p-4 border-t border-base-300 space-y-2">
         {/* Approve Button */}
         {!isApprovedOrRejected && (
           <>
             {showApproveConfirm ? (
               <div className="space-y-2">
-                <p className="text-sm text-gray-700 font-medium">¿Confirmar aprobación?</p>
+                <p className="text-sm text-base-content font-medium">¿Confirmar aprobación?</p>
                 <div className="flex gap-2">
                   <button
                     onClick={handleApprove}
                     disabled={isApproving}
-                    className="flex-1 px-3 py-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white rounded text-sm font-medium transition"
+                    className="btn btn-success btn-sm flex-1"
                   >
-                    {isApproving ? 'Aprobando...' : '✓ Sí, Aprobar'}
+                    {isApproving ? 'Aprobando...' : 'Sí, Aprobar'}
                   </button>
                   <button
                     onClick={() => setShowApproveConfirm(false)}
-                    className="flex-1 px-3 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded text-sm font-medium transition"
+                    className="btn btn-ghost btn-sm flex-1"
                   >
                     Cancelar
                   </button>
@@ -266,9 +266,9 @@ export default function VacationRequestDetail({
             ) : (
               <button
                 onClick={() => setShowApproveConfirm(true)}
-                className="w-full px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded text-sm font-medium transition"
+                className="btn btn-success w-full"
               >
-                ✓ Aprobar Solicitud
+                Aprobar Solicitud
               </button>
             )}
           </>
@@ -278,30 +278,30 @@ export default function VacationRequestDetail({
         {!isApprovedOrRejected && (
           <>
             {showRejectReason ? (
-              <div className="space-y-2 bg-red-50 p-3 rounded border border-red-200">
-                <p className="text-sm font-medium text-gray-700">Razón del rechazo (opcional)</p>
+              <div className="space-y-2 bg-error/10 p-3 rounded border border-error/30">
+                <p className="text-sm font-medium text-base-content">Razón del rechazo (opcional)</p>
                 <textarea
                   value={rejectReason}
                   onChange={e => setRejectReason(e.target.value)}
                   placeholder="Ej: Necesitamos cobertura esa semana..."
                   maxLength={500}
-                  className="w-full px-2 py-2 border border-gray-300 rounded text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="textarea textarea-bordered w-full text-sm"
                   rows={3}
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={handleReject}
                     disabled={isRejecting}
-                    className="flex-1 px-3 py-2 bg-red-500 hover:bg-red-600 disabled:bg-gray-300 text-white rounded text-sm font-medium transition"
+                    className="btn btn-error btn-sm flex-1"
                   >
-                    {isRejecting ? 'Rechazando...' : '✕ Rechazar'}
+                    {isRejecting ? 'Rechazando...' : 'Rechazar'}
                   </button>
                   <button
                     onClick={() => {
                       setShowRejectReason(false);
                       setRejectReason('');
                     }}
-                    className="flex-1 px-3 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded text-sm font-medium transition"
+                    className="btn btn-ghost btn-sm flex-1"
                   >
                     Cancelar
                   </button>
@@ -310,9 +310,9 @@ export default function VacationRequestDetail({
             ) : (
               <button
                 onClick={() => setShowRejectReason(true)}
-                className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded text-sm font-medium transition"
+                className="btn btn-error w-full"
               >
-                ✕ Rechazar Solicitud
+                Rechazar Solicitud
               </button>
             )}
           </>
@@ -320,7 +320,7 @@ export default function VacationRequestDetail({
 
         {/* Already Processed */}
         {isApprovedOrRejected && (
-          <div className="p-3 bg-gray-50 rounded text-center text-sm text-gray-600">
+          <div className="p-3 bg-base-200 rounded text-center text-sm text-base-content/60">
             Esta solicitud ya ha sido {detail.status === 'Aprobado' ? 'aprobada' : 'rechazada'}
           </div>
         )}

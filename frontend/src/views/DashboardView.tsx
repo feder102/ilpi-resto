@@ -33,12 +33,12 @@ export default function DashboardView() {
   }, []);
 
   if (loading) {
-    return <p className="text-center text-slate-600 mt-10">Cargando dashboard...</p>;
+    return <p className="text-center text-base-content/60 mt-10">Cargando dashboard...</p>;
   }
 
   return (
     <div className="max-w-7xl">
-      <h1 className="text-2xl md:text-3xl font-bold mb-8 text-slate-900">Dashboard</h1>
+      <h1 className="text-2xl md:text-3xl font-bold mb-8 text-base-content">Dashboard</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard title="Total Personal" value={stats?.total_employees ?? 0} icon={<Users size={24} />} color="#3b82f6" />
@@ -49,16 +49,16 @@ export default function DashboardView() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <div className="lg:col-span-2">
-          <h2 className="text-base md:text-lg font-semibold text-slate-900 mb-4">Turnos de Hoy</h2>
+          <h2 className="text-base md:text-lg font-semibold text-base-content mb-4">Turnos de Hoy</h2>
           {todayShifts.length === 0 ? (
-            <p className="text-slate-600">No hay turnos registrados hoy</p>
+            <p className="text-base-content/60">No hay turnos registrados hoy</p>
           ) : (
             <div className="space-y-2">
               {todayShifts.map((s) => (
                 <Card key={s.id} className="flex items-center justify-between p-3">
-                  <span className="font-medium text-slate-900">{s.employee_name || 'N/A'}</span>
+                  <span className="font-medium text-base-content">{s.employee_name || 'N/A'}</span>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm text-slate-600">
+                    <span className="text-sm text-base-content/60">
                       {s.entry_time ? new Date(s.entry_time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : ''}
                       {s.exit_time ? ` - ${new Date(s.exit_time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}` : ' — En turno...'}
                     </span>
@@ -74,12 +74,12 @@ export default function DashboardView() {
 
         <div>
           <Card className="sticky top-6">
-            <h3 className="text-sm font-semibold text-slate-900 mb-3">Resumen Rápido</h3>
-            <div className="space-y-2 text-sm text-slate-700">
-              <p>Personal activo: <strong className="text-slate-900">{stats?.total_employees ?? 0}</strong></p>
-              <p>Turnos en curso: <strong className="text-slate-900">{stats?.on_shift ?? 0}</strong></p>
-              <p>Vacaciones activas: <strong className="text-slate-900">{stats?.on_vacation ?? 0}</strong></p>
-              <p>Pendientes de revisión: <strong className="text-slate-900">{stats?.pending_requests ?? 0}</strong></p>
+            <h3 className="text-sm font-semibold text-base-content mb-3">Resumen Rápido</h3>
+            <div className="space-y-2 text-sm text-base-content/80">
+              <p>Personal activo: <strong className="text-base-content">{stats?.total_employees ?? 0}</strong></p>
+              <p>Turnos en curso: <strong className="text-base-content">{stats?.on_shift ?? 0}</strong></p>
+              <p>Vacaciones activas: <strong className="text-base-content">{stats?.on_vacation ?? 0}</strong></p>
+              <p>Pendientes de revisión: <strong className="text-base-content">{stats?.pending_requests ?? 0}</strong></p>
             </div>
           </Card>
         </div>
