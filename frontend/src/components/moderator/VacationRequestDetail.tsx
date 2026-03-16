@@ -56,6 +56,21 @@ function formatDate(dateStr: string): string {
   });
 }
 
+function getStatusBadgeClass(status: string): string {
+  switch (status) {
+    case 'Pendiente':
+      return 'badge-warning';
+    case 'Aprobado':
+      return 'badge-success';
+    case 'Rechazado':
+      return 'badge-error';
+    case 'Cancelado':
+      return 'badge-ghost';
+    default:
+      return 'badge-ghost';
+  }
+}
+
 export default function VacationRequestDetail({
   requestId,
   onApproved,
@@ -235,7 +250,7 @@ export default function VacationRequestDetail({
         {/* Status */}
         <div>
           <p className="text-sm font-medium text-base-content mb-2">Estado</p>
-          <span className="badge badge-warning">{detail.status}</span>
+          <span className={`badge ${getStatusBadgeClass(detail.status)}`}>{detail.status}</span>
         </div>
       </div>
 

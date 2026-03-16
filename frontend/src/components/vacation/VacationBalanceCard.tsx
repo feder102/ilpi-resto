@@ -48,9 +48,9 @@ export default function VacationBalanceCard({ balance, loading }: VacationBalanc
 
   // Color based on remaining days
   const getColor = () => {
-    if (balance.remaining_days >= 15) return 'oklch(var(--su))';
-    if (balance.remaining_days >= 5) return 'oklch(var(--wa))';
-    return 'oklch(var(--er))';
+    if (balance.remaining_days >= 15) return 'var(--color-success)';
+    if (balance.remaining_days >= 5) return 'var(--color-warning)';
+    return 'var(--color-error)';
   };
 
   const getColorClass = () => {
@@ -70,7 +70,7 @@ export default function VacationBalanceCard({ balance, loading }: VacationBalanc
             <div className="relative w-40 h-40">
               <svg className="w-full h-full" viewBox="0 0 120 120">
                 {/* Background circle */}
-                <circle cx="60" cy="60" r="45" fill="none" stroke="oklch(var(--b3))" strokeWidth="8" />
+                <circle cx="60" cy="60" r="45" fill="none" stroke="var(--color-base-300)" strokeWidth="8" />
 
                 {/* Progress circle */}
                 <circle
