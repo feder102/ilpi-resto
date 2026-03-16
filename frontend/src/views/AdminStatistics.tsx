@@ -2,6 +2,8 @@
  * AdminStatistics - Professional Time Tracking Analytics Dashboard
  * Features: Employee stats, department analytics, time entries, batch processing
  * Accessible to Admin and Moderador roles only
+ *
+ * Styled with daisyUI 5 dark luxury theme (gold/purple/navy palette)
  */
 
 import React, { useState, useMemo } from "react";
@@ -110,251 +112,274 @@ export const AdminStatistics: React.FC = () => {
 
   if (!isAuthorized) {
     return (
-      <div className="max-w-2xl mx-auto py-12">
-        <Alert
-          variant="error"
-          title="Acceso Denegado"
-          message="No tienes permiso para acceder a esta página. Se requiere rol de Administrador o Moderador."
-        />
+      <div className="min-h-screen bg-base-200 py-12 px-4">
+        <div className="max-w-2xl mx-auto">
+          <Alert
+            variant="error"
+            title="Acceso Denegado"
+            message="No tienes permiso para acceder a esta página. Se requiere rol de Administrador o Moderador."
+          />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-4xl font-bold text-slate-900">Análisis de Seguimiento de Tiempo</h1>
-        <p className="text-slate-600">
-          Monitorea horas de trabajo, productividad de empleados y generación automática de entradas de tiempo
-        </p>
-      </div>
+    <div className="min-h-screen bg-base-200 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="space-y-8 max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-primary/20 rounded-xl">
+              <BarChart3 className="w-8 h-8 text-primary" />
+            </div>
+            <h1 className="text-4xl font-bold text-base-content">Análisis de Seguimiento de Tiempo</h1>
+          </div>
+          <p className="text-base-content/70 text-lg max-w-2xl">
+            Monitorea horas de trabajo, productividad de empleados y generación automática de entradas de tiempo
+          </p>
+        </div>
 
-      {/* Tab Navigation */}
-      <div className="border-b border-slate-200">
-        <div className="flex gap-1">
+        {/* Tab Navigation */}
+        <div className="flex flex-col sm:flex-row gap-2">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-3 font-medium text-sm border-b-2 transition-all flex items-center gap-2 ${
+              className={`px-4 py-3 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${
                 activeTab === tab.id
-                  ? "border-indigo-500 text-indigo-600"
-                  : "border-transparent text-slate-600 hover:text-slate-900"
+                  ? "bg-primary text-primary-content shadow-lg"
+                  : "bg-base-100 text-base-content/70 hover:bg-base-300 border border-base-300/50"
               }`}
               title={tab.description}
             >
               {tab.icon}
-              {tab.label}
+              <span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Tab Content */}
-      <div className="min-h-[500px]">
-        {/* Employee Statistics Tab */}
-        {activeTab === "employee" && (
-          <div className="space-y-6">
-            <Card className="bg-gradient-to-br from-indigo-50 to-slate-50 border border-indigo-100">
-              <div className="p-6">
-                <h2 className="text-xl font-semibold text-slate-900 mb-2">Estadísticas de Empleados</h2>
-                <p className="text-sm text-slate-600">
-                  Busca un empleado para ver sus estadísticas de trabajo mensuales
-                </p>
-              </div>
-            </Card>
-            <EmployeeStatisticsCard />
-          </div>
-        )}
-
-        {/* Department Statistics Tab */}
-        {activeTab === "department" && (
-          <div className="space-y-6">
-            <Card className="bg-gradient-to-br from-violet-50 to-slate-50 border border-violet-100">
-              <div className="p-6">
-                <h2 className="text-xl font-semibold text-slate-900 mb-2">
-                  Análisis de Departamentos
-                </h2>
-                <p className="text-sm text-slate-600">
-                  Ver estadísticas agregadas por departamento
-                </p>
-              </div>
-            </Card>
-            <DepartmentStatisticsCard />
-          </div>
-        )}
-
-        {/* Time Entries Tab */}
-        {activeTab === "entries" && (
-          <div className="space-y-6">
-            <Card className="bg-gradient-to-br from-blue-50 to-slate-50 border border-blue-100">
-              <div className="p-6">
-                <h2 className="text-xl font-semibold text-slate-900 mb-2">Registros de Entradas de Tiempo</h2>
-                <p className="text-sm text-slate-600">
-                  Explora y filtra todas las entradas de tiempo por fecha, empleado o departamento
-                </p>
-              </div>
-            </Card>
-
-            {/* Filters Card */}
-            <Card>
-              <div className="p-6">
-                <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                  <ChevronDown className="w-4 h-4" />
-                  Filtros
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Fecha de Inicio
-                    </label>
-                    <input
-                      type="date"
-                      value={entriesStartDate}
-                      onChange={(e) => setEntriesStartDate(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
+        {/* Tab Content */}
+        <div className="min-h-[500px]">
+          {/* Employee Statistics Tab */}
+          {activeTab === "employee" && (
+            <div className="space-y-6">
+              <Card className="bg-primary/10 border-2 border-primary/30">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-primary/20 rounded-lg">
+                    <Users className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Fecha de Fin
-                    </label>
-                    <input
-                      type="date"
-                      value={entriesEndDate}
-                      onChange={(e) => setEntriesEndDate(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Empleado (Opcional)
-                    </label>
-                    <input
-                      type="text"
-                      value={entriesEmployee}
-                      onChange={(e) => setEntriesEmployee(e.target.value)}
-                      placeholder="ID del empleado..."
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Departamento
-                    </label>
-                    <select
-                      value={entriesDepartment}
-                      onChange={(e) => setEntriesDepartment(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    >
-                      <option value="">Todos los Departamentos</option>
-                      <option value="Cocina">Cocina</option>
-                      <option value="Atención al Público">Atención al Público</option>
-                      <option value="Barra">Barra</option>
-                      <option value="Dirección">Dirección</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Time Entries Table */}
-            <TimeEntriesTable
-              filters={timeEntriesFilters}
-              pageSize={20}
-            />
-          </div>
-        )}
-
-        {/* Batch Process Tab */}
-        {activeTab === "batch" && (
-          <div className="space-y-6">
-            {!isAdmin && (
-              <Alert
-                variant="warning"
-                title="Solo Administrador"
-                message="El procesamiento por lotes está restringido a usuarios Administrador. Tu rol: Moderador"
-              />
-            )}
-
-            {isAdmin && (
-              <>
-                <Card className="bg-gradient-to-br from-amber-50 to-slate-50 border border-amber-100">
-                  <div className="p-6">
-                    <h2 className="text-xl font-semibold text-slate-900 mb-2">
-                      Procesamiento por Lotes
-                    </h2>
-                    <p className="text-sm text-slate-600">
-                      Genera manualmente entradas de tiempo automáticas para una fecha específica
+                    <h2 className="text-xl font-semibold text-base-content">Estadísticas de Empleados</h2>
+                    <p className="text-sm text-base-content/70 mt-1">
+                      Busca un empleado para ver sus estadísticas de trabajo mensuales
                     </p>
                   </div>
-                </Card>
+                </div>
+              </Card>
+              <EmployeeStatisticsCard />
+            </div>
+          )}
 
-                <Card>
-                  <div className="p-6 space-y-6">
-                    {/* Info Alert */}
-                    <Alert
-                      variant="info"
-                      message="Las entradas de tiempo se generan normalmente diariamente a la 1:00 AM. Usa esto para regenerar manualmente entradas para una fecha específica."
-                    />
+          {/* Department Statistics Tab */}
+          {activeTab === "department" && (
+            <div className="space-y-6">
+              <Card className="bg-secondary/10 border-2 border-secondary/30">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-secondary/20 rounded-lg">
+                    <BarChart3 className="w-6 h-6 text-secondary" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-base-content">Análisis de Departamentos</h2>
+                    <p className="text-sm text-base-content/70 mt-1">
+                      Ver estadísticas agregadas por departamento
+                    </p>
+                  </div>
+                </div>
+              </Card>
+              <DepartmentStatisticsCard />
+            </div>
+          )}
 
-                    {/* Date Selection */}
+          {/* Time Entries Tab */}
+          {activeTab === "entries" && (
+            <div className="space-y-6">
+              <Card className="bg-accent/10 border-2 border-accent/30">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-accent/20 rounded-lg">
+                    <Clock className="w-6 h-6 text-accent" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-base-content">Registros de Entradas de Tiempo</h2>
+                    <p className="text-sm text-base-content/70 mt-1">
+                      Explora y filtra todas las entradas de tiempo por fecha, empleado o departamento
+                    </p>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Filters Card */}
+              <Card>
+                <div className="p-6">
+                  <h3 className="font-semibold text-base-content mb-4 flex items-center gap-2">
+                    <ChevronDown className="w-4 h-4" />
+                    Filtros
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-slate-900 mb-2">
-                        Fecha a Procesar
+                      <label className="block text-sm font-medium text-base-content mb-2">
+                        Fecha de Inicio
                       </label>
                       <input
                         type="date"
-                        value={batchDate}
-                        onChange={(e) => setBatchDate(e.target.value)}
-                        className="w-full md:w-64 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        value={entriesStartDate}
+                        onChange={(e) => setEntriesStartDate(e.target.value)}
+                        className="input input-bordered w-full text-sm"
                       />
-                      <p className="text-xs text-slate-500 mt-2">
-                        Típicamente se establece a la fecha de ayer para turnos completados
-                      </p>
                     </div>
-
-                    {/* Action Button */}
-                    <div className="flex gap-3">
-                      <Button
-                        onClick={handleBatchProcess}
-                        disabled={batchProcessing}
-                        className="flex items-center gap-2"
+                    <div>
+                      <label className="block text-sm font-medium text-base-content mb-2">
+                        Fecha de Fin
+                      </label>
+                      <input
+                        type="date"
+                        value={entriesEndDate}
+                        onChange={(e) => setEntriesEndDate(e.target.value)}
+                        className="input input-bordered w-full text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-base-content mb-2">
+                        Empleado (Opcional)
+                      </label>
+                      <input
+                        type="text"
+                        value={entriesEmployee}
+                        onChange={(e) => setEntriesEmployee(e.target.value)}
+                        placeholder="ID del empleado..."
+                        className="input input-bordered w-full text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-base-content mb-2">
+                        Departamento
+                      </label>
+                      <select
+                        value={entriesDepartment}
+                        onChange={(e) => setEntriesDepartment(e.target.value)}
+                        className="select select-bordered w-full text-sm"
                       >
-                        <RefreshCw className={`w-4 h-4 ${batchProcessing ? "animate-spin" : ""}`} />
-                        {batchProcessing ? "Procesando..." : "Generar Entradas"}
-                      </Button>
+                        <option value="">Todos los Departamentos</option>
+                        <option value="Cocina">Cocina</option>
+                        <option value="Atención al Público">Atención al Público</option>
+                        <option value="Barra">Barra</option>
+                        <option value="Dirección">Dirección</option>
+                      </select>
                     </div>
-
-                    {/* Result Messages */}
-                    {batchMessage && (
-                      <Alert variant="success" message={batchMessage} />
-                    )}
-
-                    {batchError && (
-                      <Alert variant="error" message={batchError} />
-                    )}
                   </div>
-                </Card>
-              </>
-            )}
-          </div>
-        )}
-      </div>
+                </div>
+              </Card>
 
-      {/* Footer Info */}
-      <div className="pt-6 border-t border-slate-200 text-sm text-slate-500">
-        <p>
-          Última actualización: {new Date().toLocaleDateString("es-ES", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </p>
+              {/* Time Entries Table */}
+              <TimeEntriesTable
+                filters={timeEntriesFilters}
+                pageSize={20}
+              />
+            </div>
+          )}
+
+          {/* Batch Process Tab */}
+          {activeTab === "batch" && (
+            <div className="space-y-6">
+              {!isAdmin && (
+                <Alert
+                  variant="warning"
+                  title="Solo Administrador"
+                  message="El procesamiento por lotes está restringido a usuarios Administrador. Tu rol: Moderador"
+                />
+              )}
+
+              {isAdmin && (
+                <>
+                  <Card className="bg-warning/10 border-2 border-warning/30">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 bg-warning/20 rounded-lg">
+                        <RefreshCw className="w-6 h-6 text-warning" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-semibold text-base-content">Procesamiento por Lotes</h2>
+                        <p className="text-sm text-base-content/70 mt-1">
+                          Genera manualmente entradas de tiempo automáticas para una fecha específica
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card>
+                    <div className="p-6 space-y-6">
+                      {/* Info Alert */}
+                      <Alert
+                        variant="info"
+                        message="Las entradas de tiempo se generan normalmente diariamente a la 1:00 AM. Usa esto para regenerar manualmente entradas para una fecha específica."
+                      />
+
+                      {/* Date Selection */}
+                      <div>
+                        <label className="block text-sm font-semibold text-base-content mb-2">
+                          Fecha a Procesar
+                        </label>
+                        <input
+                          type="date"
+                          value={batchDate}
+                          onChange={(e) => setBatchDate(e.target.value)}
+                          className="input input-bordered w-full md:w-64 text-sm"
+                        />
+                        <p className="text-xs text-base-content/50 mt-2">
+                          Típicamente se establece a la fecha de ayer para turnos completados
+                        </p>
+                      </div>
+
+                      {/* Action Button */}
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={handleBatchProcess}
+                          disabled={batchProcessing}
+                          className="btn-primary gap-2"
+                        >
+                          <RefreshCw className={`w-4 h-4 ${batchProcessing ? "animate-spin" : ""}`} />
+                          {batchProcessing ? "Procesando..." : "Generar Entradas"}
+                        </Button>
+                      </div>
+
+                      {/* Result Messages */}
+                      {batchMessage && (
+                        <Alert variant="success" message={batchMessage} />
+                      )}
+
+                      {batchError && (
+                        <Alert variant="error" message={batchError} />
+                      )}
+                    </div>
+                  </Card>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer Info */}
+        <div className="pt-6 border-t border-base-300 text-sm text-base-content/50">
+          <p>
+            Última actualización: {new Date().toLocaleDateString("es-ES", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
+        </div>
       </div>
     </div>
   );
