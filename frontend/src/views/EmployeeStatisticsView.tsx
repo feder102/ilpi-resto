@@ -145,7 +145,7 @@ export default function EmployeeStatisticsView() {
         setLoading(true);
         setError(null);
         const response = await apiClient.get<StatisticsResponse>(
-          `/employee/statistics?year=${selectedYear}&month=${selectedMonth}`
+          `/employee/time-tracking/statistics?year=${selectedYear}&month=${selectedMonth}`
         );
         setData(response.data);
       } catch (err) {
