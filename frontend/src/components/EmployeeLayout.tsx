@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Calendar, Users, BarChart3, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Calendar, BarChart3, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 interface NavItem {
@@ -12,7 +12,6 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Panel Principal', path: '/employee/dashboard', icon: <LayoutDashboard size={20} /> },
   { label: 'Mi Calendario', path: '/employee/shifts', icon: <Calendar size={20} /> },
-  { label: 'Compañeros de Trabajo', path: '/employee/colleagues', icon: <Users size={20} /> },
   { label: 'Mis Estadísticas', path: '/employee/statistics', icon: <BarChart3 size={20} /> },
 ];
 

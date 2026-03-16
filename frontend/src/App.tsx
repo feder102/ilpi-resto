@@ -27,7 +27,6 @@ import PasswordSetup from './views/PasswordSetup';
 import EmployeeDashboardView from './views/EmployeeDashboardView';
 import EmployeeShiftCalendar from './views/EmployeeShiftCalendar';
 import EmployeeVacationView from './views/EmployeeVacationView';
-import EmployeeColleagues from './views/EmployeeColleagues';
 import EmployeeStatisticsView from './views/EmployeeStatisticsView';
 // Feature 007: Password Recovery
 import PasswordReset from './views/PasswordReset';
@@ -93,7 +92,6 @@ export default function App() {
         <Route path="/employee/dashboard" element={<EmployeeDashboardView />} />
         <Route path="/employee/shifts" element={<EmployeeShiftCalendar />} />
         <Route path="/employee/vacations" element={<EmployeeVacationView />} />
-        <Route path="/employee/colleagues" element={<EmployeeColleagues />} />
         <Route path="/employee/statistics" element={<EmployeeStatisticsView />} />
       </Route>
 

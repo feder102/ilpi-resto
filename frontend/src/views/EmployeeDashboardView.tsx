@@ -4,7 +4,7 @@
  */
 
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Users, BarChart3, AlertCircle } from 'lucide-react';
+import { Calendar, BarChart3, AlertCircle } from 'lucide-react';
 import { Card, Button } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { ROUTES } from '../config/constants';
@@ -30,14 +30,6 @@ export default function EmployeeDashboardView() {
       icon: <Calendar className="w-8 h-8" />,
       route: ROUTES.EMPLOYEE_SHIFTS,
       color: 'bg-primary/10 border-primary/30',
-    },
-    {
-      id: 'colleagues',
-      title: 'Compañeros de Trabajo',
-      description: 'Ver con quién trabajas en tus turnos',
-      icon: <Users className="w-8 h-8" />,
-      route: '/employee/colleagues',
-      color: 'bg-secondary/10 border-secondary/30',
     },
     {
       id: 'stats',
@@ -77,7 +69,7 @@ export default function EmployeeDashboardView() {
       {/* Quick Access */}
       <div>
         <h2 className="text-xl font-semibold mb-4">Acceso Rápido</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {quickAccess.map((item) => (
             <div
               key={item.id}
