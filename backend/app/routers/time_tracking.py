@@ -22,6 +22,7 @@ from app.schemas.time_tracking import (
     EmployeeStatisticsResponse,
     DepartmentStatisticsResponse,
     TimeEntryListResponse,
+    EmployeeStatisticsPublicResponse,
 )
 from app.common.time_tracking_exceptions import NoShiftsFoundError
 
@@ -149,6 +150,46 @@ def get_time_records(
         page=page,
         size=size,
         session=session
+    )
+
+
+@router.get("/statistics", response_model=EmployeeStatisticsPublicResponse, status_code=200)
+@handle_exceptions
+def get_employee_statistics_public(
+    db: DbSession,
+    year: int = Query(..., ge=2020, le=2100, description="Year (YYYY)"),
+    month: int = Query(..., ge=1, le=12, description="Month (1-12)"),
+    current_user: dict = Depends(require_role_and_active("Empleado")),
+):
+    """Get work statistics for the logged-in employee.
+
+    Returns total hours worked, weekly breakdown, and daily records with entry/exit times.
+    This endpoint is for the employee portal dashboard.
+
+    Requires:
+    - Valid JWT token with Empleado role
+    - is_active=true
+
+    Query Parameters:
+    - year: Year (1-indexed, e.g., 2026)
+    - month: Month (1-12, e.g., 3 for March)
+
+    Returns:
+    - 200: OK - Statistics object with total_hours, weekly_breakdown, daily_records
+    - 400: Bad Request - Invalid year/month
+    - 401: Unauthorized - Not authenticated or is_active=false
+    - 403: Forbidden - Not Empleado role
+    - 404: Not Found - Employee not found
+    """
+    employee_id = uuid.UUID(current_user.get("employee_id", ""))
+    tenant_id = uuid.UUID(current_user.get("tenant_id", ""))
+
+    return TimeTrackingService.get_employee_statistics_for_current_user(
+        db=db,
+        tenant_id=tenant_id,
+        employee_id=employee_id,
+        year=year,
+        month=month,
     )
 
 

@@ -634,6 +634,95 @@ class TimeTrackingService:
         )
 
     @staticmethod
+    def get_employee_statistics_for_current_user(
+        db: Session,
+        tenant_id: uuid.UUID,
+        employee_id: uuid.UUID,
+        year: int,
+        month: int,
+    ) -> dict[str, Any]:
+        """Get work statistics for the current logged-in employee.
+
+        Returns total hours, weekly breakdown, and daily records with entry/exit times.
+        Used by employee portal statistics view.
+
+        Args:
+            db: Database session
+            tenant_id: Tenant UUID
+            employee_id: Employee UUID (from JWT token)
+            year: Year to query (1-indexed)
+            month: Month to query (1-12)
+
+        Returns:
+            Dict with total_hours, weekly_breakdown, daily_records
+        """
+        # Validate employee exists and belongs to tenant
+        employee = db.exec(
+            select(Employee).where(
+                Employee.id == employee_id,
+                Employee.tenant_id == tenant_id,
+            )
+        ).first()
+        if not employee:
+            raise NotFoundError("Empleado no encontrado")
+
+        # Calculate month boundaries
+        if month == 12:
+            end_date = date_type(year + 1, 1, 1) - timedelta(days=1)
+        else:
+            end_date = date_type(year, month + 1, 1) - timedelta(days=1)
+        start_date = date_type(year, month, 1)
+
+        # Query time entries for the month
+        entries = db.exec(
+            select(TimeEntry)
+            .where(
+                TimeEntry.tenant_id == tenant_id,
+                TimeEntry.employee_id == employee_id,
+                TimeEntry.shift_date >= start_date,
+                TimeEntry.shift_date <= end_date,
+                TimeEntry.source == TimeEntrySource.SHIFT,  # Only shift-based entries
+            )
+            .order_by(TimeEntry.shift_date)
+        ).all()
+
+        # Calculate total hours
+        total_hours = sum((e.hours_worked for e in entries), Decimal(0))
+
+        # Build daily records
+        daily_records: list[dict[str, Any]] = []
+        for entry in entries:
+            daily_records.append({
+                "date": entry.shift_date.isoformat(),
+                "entry_time": entry.start_time.strftime("%H:%M") if entry.start_time else None,
+                "exit_time": entry.end_time.strftime("%H:%M") if entry.end_time else None,
+                "duration_hours": float(entry.hours_worked),
+            })
+
+        # Build weekly breakdown
+        weekly_hours: dict[int, Decimal] = {}
+        for entry in entries:
+            # Get ISO calendar (year, week, weekday)
+            iso_year, iso_week, _ = entry.shift_date.isocalendar()
+
+            # Use week number from ISO calendar
+            week_key = iso_week
+            if week_key not in weekly_hours:
+                weekly_hours[week_key] = Decimal(0)
+            weekly_hours[week_key] += entry.hours_worked
+
+        weekly_breakdown = [
+            {"week": week, "hours": float(hours)}
+            for week, hours in sorted(weekly_hours.items())
+        ]
+
+        return {
+            "total_hours": float(total_hours),
+            "weekly_breakdown": weekly_breakdown,
+            "daily_records": daily_records,
+        }
+
+    @staticmethod
     def get_department_statistics(
         db: Session,
         tenant_id: uuid.UUID,
