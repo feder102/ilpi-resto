@@ -1,6 +1,7 @@
 // T031: Application routing
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
+import EmployeeLayout from './components/EmployeeLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import { EmployeeRoute } from './components/EmployeeRoute';
 import { ModeratorRoute } from './components/ModeratorRoute';
@@ -23,10 +24,11 @@ import ModeratorShifts from './views/ModeratorShifts';
 import ModeratorReports from './views/ModeratorReports';
 // Feature 005: Employee Workspace Portal
 import PasswordSetup from './views/PasswordSetup';
-import EmployeeDashboard from './views/EmployeeDashboard';
+import EmployeeDashboardView from './views/EmployeeDashboardView';
 import EmployeeShiftCalendar from './views/EmployeeShiftCalendar';
 import EmployeeVacationView from './views/EmployeeVacationView';
-import EmployeeTimeTracking from './views/EmployeeTimeTracking';
+import EmployeeColleagues from './views/EmployeeColleagues';
+import EmployeeStatisticsView from './views/EmployeeStatisticsView';
 // Feature 007: Password Recovery
 import PasswordReset from './views/PasswordReset';
 // Feature 008: Automatic Time Tracking Statistics
@@ -82,48 +84,18 @@ export default function App() {
       {/* Feature 005: Employee Portal - CRITICAL SECURITY ROUTES */}
       {/* All employee routes require: authenticated + Empleado role + is_active=true */}
       <Route
-        path="/employee/dashboard"
         element={
           <EmployeeRoute>
-            <EmployeeDashboard />
+            <EmployeeLayout />
           </EmployeeRoute>
         }
-      />
-
-      {/* Feature 005: US2 - Employee Shift Calendar */}
-      {/* SECURITY: EmployeeRoute enforces (authenticated + Empleado role + is_active=true) */}
-      {/* Backend enforces RLS: only current employee's shifts returned */}
-      <Route
-        path="/employee/shifts"
-        element={
-          <EmployeeRoute>
-            <EmployeeShiftCalendar />
-          </EmployeeRoute>
-        }
-      />
-
-      {/* Feature 005: US3 - Employee Vacation Requests */}
-      {/* SECURITY: EmployeeRoute enforces (authenticated + Empleado role + is_active=true) */}
-      {/* Backend enforces RLS: only current employee's vacation requests returned */}
-      <Route
-        path="/employee/vacations"
-        element={
-          <EmployeeRoute>
-            <EmployeeVacationView />
-          </EmployeeRoute>
-        }
-      />
-
-      {/* Feature 005: US4 - Employee Time Tracking */}
-      {/* SECURITY: EmployeeRoute enforces (authenticated + Empleado role + is_active=true) */}
-      <Route
-        path="/employee/time-tracking"
-        element={
-          <EmployeeRoute>
-            <EmployeeTimeTracking />
-          </EmployeeRoute>
-        }
-      />
+      >
+        <Route path="/employee/dashboard" element={<EmployeeDashboardView />} />
+        <Route path="/employee/shifts" element={<EmployeeShiftCalendar />} />
+        <Route path="/employee/vacations" element={<EmployeeVacationView />} />
+        <Route path="/employee/colleagues" element={<EmployeeColleagues />} />
+        <Route path="/employee/statistics" element={<EmployeeStatisticsView />} />
+      </Route>
 
       {/* Feature 006: Moderator Portal - CRITICAL SECURITY ROUTES */}
       {/* All moderator routes require: authenticated + Moderador role + is_active=true */}
