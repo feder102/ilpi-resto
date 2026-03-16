@@ -156,8 +156,8 @@ export default function VacationView() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 m-0">Vacaciones</h1>
-          <p className="text-sm text-slate-600 mt-1">{total} solicitudes</p>
+          <h1 className="text-3xl font-bold text-base-content m-0">Vacaciones</h1>
+          <p className="text-sm text-base-content/60 mt-1">{total} solicitudes</p>
         </div>
         <Button
           onClick={openCreate}
@@ -174,7 +174,7 @@ export default function VacationView() {
         <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+          className="select select-bordered"
         >
           <option value="">Todos los estados</option>
           {Object.values(VacationStatus).map((s) => (
@@ -186,35 +186,35 @@ export default function VacationView() {
       {error && <Alert variant="error" message={error} className="mb-4" />}
 
       {loading ? (
-        <p className="text-center text-slate-600 mt-10">Cargando...</p>
+        <p className="text-center text-base-content/60 mt-10">Cargando...</p>
       ) : requests.length === 0 ? (
-        <p className="text-center text-slate-600 mt-10">No hay solicitudes</p>
+        <p className="text-center text-base-content/60 mt-10">No hay solicitudes</p>
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {requests.map((req) => (
               <Card key={req.id} className="flex flex-col">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <div className="w-10 h-10 rounded-full bg-base-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {req.employee_image
                       ? <img src={req.employee_image} alt={req.employee_name} className="w-full h-full object-cover" />
-                      : <User size={20} className="text-slate-400" />}
+                      : <User size={20} className="text-base-content/40" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-slate-900">{req.employee_name || 'Empleado'}</h3>
-                    <p className="text-xs text-slate-600">{req.employee_department}</p>
+                    <h3 className="font-semibold text-base-content">{req.employee_name || 'Empleado'}</h3>
+                    <p className="text-xs text-base-content/60">{req.employee_department}</p>
                   </div>
                   <Badge variant={getVacationStatusVariant(req.status)}>{req.status}</Badge>
                 </div>
 
-                <div className="text-sm text-slate-700 space-y-1 mb-3">
+                <div className="text-sm text-base-content/80 space-y-1 mb-3">
                   <p>
                     {req.start_date} → {req.end_date}
                   </p>
                   <p className="font-semibold">{req.requested_days} días solicitados</p>
                 </div>
 
-                <div className="flex gap-2 mt-auto pt-3 border-t border-slate-200">
+                <div className="flex gap-2 mt-auto pt-3 border-t border-base-300">
                   {isAdminOrMod && req.status === 'Pendiente' && (
                     <>
                       <Button
@@ -260,7 +260,7 @@ export default function VacationView() {
               >
                 Anterior
               </Button>
-              <span className="text-sm text-slate-600">Página {page} de {pages}</span>
+              <span className="text-sm text-base-content/60">Página {page} de {pages}</span>
               <Button
                 onClick={() => setPage((p) => Math.min(pages, p + 1))}
                 disabled={page >= pages}
@@ -302,11 +302,11 @@ export default function VacationView() {
 
         <div className="space-y-4">
           {isAdminOrMod && (
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Empleado *
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Empleado *</span>
               </label>
-              <select className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" value={selectedEmployee} onChange={(e) => setSelectedEmployee(e.target.value)}>
+              <select className="select select-bordered w-full" value={selectedEmployee} onChange={(e) => setSelectedEmployee(e.target.value)}>
                 <option value="">Seleccionar empleado...</option>
                 {employees.map((emp) => (
                   <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
@@ -315,24 +315,24 @@ export default function VacationView() {
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Fecha inicio *
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Fecha inicio *</span>
             </label>
-            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <input className="input input-bordered w-full" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Fecha fin *
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Fecha fin *</span>
             </label>
-            <input className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            <input className="input input-bordered w-full" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
           </div>
 
           {computedDays > 0 && (
-            <Card className="bg-slate-50 border-slate-200 text-sm">
-              <p className="font-semibold text-slate-900 mb-1">Días solicitados: {computedDays}</p>
+            <Card className="bg-base-200 border-base-300 text-sm">
+              <p className="font-semibold text-base-content mb-1">Días solicitados: {computedDays}</p>
               {balance && (
-                <p className="text-slate-600">
+                <p className="text-base-content/60">
                   Saldo disponible: {balance.remaining_days} de {balance.total_days} días
                 </p>
               )}

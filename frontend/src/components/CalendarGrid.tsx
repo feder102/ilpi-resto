@@ -56,10 +56,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   // Get shift color by type name
   const getShiftColor = (shiftTypeName: string | undefined) => {
     const name = shiftTypeName?.toLowerCase() || '';
-    if (name.includes('mañana')) return 'bg-blue-100 text-blue-900';
-    if (name.includes('tarde')) return 'bg-yellow-100 text-yellow-900';
-    if (name.includes('noche')) return 'bg-purple-100 text-purple-900';
-    return 'bg-gray-100 text-gray-900';
+    if (name.includes('mañana')) return 'bg-info/20 text-info';
+    if (name.includes('tarde')) return 'bg-warning/20 text-warning';
+    if (name.includes('noche')) return 'bg-secondary/20 text-secondary';
+    return 'bg-base-200 text-base-content';
   };
 
   const getShiftLabel = (shiftTypeName: string | undefined) => {
@@ -89,7 +89,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         {weekDayLabels.map((label) => (
           <div
             key={label}
-            className="bg-gray-200 py-2 text-center font-semibold text-gray-900"
+            className="bg-base-200 py-2 text-center font-semibold text-base-content"
           >
             {label}
           </div>
@@ -115,15 +115,15 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               key={dateKey}
               onClick={() => !isPast && canAssign && onDateSelect(date)}
               className={`aspect-square rounded-lg border-2 p-2 transition-all ${
-                today ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'
+                today ? 'border-primary bg-primary/10' : 'border-base-300 bg-base-100'
               } ${
-                !isPast && canAssign ? 'cursor-pointer hover:border-blue-400 hover:shadow-md' : ''
-              } ${isPast ? 'bg-gray-50' : ''} overflow-hidden flex flex-col`}
+                !isPast && canAssign ? 'cursor-pointer hover:border-primary/60 hover:shadow-md' : ''
+              } ${isPast ? 'bg-base-200' : ''} overflow-hidden flex flex-col`}
             >
               {/* Date number */}
               <div
                 className={`text-sm font-bold ${
-                  today ? 'text-blue-600' : isPast ? 'text-gray-400' : 'text-gray-900'
+                  today ? 'text-primary' : isPast ? 'text-base-content/40' : 'text-base-content'
                 }`}
               >
                 {format(date, 'd')}
@@ -145,7 +145,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                   </div>
                 ))}
                 {dayShifts.length > 2 && (
-                  <div className="px-1 py-0.5 text-xs font-medium text-gray-600">
+                  <div className="px-1 py-0.5 text-xs font-medium text-base-content/60">
                     +{dayShifts.length - 2} más
                   </div>
                 )}
@@ -156,17 +156,17 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
       </div>
 
       {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-4 rounded-lg bg-gray-50 p-4 text-sm">
+      <div className="mt-4 flex flex-wrap gap-4 rounded-lg bg-base-200 p-4 text-sm">
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-sm bg-blue-100" />
+          <div className="h-3 w-3 rounded-sm bg-info/20" />
           <span>Mañana</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-sm bg-yellow-100" />
+          <div className="h-3 w-3 rounded-sm bg-warning/20" />
           <span>Tarde</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-sm bg-purple-100" />
+          <div className="h-3 w-3 rounded-sm bg-secondary/20" />
           <span>Noche</span>
         </div>
       </div>

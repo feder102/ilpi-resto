@@ -13,7 +13,6 @@
 import React, { useState } from 'react';
 import {
   Calendar,
-  Loader,
   AlertCircle,
   XCircle,
   CheckCircle,
@@ -36,25 +35,25 @@ interface VacationRequestListProps {
   onCancel?: (requestId: string, version: number) => Promise<void>;
 }
 
-const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+const statusConfig: Record<string, { label: string; badgeClass: string; icon: React.ReactNode }> = {
   Pendiente: {
     label: 'Pendiente',
-    color: 'bg-yellow-100 border-yellow-300 text-yellow-800',
+    badgeClass: 'badge badge-warning',
     icon: <Clock className="w-4 h-4" />,
   },
   Aprobado: {
     label: 'Aprobado',
-    color: 'bg-green-100 border-green-300 text-green-800',
+    badgeClass: 'badge badge-success',
     icon: <CheckCircle className="w-4 h-4" />,
   },
   Rechazado: {
     label: 'Rechazado',
-    color: 'bg-red-100 border-red-300 text-red-800',
+    badgeClass: 'badge badge-error',
     icon: <XCircle className="w-4 h-4" />,
   },
   Cancelado: {
     label: 'Cancelado',
-    color: 'bg-gray-100 border-gray-300 text-gray-800',
+    badgeClass: 'badge badge-ghost',
     icon: <XCircle className="w-4 h-4" />,
   },
 };
@@ -97,202 +96,182 @@ export default function VacationRequestList({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-8">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Mis Solicitudes de Vacaciones</h2>
+    <div className="card bg-base-100 shadow-md">
+      <div className="card-body">
+        <h2 className="card-title text-2xl">Mis Solicitudes de Vacaciones</h2>
 
-      {/* Filters */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        <button
-          onClick={() => onFilterChange?.(null)}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-            statusFilter === null
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          Todas
-        </button>
-        <button
-          onClick={() => onFilterChange?.('Pendiente')}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-            statusFilter === 'Pendiente'
-              ? 'bg-yellow-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          Pendientes
-        </button>
-        <button
-          onClick={() => onFilterChange?.('Aprobado')}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-            statusFilter === 'Aprobado'
-              ? 'bg-green-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          Aprobadas
-        </button>
-        <button
-          onClick={() => onFilterChange?.('Rechazado')}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-            statusFilter === 'Rechazado'
-              ? 'bg-red-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          Rechazadas
-        </button>
-        <button
-          onClick={() => onFilterChange?.('Cancelado')}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-            statusFilter === 'Cancelado'
-              ? 'bg-gray-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          Canceladas
-        </button>
-      </div>
-
-      {/* Loading State */}
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader className="w-8 h-8 text-blue-500 animate-spin" />
-          <span className="ml-3 text-gray-600">Cargando solicitudes...</span>
+        {/* Filters */}
+        <div className="mb-6 flex flex-wrap gap-2">
+          <button
+            onClick={() => onFilterChange?.(null)}
+            className={`btn btn-sm ${statusFilter === null ? 'btn-primary' : 'btn-ghost'}`}
+          >
+            Todas
+          </button>
+          <button
+            onClick={() => onFilterChange?.('Pendiente')}
+            className={`btn btn-sm ${statusFilter === 'Pendiente' ? 'btn-warning' : 'btn-ghost'}`}
+          >
+            Pendientes
+          </button>
+          <button
+            onClick={() => onFilterChange?.('Aprobado')}
+            className={`btn btn-sm ${statusFilter === 'Aprobado' ? 'btn-success' : 'btn-ghost'}`}
+          >
+            Aprobadas
+          </button>
+          <button
+            onClick={() => onFilterChange?.('Rechazado')}
+            className={`btn btn-sm ${statusFilter === 'Rechazado' ? 'btn-error' : 'btn-ghost'}`}
+          >
+            Rechazadas
+          </button>
+          <button
+            onClick={() => onFilterChange?.('Cancelado')}
+            className={`btn btn-sm ${statusFilter === 'Cancelado' ? 'btn-neutral' : 'btn-ghost'}`}
+          >
+            Canceladas
+          </button>
         </div>
-      ) : requests.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <Calendar className="w-12 h-12 text-gray-300 mb-3" />
-          <p className="text-gray-600 font-medium">No tienes solicitudes</p>
-          <p className="text-sm text-gray-500 mt-1">
-            {statusFilter ? 'con ese estado' : 'todavía. ¡Solicita tus vacaciones!'}
-          </p>
-        </div>
-      ) : (
-        <>
-          {/* Requests List */}
-          <div className="space-y-4 mb-6">
-            {requests.map(request => {
-              const config = statusConfig[request.status] || statusConfig['Pendiente'];
-              const startDate = new Date(request.start_date);
-              const endDate = new Date(request.end_date);
-              const daysDiff =
-                Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-              return (
-                <div
-                  key={request.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    {/* Left side - Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-3">
-                        {/* Status Badge */}
-                        <span
-                          className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-medium ${config.color}`}
-                        >
-                          {config.icon}
-                          {config.label}
-                        </span>
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <span className="loading loading-spinner loading-lg text-primary"></span>
+            <span className="ml-3 text-base-content/60">Cargando solicitudes...</span>
+          </div>
+        ) : requests.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Calendar className="w-12 h-12 text-base-content/30 mb-3" />
+            <p className="text-base-content/60 font-medium">No tienes solicitudes</p>
+            <p className="text-sm text-base-content/60 mt-1">
+              {statusFilter ? 'con ese estado' : 'todavía. ¡Solicita tus vacaciones!'}
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Requests List */}
+            <div className="space-y-4 mb-6">
+              {requests.map(request => {
+                const config = statusConfig[request.status] || statusConfig['Pendiente'];
+                const startDate = new Date(request.start_date);
+                const endDate = new Date(request.end_date);
+                const daysDiff =
+                  Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-                        {/* Dates */}
-                        <span className="text-sm text-gray-600 flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          {formatDate(request.start_date)} → {formatDate(request.end_date)}
-                        </span>
-                      </div>
+                return (
+                  <div
+                    key={request.id}
+                    className="border border-base-300 rounded-lg p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      {/* Left side - Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-3">
+                          {/* Status Badge */}
+                          <span className={`${config.badgeClass} gap-1`}>
+                            {config.icon}
+                            {config.label}
+                          </span>
 
-                      {/* Days info */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase font-medium">Días</p>
-                          <p className="text-lg font-semibold text-gray-800">
-                            {request.requested_days || daysDiff}
-                          </p>
+                          {/* Dates */}
+                          <span className="text-sm text-base-content/60 flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            {formatDate(request.start_date)} → {formatDate(request.end_date)}
+                          </span>
                         </div>
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase font-medium">Creada</p>
-                          <p className="text-sm text-gray-700">
-                            {new Date(request.created_at).toLocaleDateString('es-ES', {
-                              month: 'short',
-                              day: 'numeric',
-                            })}
-                          </p>
-                        </div>
-                        {request.reviewed_at && (
+
+                        {/* Days info */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                           <div>
-                            <p className="text-xs text-gray-500 uppercase font-medium">Revisada</p>
-                            <p className="text-sm text-gray-700">
-                              {new Date(request.reviewed_at).toLocaleDateString('es-ES', {
+                            <p className="text-xs text-base-content/60 uppercase font-medium">Días</p>
+                            <p className="text-lg font-semibold text-base-content">
+                              {request.requested_days || daysDiff}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-base-content/60 uppercase font-medium">Creada</p>
+                            <p className="text-sm text-base-content">
+                              {new Date(request.created_at).toLocaleDateString('es-ES', {
                                 month: 'short',
                                 day: 'numeric',
                               })}
                             </p>
                           </div>
+                          {request.reviewed_at && (
+                            <div>
+                              <p className="text-xs text-base-content/60 uppercase font-medium">Revisada</p>
+                              <p className="text-sm text-base-content">
+                                {new Date(request.reviewed_at).toLocaleDateString('es-ES', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right side - Actions */}
+                      <div className="flex flex-col items-end gap-2">
+                        {request.status === 'Pendiente' && (
+                          <button
+                            onClick={() => handleCancel(request.id, request.version)}
+                            disabled={submitting || cancelling === request.id}
+                            className="btn btn-error btn-outline btn-sm gap-2"
+                          >
+                            {cancelling === request.id ? (
+                              <span className="loading loading-spinner loading-xs"></span>
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                            {cancelling === request.id ? 'Cancelando...' : 'Cancelar'}
+                          </button>
                         )}
                       </div>
                     </div>
 
-                    {/* Right side - Actions */}
-                    <div className="flex flex-col items-end gap-2">
-                      {request.status === 'Pendiente' && (
-                        <button
-                          onClick={() => handleCancel(request.id, request.version)}
-                          disabled={submitting || cancelling === request.id}
-                          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 border border-red-300 rounded-lg hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                          {cancelling === request.id ? (
-                            <Loader className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4" />
-                          )}
-                          {cancelling === request.id ? 'Cancelando...' : 'Cancelar'}
-                        </button>
-                      )}
-                    </div>
+                    {/* Error message for cancel */}
+                    {cancelError && cancelling === request.id && (
+                      <div role="alert" className="alert alert-error mt-3 py-2">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                        <span className="text-xs">{cancelError}</span>
+                      </div>
+                    )}
                   </div>
-
-                  {/* Error message for cancel */}
-                  {cancelError && cancelling === request.id && (
-                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded flex gap-2">
-                      <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-                      <p className="text-xs text-red-700">{cancelError}</p>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-              <p className="text-sm text-gray-600">
-                Página {page} de {totalPages}
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onPageChange?.(page - 1)}
-                  disabled={page === 1 || loading}
-                  className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Anterior
-                </button>
-                <button
-                  onClick={() => onPageChange?.(page + 1)}
-                  disabled={page === totalPages || loading}
-                  className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Siguiente
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
+                );
+              })}
             </div>
-          )}
-        </>
-      )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4 border-t border-base-300">
+                <p className="text-sm text-base-content/60">
+                  Página {page} de {totalPages}
+                </p>
+                <div className="join">
+                  <button
+                    onClick={() => onPageChange?.(page - 1)}
+                    disabled={page === 1 || loading}
+                    className="join-item btn btn-sm"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Anterior
+                  </button>
+                  <button
+                    onClick={() => onPageChange?.(page + 1)}
+                    disabled={page === totalPages || loading}
+                    className="join-item btn btn-sm"
+                  >
+                    Siguiente
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

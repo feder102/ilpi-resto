@@ -1,7 +1,7 @@
 // T072: Attendance view — Clock-in/out with shift history
 import { useState, useEffect, useCallback } from 'react';
 import { Clock, MapPin, User } from 'lucide-react';
-import { Button, Card, Alert, Badge } from '../components/ui';
+import { Button, Card, Alert } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { Role } from '../types/models';
 import type { ShiftRecord, Employee } from '../types/models';
@@ -90,10 +90,10 @@ export default function AttendanceView() {
 
   return (
     <div>
-      <h1 className="mb-6 text-3xl font-bold text-slate-900">Control Horario</h1>
+      <h1 className="mb-6 text-3xl font-bold text-base-content">Control Horario</h1>
 
       {/* Clock-in Card */}
-      <Card variant="elevated" className="mb-8 bg-gradient-to-br from-indigo-600 to-indigo-700 text-white border-0 p-6">
+      <Card variant="elevated" className="mb-8 bg-primary text-primary-content border-0 p-6">
         <div className="flex items-center gap-3 mb-6">
           <Clock size={28} />
           <h2 className="m-0 text-2xl font-bold">Fichaje</h2>
@@ -106,11 +106,11 @@ export default function AttendanceView() {
               <select
                 value={selectedEmployee}
                 onChange={(e) => setSelectedEmployee(e.target.value)}
-                className="w-full rounded-md border border-indigo-300 bg-indigo-50 px-3 py-2 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600"
+                className="select select-bordered w-full bg-primary-content/10 text-primary-content"
               >
                 <option value="">Seleccionar empleado...</option>
                 {employees.map((emp) => (
-                  <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
+                  <option key={emp.id} value={emp.id} className="text-base-content">{emp.first_name} {emp.last_name}</option>
                 ))}
               </select>
             </div>
@@ -121,14 +121,14 @@ export default function AttendanceView() {
               value={taskLabel}
               onChange={(e) => setTaskLabel(e.target.value)}
               placeholder="Ej: Parrilla"
-              className="w-full rounded-md border border-indigo-300 bg-indigo-50 px-3 py-2 text-slate-900 text-sm placeholder-indigo-300 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600"
+              className="input input-bordered w-full bg-primary-content/10 text-primary-content placeholder-primary-content/50"
             />
           </div>
           <Button
             onClick={handleClockIn}
             disabled={submitting}
             loading={submitting}
-            className="border-2 border-white bg-transparent text-white hover:bg-white/20"
+            className="btn btn-outline border-primary-content text-primary-content hover:bg-primary-content/20"
           >
             {submitting ? 'Fichando...' : 'Confirmar Fichaje'}
           </Button>
@@ -139,70 +139,70 @@ export default function AttendanceView() {
 
       {/* Shift History */}
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">
+        <h2 className="mb-4 text-lg font-semibold text-base-content">
           Historial de Turnos ({total})
         </h2>
 
         {loading ? (
-          <p className="text-center text-slate-600 mt-10">Cargando...</p>
+          <p className="text-center text-base-content/60 mt-10">Cargando...</p>
         ) : shifts.length === 0 ? (
-          <p className="text-center text-slate-600 mt-10">No hay registros de turnos</p>
+          <p className="text-center text-base-content/60 mt-10">No hay registros de turnos</p>
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-sm">
+              <table className="table table-zebra w-full">
                 <thead>
-                  <tr className="border-b-2 border-slate-200 text-left">
-                    <th className="px-2 py-3 font-semibold text-slate-700">Empleado</th>
-                    <th className="px-2 py-3 font-semibold text-slate-700">Fecha</th>
-                    <th className="px-2 py-3 font-semibold text-slate-700">Entrada</th>
-                    <th className="px-2 py-3 font-semibold text-slate-700">Salida</th>
-                    <th className="px-2 py-3 font-semibold text-slate-700">Tarea</th>
-                    <th className="px-2 py-3 font-semibold text-slate-700">GPS</th>
-                    <th className="px-2 py-3"></th>
+                  <tr>
+                    <th>Empleado</th>
+                    <th>Fecha</th>
+                    <th>Entrada</th>
+                    <th>Salida</th>
+                    <th>Tarea</th>
+                    <th>GPS</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
                   {shifts.map((s) => (
-                    <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="px-2 py-3">
+                    <tr key={s.id} className="hover">
+                      <td>
                         <div className="flex items-center gap-2">
-                          <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full bg-slate-200 flex items-center justify-center">
+                          <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full bg-base-200 flex items-center justify-center">
                             {s.employee_image
                               ? <img src={s.employee_image} alt="" className="h-full w-full object-cover" />
-                              : <User size={16} className="text-slate-400" />}
+                              : <User size={16} className="text-base-content/40" />}
                           </div>
                           {s.employee_name || 'N/A'}
                         </div>
                       </td>
-                      <td className="px-2 py-3">{s.date}</td>
-                      <td className="px-2 py-3">
+                      <td>{s.date}</td>
+                      <td>
                         {s.entry_time ? (
-                          <Badge variant="success" className="bg-green-100 text-green-700">
+                          <span className="badge badge-success">
                             {formatTime(s.entry_time)}
-                          </Badge>
+                          </span>
                         ) : (
-                          <span className="text-slate-600 text-xs">-</span>
+                          <span className="text-base-content/60 text-xs">-</span>
                         )}
                       </td>
-                      <td className="px-2 py-3">
+                      <td>
                         {s.exit_time ? (
-                          <Badge variant="warning" className="bg-orange-100 text-orange-700">
+                          <span className="badge badge-warning">
                             {formatTime(s.exit_time)}
-                          </Badge>
+                          </span>
                         ) : (
-                          <span className="text-slate-600 italic text-xs">En turno...</span>
+                          <span className="text-base-content/60 italic text-xs">En turno...</span>
                         )}
                       </td>
-                      <td className="px-2 py-3 text-slate-600">{s.task_label || '-'}</td>
-                      <td className="px-2 py-3">
+                      <td className="text-base-content/60">{s.task_label || '-'}</td>
+                      <td>
                         {s.location_lat && s.location_lng ? (
-                          <a href={`https://maps.google.com/?q=${s.location_lat},${s.location_lng}`} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-700 text-sm flex items-center gap-1">
+                          <a href={`https://maps.google.com/?q=${s.location_lat},${s.location_lng}`} target="_blank" rel="noopener noreferrer" className="link link-primary text-sm flex items-center gap-1">
                             <MapPin size={14} /> Ver GPS
                           </a>
                         ) : '-'}
                       </td>
-                      <td className="px-2 py-3">
+                      <td>
                         {!s.exit_time && (
                           <Button
                             onClick={() => handleClockOut(s.id)}
@@ -229,7 +229,7 @@ export default function AttendanceView() {
                 >
                   Anterior
                 </Button>
-                <span className="text-sm text-slate-600">Página {page} de {pages}</span>
+                <span className="text-sm text-base-content/60">Página {page} de {pages}</span>
                 <Button
                   onClick={() => setPage((p) => Math.min(pages, p + 1))}
                   disabled={page >= pages}

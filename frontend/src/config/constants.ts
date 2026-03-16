@@ -1,7 +1,10 @@
 // T008: Application constants
 import { Role, Department } from '../types';
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+// Feature 005: API configuration
+// In Docker: VITE_API_BASE=/api/v1 (proxy to backend)
+// In dev: http://localhost:8000/api/v1 (direct to backend)
+export const API_BASE_URL = import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 export const ROLE_PERMISSIONS: Record<Role, string[]> = {
   [Role.ADMIN]: [

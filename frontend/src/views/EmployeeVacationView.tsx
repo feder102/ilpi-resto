@@ -74,27 +74,27 @@ export default function EmployeeVacationView() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-base-200 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">Mis Vacaciones</h1>
-          <p className="mt-2 text-lg text-gray-600">
+          <h1 className="text-4xl font-bold text-base-content">Mis Vacaciones</h1>
+          <p className="mt-2 text-lg text-base-content/60">
             Solicita, consulta y gestiona tus días de vacaciones
           </p>
         </div>
 
         {/* Global Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex gap-4 items-start animate-in fade-in">
-            <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="alert alert-error mb-6 animate-in fade-in">
+            <AlertCircle className="w-6 h-6 flex-shrink-0" />
             <div className="flex-1">
-              <h3 className="font-semibold text-red-800">Error</h3>
-              <p className="text-sm text-red-700 mt-1">{error}</p>
+              <h3 className="font-semibold">Error</h3>
+              <p className="text-sm mt-1">{error}</p>
             </div>
             <button
               onClick={clearError}
-              className="text-red-600 hover:text-red-800 flex-shrink-0 p-1"
+              className="btn btn-ghost btn-sm"
               aria-label="Cerrar mensaje"
             >
               <X className="w-5 h-5" />
@@ -104,15 +104,15 @@ export default function EmployeeVacationView() {
 
         {/* Global Success Message */}
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex gap-4 items-start animate-in fade-in">
-            <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
+          <div className="alert alert-success mb-6 animate-in fade-in">
+            <CheckCircle className="w-6 h-6 flex-shrink-0" />
             <div className="flex-1">
-              <h3 className="font-semibold text-green-800">¡Éxito!</h3>
-              <p className="text-sm text-green-700 mt-1">{success}</p>
+              <h3 className="font-semibold">¡Éxito!</h3>
+              <p className="text-sm mt-1">{success}</p>
             </div>
             <button
               onClick={clearSuccess}
-              className="text-green-600 hover:text-green-800 flex-shrink-0 p-1"
+              className="btn btn-ghost btn-sm"
               aria-label="Cerrar mensaje"
             >
               <X className="w-5 h-5" />
@@ -154,9 +154,9 @@ export default function EmployeeVacationView() {
         </div>
 
         {/* Footer Info */}
-        <div className="mt-12 p-6 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="font-semibold text-blue-900 mb-3">ℹ️ Información Importante</h3>
-          <ul className="space-y-2 text-sm text-blue-800">
+        <div className="mt-12 p-6 bg-info/10 border border-info/30 rounded-lg">
+          <h3 className="font-semibold text-info mb-3">Información Importante</h3>
+          <ul className="space-y-2 text-sm text-base-content/70">
             <li>
               • Las solicitudes de vacaciones deben ser revisadas por un moderador o administrador
             </li>

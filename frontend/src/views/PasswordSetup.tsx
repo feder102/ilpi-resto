@@ -111,11 +111,11 @@ export default function PasswordSetup() {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-700 px-4">
-        <Card className="w-full max-w-md bg-white shadow-2xl">
+      <div className="min-h-screen flex items-center justify-center bg-base-200 px-4">
+        <Card className="w-full max-w-md bg-base-100 shadow-2xl">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-slate-900 mb-4">Enlace Inválido</h1>
-            <p className="text-slate-600 mb-6">
+            <h1 className="text-2xl font-bold text-base-content mb-4">Enlace Inválido</h1>
+            <p className="text-base-content/60 mb-6">
               El enlace de configuración de contraseña no es válido o ha expirado.
             </p>
             <Button
@@ -132,11 +132,11 @@ export default function PasswordSetup() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-700 px-4">
-      <Card className="w-full max-w-md bg-white shadow-2xl">
+    <div className="min-h-screen flex items-center justify-center bg-base-200 px-4">
+      <Card className="w-full max-w-md bg-base-100 shadow-2xl">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Configurar Contraseña</h1>
-          <p className="text-sm text-slate-600">
+          <h1 className="text-3xl font-bold text-base-content mb-2">Configurar Contraseña</h1>
+          <p className="text-sm text-base-content/60">
             Configura tu contraseña para acceder a tu cuenta
           </p>
         </div>
@@ -144,16 +144,16 @@ export default function PasswordSetup() {
         {success ? (
           <div className="text-center">
             <Alert variant="success" message="¡Contraseña establecida correctamente!" />
-            <p className="text-slate-600 mt-4">
+            <p className="text-base-content/60 mt-4">
               Redirigiendo al inicio de sesión...
             </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
-                Nueva Contraseña
+            <div className="form-control">
+              <label htmlFor="password" className="label">
+                <span className="label-text">Nueva Contraseña</span>
               </label>
               <Input
                 id="password"
@@ -167,9 +167,9 @@ export default function PasswordSetup() {
             </div>
 
             {/* Password Confirm Field */}
-            <div>
-              <label htmlFor="passwordConfirm" className="block text-sm font-medium text-slate-700 mb-2">
-                Confirmar Contraseña
+            <div className="form-control">
+              <label htmlFor="passwordConfirm" className="label">
+                <span className="label-text">Confirmar Contraseña</span>
               </label>
               <Input
                 id="passwordConfirm"
@@ -183,22 +183,22 @@ export default function PasswordSetup() {
             </div>
 
             {/* Password Requirements */}
-            <div className="bg-slate-50 p-4 rounded-lg space-y-2">
-              <p className="text-sm font-medium text-slate-700">Requisitos:</p>
+            <div className="bg-base-200 p-4 rounded-lg space-y-2">
+              <p className="text-sm font-medium text-base-content">Requisitos:</p>
               <div className="space-y-1 text-sm">
-                <div className={validation.minLength ? 'text-green-600' : 'text-slate-400'}>
+                <div className={validation.minLength ? 'text-success' : 'text-base-content/40'}>
                   ✓ Al menos 8 caracteres
                 </div>
-                <div className={validation.hasUppercase ? 'text-green-600' : 'text-slate-400'}>
+                <div className={validation.hasUppercase ? 'text-success' : 'text-base-content/40'}>
                   ✓ Contiene letras mayúsculas (A-Z)
                 </div>
-                <div className={validation.hasLowercase ? 'text-green-600' : 'text-slate-400'}>
+                <div className={validation.hasLowercase ? 'text-success' : 'text-base-content/40'}>
                   ✓ Contiene letras minúsculas (a-z)
                 </div>
-                <div className={validation.hasNumber ? 'text-green-600' : 'text-slate-400'}>
+                <div className={validation.hasNumber ? 'text-success' : 'text-base-content/40'}>
                   ✓ Contiene números (0-9)
                 </div>
-                <div className={validation.match ? 'text-green-600' : 'text-slate-400'}>
+                <div className={validation.match ? 'text-success' : 'text-base-content/40'}>
                   ✓ Las contraseñas coinciden
                 </div>
               </div>
@@ -222,7 +222,7 @@ export default function PasswordSetup() {
             </Button>
 
             {/* Help Text */}
-            <p className="text-xs text-center text-slate-500">
+            <p className="text-xs text-center text-base-content/50">
               Esta contraseña será utilizada para acceder a tu cuenta de empleado
             </p>
           </form>

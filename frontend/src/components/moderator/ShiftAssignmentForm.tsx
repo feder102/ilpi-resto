@@ -156,19 +156,17 @@ export default function ShiftAssignmentForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Employee Dropdown */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Empleado
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text">Empleado</span>
         </label>
         <select
           value={employeeId}
           onChange={e => handleEmployeeChange(e.target.value)}
           disabled={isSubmitting || employees.length === 0}
-          className={`w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            errors.employeeId
-              ? 'border-red-300 bg-red-50'
-              : 'border-gray-300 bg-white'
-          } disabled:bg-gray-100 disabled:text-gray-500`}
+          className={`select select-bordered w-full ${
+            errors.employeeId ? 'select-error' : ''
+          }`}
         >
           <option value="">
             {employees.length === 0
@@ -182,14 +180,16 @@ export default function ShiftAssignmentForm({
           ))}
         </select>
         {errors.employeeId && (
-          <p className="mt-1 text-sm text-red-600">{errors.employeeId}</p>
+          <label className="label">
+            <span className="label-text-alt text-error">{errors.employeeId}</span>
+          </label>
         )}
       </div>
 
       {/* Date Picker */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Fecha del Turno
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text">Fecha del Turno</span>
         </label>
         <input
           type="date"
@@ -197,38 +197,40 @@ export default function ShiftAssignmentForm({
           onChange={e => handleDateChange(e.target.value)}
           min={getTodayString()}
           disabled={isSubmitting}
-          className={`w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            errors.date ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
-          } disabled:bg-gray-100 disabled:text-gray-500`}
+          className={`input input-bordered w-full ${
+            errors.date ? 'input-error' : ''
+          }`}
         />
         {errors.date && (
-          <p className="mt-1 text-sm text-red-600">{errors.date}</p>
+          <label className="label">
+            <span className="label-text-alt text-error">{errors.date}</span>
+          </label>
         )}
         {date && !errors.date && !isWeekend(date) && (
-          <p className="mt-1 text-sm text-green-600">
-            ✓ Fecha válida ({new Date(date).toLocaleDateString('es-ES', {
-              weekday: 'long',
-              day: '2-digit',
-              month: 'long',
-            })})
-          </p>
+          <label className="label">
+            <span className="label-text-alt text-success">
+              Fecha válida ({new Date(date).toLocaleDateString('es-ES', {
+                weekday: 'long',
+                day: '2-digit',
+                month: 'long',
+              })})
+            </span>
+          </label>
         )}
       </div>
 
       {/* Shift Type Dropdown */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Tipo de Turno
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text">Tipo de Turno</span>
         </label>
         <select
           value={shiftTypeId}
           onChange={e => handleShiftTypeChange(e.target.value)}
           disabled={isSubmitting || shiftTypes.length === 0}
-          className={`w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            errors.shiftTypeId
-              ? 'border-red-300 bg-red-50'
-              : 'border-gray-300 bg-white'
-          } disabled:bg-gray-100 disabled:text-gray-500`}
+          className={`select select-bordered w-full ${
+            errors.shiftTypeId ? 'select-error' : ''
+          }`}
         >
           <option value="">
             {shiftTypes.length === 0
@@ -242,7 +244,9 @@ export default function ShiftAssignmentForm({
           ))}
         </select>
         {errors.shiftTypeId && (
-          <p className="mt-1 text-sm text-red-600">{errors.shiftTypeId}</p>
+          <label className="label">
+            <span className="label-text-alt text-error">{errors.shiftTypeId}</span>
+          </label>
         )}
       </div>
 
@@ -251,27 +255,27 @@ export default function ShiftAssignmentForm({
         <button
           type="submit"
           disabled={isSubmitting || employees.length === 0}
-          className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
+          className="btn btn-primary w-full"
         >
           {isSubmitting ? (
             <>
-              <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+              <span className="loading loading-spinner loading-sm"></span>
               Asignando turno...
             </>
           ) : (
-            '✓ Asignar Turno'
+            'Asignar Turno'
           )}
         </button>
       </div>
 
       {/* Form Help */}
-      <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <p className="text-xs font-semibold text-gray-700 mb-2">💡 NOTA</p>
-        <ul className="text-xs text-gray-600 space-y-1">
-          <li>• Las fechas de fin de semana no están permitidas</li>
-          <li>• No se pueden asignar turnos en fechas pasadas</li>
-          <li>• El sistema valida conflictos de vacaciones automáticamente</li>
-          <li>• No se pueden asignar dos turnos a la misma persona el mismo día</li>
+      <div className="mt-6 p-4 bg-base-200 rounded-lg border border-base-300">
+        <p className="text-xs font-semibold text-base-content mb-2">NOTA</p>
+        <ul className="text-xs text-base-content/60 space-y-1">
+          <li>Las fechas de fin de semana no están permitidas</li>
+          <li>No se pueden asignar turnos en fechas pasadas</li>
+          <li>El sistema valida conflictos de vacaciones automáticamente</li>
+          <li>No se pueden asignar dos turnos a la misma persona el mismo día</li>
         </ul>
       </div>
     </form>

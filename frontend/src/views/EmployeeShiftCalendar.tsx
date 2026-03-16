@@ -15,7 +15,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { Calendar, AlertCircle, Loader, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { shiftService } from '../services/shiftService';
 import { useAuth } from '../hooks/useAuth';
 import type { ShiftRecord } from '../types/models';
@@ -158,60 +158,60 @@ export default function EmployeeShiftCalendar() {
 
   // Get shift type colors for visual distinction
   const getShiftTypeColor = (shiftTypeName: string | null): string => {
-    if (!shiftTypeName) return 'bg-slate-100 text-slate-700';
+    if (!shiftTypeName) return 'bg-base-200 text-base-content/70';
     const colorMap: Record<string, string> = {
-      'Mañana': 'bg-yellow-100 text-yellow-700 border border-yellow-300',
-      'Tarde': 'bg-orange-100 text-orange-700 border border-orange-300',
-      'Noche': 'bg-blue-100 text-blue-700 border border-blue-300',
-      'Cortado': 'bg-purple-100 text-purple-700 border border-purple-300',
-      'Corrido': 'bg-pink-100 text-pink-700 border border-pink-300',
+      'Mañana': 'bg-warning/20 text-warning border border-warning/40',
+      'Tarde': 'bg-warning/30 text-warning border border-warning/50',
+      'Noche': 'bg-info/20 text-info border border-info/40',
+      'Cortado': 'bg-secondary/20 text-secondary border border-secondary/40',
+      'Corrido': 'bg-accent/20 text-accent border border-accent/40',
     };
-    return colorMap[shiftTypeName] || 'bg-indigo-100 text-indigo-700 border border-indigo-300';
+    return colorMap[shiftTypeName] || 'bg-primary/20 text-primary border border-primary/40';
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
+    <div className="min-h-screen bg-base-200 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-4">
-            <Calendar className="w-8 h-8 text-indigo-600" />
-            <h1 className="text-3xl font-bold text-slate-900">Tu Calendario de Turnos</h1>
+            <Calendar className="w-8 h-8 text-primary" />
+            <h1 className="text-3xl font-bold text-base-content">Tu Calendario de Turnos</h1>
           </div>
-          <p className="text-slate-600">
+          <p className="text-base-content/60">
             {user ? `Hola ${user.email}, aquí puedes ver tus turnos asignados` : 'Cargando...'}
           </p>
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="alert alert-error mb-6">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <div>
-              <p className="font-semibold text-red-900">Error al cargar los turnos</p>
-              <p className="text-red-800 text-sm mt-1">{error}</p>
+              <p className="font-semibold">Error al cargar los turnos</p>
+              <p className="text-sm mt-1">{error}</p>
             </div>
           </div>
         )}
 
         {/* Calendar Card */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="card bg-base-100 shadow-lg overflow-hidden">
           {/* Calendar Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 p-6">
+          <div className="bg-primary p-6">
             <div className="flex items-center justify-between">
               <button
                 onClick={goToPreviousMonth}
-                className="p-2 hover:bg-indigo-500 rounded-lg transition"
+                className="btn btn-ghost btn-sm text-primary-content"
                 aria-label="Mes anterior"
               >
-                <ChevronLeft className="w-6 h-6 text-white" />
+                <ChevronLeft className="w-6 h-6" />
               </button>
 
               <div className="flex flex-col items-center">
-                <h2 className="text-2xl font-bold text-white capitalize">{monthYear}</h2>
+                <h2 className="text-2xl font-bold text-primary-content capitalize">{monthYear}</h2>
                 <button
                   onClick={goToToday}
-                  className="text-sm text-indigo-100 hover:text-white mt-2 underline"
+                  className="text-sm text-primary-content/70 hover:text-primary-content mt-2 underline"
                 >
                   Hoy
                 </button>
@@ -219,10 +219,10 @@ export default function EmployeeShiftCalendar() {
 
               <button
                 onClick={goToNextMonth}
-                className="p-2 hover:bg-indigo-500 rounded-lg transition"
+                className="btn btn-ghost btn-sm text-primary-content"
                 aria-label="Próximo mes"
               >
-                <ChevronRight className="w-6 h-6 text-white" />
+                <ChevronRight className="w-6 h-6" />
               </button>
             </div>
           </div>
@@ -230,18 +230,18 @@ export default function EmployeeShiftCalendar() {
           {/* Loading Spinner */}
           {loading && (
             <div className="p-12 flex flex-col items-center justify-center">
-              <Loader className="w-8 h-8 text-indigo-600 animate-spin mb-3" />
-              <p className="text-slate-600">Cargando tus turnos...</p>
+              <span className="loading loading-spinner loading-lg text-primary mb-3"></span>
+              <p className="text-base-content/60">Cargando tus turnos...</p>
             </div>
           )}
 
           {/* Calendar Grid */}
           {!loading && (
-            <div className="p-6">
+            <div className="card-body">
               {/* Day headers */}
               <div className="grid grid-cols-7 gap-2 mb-4">
                 {(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as DayOfWeek[]).map((day) => (
-                  <div key={day} className="text-center font-semibold text-slate-600 text-sm py-2">
+                  <div key={day} className="text-center font-semibold text-base-content/60 text-sm py-2">
                     {day.substring(0, 3)}
                   </div>
                 ))}
@@ -254,11 +254,11 @@ export default function EmployeeShiftCalendar() {
                     key={index}
                     className={`min-h-24 p-2 rounded-lg border-2 transition ${
                       day.isCurrentMonth
-                        ? 'bg-white border-slate-200 hover:border-indigo-300'
-                        : 'bg-slate-50 border-slate-100 opacity-50'
+                        ? 'bg-base-100 border-base-300 hover:border-primary/40'
+                        : 'bg-base-200 border-base-200 opacity-50'
                     }`}
                   >
-                    <div className="font-semibold text-slate-900 text-sm mb-1">
+                    <div className="font-semibold text-base-content text-sm mb-1">
                       {day.dayOfMonth}
                     </div>
 
@@ -283,51 +283,53 @@ export default function EmployeeShiftCalendar() {
 
         {/* Legend - Shift Types */}
         <div className="mt-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-bold text-slate-900 mb-4">📋 Tipos de Turno</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 bg-yellow-200 border border-yellow-400 rounded"></div>
-                <div className="text-sm">
-                  <p className="font-semibold text-slate-900">Mañana</p>
-                  <p className="text-xs text-slate-600">10:30 - 18:00</p>
+          <div className="card bg-base-100 shadow-sm">
+            <div className="card-body">
+              <h2 className="text-lg font-bold text-base-content mb-4">Tipos de Turno</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 bg-warning/30 border border-warning rounded"></div>
+                  <div className="text-sm">
+                    <p className="font-semibold text-base-content">Mañana</p>
+                    <p className="text-xs text-base-content/60">10:30 - 18:00</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 bg-warning/50 border border-warning rounded"></div>
+                  <div className="text-sm">
+                    <p className="font-semibold text-base-content">Tarde</p>
+                    <p className="text-xs text-base-content/60">14:00 - 22:00</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 bg-info/30 border border-info rounded"></div>
+                  <div className="text-sm">
+                    <p className="font-semibold text-base-content">Noche</p>
+                    <p className="text-xs text-base-content/60">17:00 - 23:59</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 bg-secondary/30 border border-secondary rounded"></div>
+                  <div className="text-sm">
+                    <p className="font-semibold text-base-content">Cortado</p>
+                    <p className="text-xs text-base-content/60">12:30-16:30 / 18:30-22:30</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 bg-accent/30 border border-accent rounded"></div>
+                  <div className="text-sm">
+                    <p className="font-semibold text-base-content">Corrido</p>
+                    <p className="text-xs text-base-content/60">14:00 - 23:59</p>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 bg-orange-200 border border-orange-400 rounded"></div>
-                <div className="text-sm">
-                  <p className="font-semibold text-slate-900">Tarde</p>
-                  <p className="text-xs text-slate-600">14:00 - 22:00</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 bg-blue-200 border border-blue-400 rounded"></div>
-                <div className="text-sm">
-                  <p className="font-semibold text-slate-900">Noche</p>
-                  <p className="text-xs text-slate-600">17:00 - 23:59</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 bg-purple-200 border border-purple-400 rounded"></div>
-                <div className="text-sm">
-                  <p className="font-semibold text-slate-900">Cortado</p>
-                  <p className="text-xs text-slate-600">12:30-16:30 / 18:30-22:30</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 bg-pink-200 border border-pink-400 rounded"></div>
-                <div className="text-sm">
-                  <p className="font-semibold text-slate-900">Corrido</p>
-                  <p className="text-xs text-slate-600">14:00 - 23:59</p>
-                </div>
-              </div>
-            </div>
 
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-slate-600">
-                <span className="font-semibold">💡 Nota:</span> Este calendario muestra solo tus turnos asignados.
-                Si crees que hay un error, contacta al administrador o moderador.
-              </p>
+              <div className="mt-4 p-3 bg-info/10 border border-info/30 rounded-lg">
+                <p className="text-sm text-base-content/60">
+                  <span className="font-semibold">Nota:</span> Este calendario muestra solo tus turnos asignados.
+                  Si crees que hay un error, contacta al administrador o moderador.
+                </p>
+              </div>
             </div>
           </div>
         </div>

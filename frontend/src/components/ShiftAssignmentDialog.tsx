@@ -176,33 +176,31 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
       <div className="space-y-4">
         {/* Date Display */}
         {selectedDate && (
-          <div className="rounded-lg bg-gray-50 p-4">
-            <p className="text-sm text-gray-600">
-              Fecha: <span className="font-bold text-gray-900">{selectedDate.toLocaleDateString('es-ES')}</span>
+          <div className="rounded-lg bg-base-200 p-4">
+            <p className="text-sm text-base-content/60">
+              Fecha: <span className="font-bold text-base-content">{selectedDate.toLocaleDateString('es-ES')}</span>
             </p>
           </div>
         )}
 
         {/* Vacation Warning */}
         {hasVacation && (
-          <div className="rounded-lg border border-yellow-300 bg-yellow-50 p-4">
-            <p className="text-sm text-yellow-900">
-              ⚠️ Este empleado tiene vacaciones aprobadas en esta fecha. Continuando de todas formas.
-            </p>
+          <div role="alert" className="alert alert-warning">
+            <span>Este empleado tiene vacaciones aprobadas en esta fecha. Continuando de todas formas.</span>
           </div>
         )}
 
         {/* Employee Selection */}
-        <div>
-          <label htmlFor="employee" className="block text-sm font-medium text-gray-900">
-            Empleado
+        <div className="form-control">
+          <label htmlFor="employee" className="label">
+            <span className="label-text">Empleado</span>
           </label>
           <select
             id="employee"
             value={selectedEmployeeId}
             onChange={(e) => setSelectedEmployeeId(e.target.value)}
             disabled={loading || employees.length === 0}
-            className="mt-2 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 disabled:bg-gray-100"
+            className="select select-bordered w-full"
           >
             <option value="">-- Seleccionar un empleado --</option>
             {employees.map((emp) => (
@@ -211,20 +209,20 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
               </option>
             ))}
           </select>
-          {employees.length === 0 && <p className="mt-1 text-xs text-gray-500">Cargando empleados...</p>}
+          {employees.length === 0 && <p className="mt-1 text-xs text-base-content/60">Cargando empleados...</p>}
         </div>
 
         {/* Shift Type Selection */}
-        <div>
-          <label htmlFor="shift_type" className="block text-sm font-medium text-gray-900">
-            Tipo de Turno
+        <div className="form-control">
+          <label htmlFor="shift_type" className="label">
+            <span className="label-text">Tipo de Turno</span>
           </label>
           <select
             id="shift_type"
             value={selectedShiftTypeId}
             onChange={(e) => setSelectedShiftTypeId(e.target.value)}
             disabled={loading || shiftTypes.length === 0}
-            className="mt-2 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 disabled:bg-gray-100"
+            className="select select-bordered w-full"
           >
             <option value="">-- Seleccionar tipo de turno --</option>
             {shiftTypes.map((st) => (
@@ -233,18 +231,16 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
               </option>
             ))}
           </select>
-          {shiftTypes.length === 0 && <p className="mt-1 text-xs text-gray-500">Cargando tipos de turno...</p>}
+          {shiftTypes.length === 0 && <p className="mt-1 text-xs text-base-content/60">Cargando tipos de turno...</p>}
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="rounded-lg border-l-4 border-red-500 bg-red-50 p-4 text-sm text-red-900">
-            <div className="flex items-start gap-3">
-              <span className="text-lg">⚠️</span>
-              <div>
-                <p className="font-semibold">Error al procesar la solicitud</p>
-                <p className="mt-1 text-red-800">{error}</p>
-              </div>
+          <div role="alert" className="alert alert-error">
+            <span>⚠️</span>
+            <div>
+              <p className="font-semibold">Error al procesar la solicitud</p>
+              <p className="mt-1">{error}</p>
             </div>
           </div>
         )}

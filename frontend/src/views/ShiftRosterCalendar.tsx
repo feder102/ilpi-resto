@@ -109,8 +109,8 @@ export const ShiftRosterCalendar: React.FC<ShiftRosterCalendarProps> = ({ employ
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4">
         <div className="text-center">
-          <h2 className="text-xl font-bold text-red-600">Error loading roster</h2>
-          <p className="mt-2 text-gray-600">{error}</p>
+          <h2 className="text-xl font-bold text-error">Error loading roster</h2>
+          <p className="mt-2 text-base-content/60">{error}</p>
         </div>
       </div>
     );
@@ -120,8 +120,8 @@ export const ShiftRosterCalendar: React.FC<ShiftRosterCalendarProps> = ({ employ
     <div className="flex flex-col gap-6 p-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Turnos - Calendario</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="text-3xl font-bold text-base-content">Turnos - Calendario</h1>
+        <p className="mt-2 text-base-content/60">
           {user?.role === 'Empleado'
             ? 'Vista de tus turnos asignados'
             : 'Planificación de turnos del equipo'}
@@ -129,21 +129,21 @@ export const ShiftRosterCalendar: React.FC<ShiftRosterCalendarProps> = ({ employ
       </div>
 
       {/* Month Navigation */}
-      <div className="flex items-center justify-between rounded-lg bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between rounded-lg bg-base-100 p-4 shadow-sm">
         <button
           onClick={handlePrevMonth}
-          className="rounded px-4 py-2 hover:bg-gray-100"
+          className="btn btn-ghost"
           aria-label="Mes anterior"
         >
           ← Anterior
         </button>
-        <h2 className="text-xl font-semibold text-gray-900">
+        <h2 className="text-xl font-semibold text-base-content">
           {monthLabel}
-          {isCurrentMonth && <span className="ml-2 text-sm text-blue-600">(Actual)</span>}
+          {isCurrentMonth && <span className="ml-2 text-sm text-info">(Actual)</span>}
         </h2>
         <button
           onClick={handleNextMonth}
-          className="rounded px-4 py-2 hover:bg-gray-100"
+          className="btn btn-ghost"
           aria-label="Próximo mes"
         >
           Siguiente →
@@ -151,7 +151,7 @@ export const ShiftRosterCalendar: React.FC<ShiftRosterCalendarProps> = ({ employ
       </div>
 
       {/* Calendar Grid */}
-      <div className="rounded-lg bg-white p-4 shadow-sm">
+      <div className="rounded-lg bg-base-100 p-4 shadow-sm">
         <CalendarGrid
           shifts={shifts}
           currentDate={currentDate}
@@ -163,9 +163,9 @@ export const ShiftRosterCalendar: React.FC<ShiftRosterCalendarProps> = ({ employ
 
       {/* Info Card */}
       {user?.role !== 'Empleado' && (
-        <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-900">
+        <div className="rounded-lg bg-info/10 p-4 text-sm text-info-content">
           <p>
-            💡 Haz clic en un día del calendario para asignar un turno. Haz clic en un turno
+            Haz clic en un día del calendario para asignar un turno. Haz clic en un turno
             existente para editarlo o eliminarlo.
           </p>
         </div>
@@ -181,8 +181,8 @@ export const ShiftRosterCalendar: React.FC<ShiftRosterCalendarProps> = ({ employ
       />
 
       {/* Stats Footer */}
-      <div className="rounded-lg bg-gray-50 p-4">
-        <p className="text-sm text-gray-600">
+      <div className="rounded-lg bg-base-200 p-4">
+        <p className="text-sm text-base-content/60">
           Total de turnos en {monthLabel}: <span className="font-bold">{shifts.length}</span>
         </p>
       </div>

@@ -32,17 +32,17 @@ export default function ReportsView() {
   }, []);
 
   if (loading) {
-    return <p className="text-center text-slate-600 mt-10">Cargando informes...</p>;
+    return <p className="text-center text-base-content/60 mt-10">Cargando informes...</p>;
   }
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-8 text-slate-900">Informes</h1>
+      <h1 className="text-3xl font-bold mb-8 text-base-content">Informes</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Hours by day chart */}
         <Card>
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">Horas por Día de la Semana</h3>
+          <h3 className="text-lg font-semibold text-base-content mb-4">Horas por Día de la Semana</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={hoursByDay}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -56,7 +56,7 @@ export default function ReportsView() {
 
         {/* Department distribution */}
         <Card>
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">Distribución por Departamento</h3>
+          <h3 className="text-lg font-semibold text-base-content mb-4">Distribución por Departamento</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={deptDist}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -71,7 +71,7 @@ export default function ReportsView() {
 
       {/* Export placeholder */}
       <Card>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Exportar</h3>
+        <h3 className="text-lg font-semibold text-base-content mb-4">Exportar</h3>
         <div className="flex gap-3">
           <Button
             disabled

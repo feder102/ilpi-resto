@@ -135,87 +135,91 @@ export default function ShiftAssignment() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-base-200 p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Asignar Turnos</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-base-content">Asignar Turnos</h1>
+          <p className="text-base-content/60 mt-1">
             Asigna turnos a los miembros de tu equipo
           </p>
         </div>
 
         {/* Main Content */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          {/* Error Alert */}
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <span className="text-xl">⚠️</span>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">Error</h3>
-                  <p className="mt-2 text-sm text-red-700">{error}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Success Alert */}
-          {successMessage && successDetails && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <span className="text-xl">✓</span>
-                </div>
-                <div className="ml-3 flex-1">
-                  <h3 className="text-sm font-medium text-green-800">Éxito</h3>
-                  <p className="mt-2 text-sm text-green-700">{successMessage}</p>
-                  <div className="mt-3 text-sm bg-white rounded p-3 border border-green-100">
-                    <p className="text-gray-700">
-                      <strong>Empleado:</strong> {successDetails.employee_name}
-                    </p>
-                    <p className="text-gray-700">
-                      <strong>Fecha:</strong> {new Date(successDetails.date).toLocaleDateString('es-ES')}
-                    </p>
-                    <p className="text-gray-700">
-                      <strong>Turno:</strong> {successDetails.shift_type_name}
-                    </p>
+        <div className="card bg-base-100 shadow-md">
+          <div className="card-body">
+            {/* Error Alert */}
+            {error && (
+              <div className="alert alert-error mb-6">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <span className="text-xl">⚠️</span>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium">Error</h3>
+                    <p className="mt-2 text-sm">{error}</p>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Loading State */}
-          {isLoadingData ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="text-center">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
-                <p className="text-gray-600 text-sm">Cargando datos...</p>
+            {/* Success Alert */}
+            {successMessage && successDetails && (
+              <div className="alert alert-success mb-6">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <span className="text-xl">✓</span>
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <h3 className="text-sm font-medium">Éxito</h3>
+                    <p className="mt-2 text-sm">{successMessage}</p>
+                    <div className="mt-3 text-sm bg-base-100 rounded p-3 border border-success/20">
+                      <p className="text-base-content/80">
+                        <strong>Empleado:</strong> {successDetails.employee_name}
+                      </p>
+                      <p className="text-base-content/80">
+                        <strong>Fecha:</strong> {new Date(successDetails.date).toLocaleDateString('es-ES')}
+                      </p>
+                      <p className="text-base-content/80">
+                        <strong>Turno:</strong> {successDetails.shift_type_name}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          ) : (
-            <ShiftAssignmentForm
-              employees={employees}
-              shiftTypes={shiftTypes}
-              isSubmitting={isSubmitting}
-              onSubmit={handleAssign}
-            />
-          )}
+            )}
+
+            {/* Loading State */}
+            {isLoadingData ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="text-center">
+                  <span className="loading loading-spinner loading-lg text-primary mb-2"></span>
+                  <p className="text-base-content/60 text-sm">Cargando datos...</p>
+                </div>
+              </div>
+            ) : (
+              <ShiftAssignmentForm
+                employees={employees}
+                shiftTypes={shiftTypes}
+                isSubmitting={isSubmitting}
+                onSubmit={handleAssign}
+              />
+            )}
+          </div>
         </div>
 
         {/* Instructions */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="font-semibold text-blue-900 mb-3">Instrucciones</h3>
-          <ul className="text-sm text-blue-800 space-y-2">
-            <li>• Selecciona el empleado de tu equipo</li>
-            <li>• Elige la fecha del turno (no se permiten fines de semana)</li>
-            <li>• Selecciona el tipo de turno (Mañana, Noche, Cortado, Corrido)</li>
-            <li>• El sistema detecta automáticamente conflictos de vacaciones</li>
-            <li>• No se pueden asignar dos turnos al mismo empleado en la misma fecha</li>
-          </ul>
+        <div className="mt-8 card bg-info/10">
+          <div className="card-body">
+            <h3 className="font-semibold text-info-content mb-3">Instrucciones</h3>
+            <ul className="text-sm text-info-content/80 space-y-2">
+              <li>• Selecciona el empleado de tu equipo</li>
+              <li>• Elige la fecha del turno (no se permiten fines de semana)</li>
+              <li>• Selecciona el tipo de turno (Mañana, Noche, Cortado, Corrido)</li>
+              <li>• El sistema detecta automáticamente conflictos de vacaciones</li>
+              <li>• No se pueden asignar dos turnos al mismo empleado en la misma fecha</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

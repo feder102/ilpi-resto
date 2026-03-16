@@ -67,25 +67,25 @@ export default function ModeratorRoster() {
     <div className="p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Roster de Turnos</h1>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold mb-2 text-base-content">Roster de Turnos</h1>
+        <p className="text-base-content/60">
           Vista de turnos de tu equipo con indicadores de vacaciones
         </p>
       </div>
 
       {/* Navigation Controls */}
-      <div className="mb-6 flex items-center justify-between bg-white rounded-lg shadow p-4">
+      <div className="mb-6 flex items-center justify-between card bg-base-100 shadow-sm p-4">
         <button
           onClick={handlePreviousMonth}
-          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm font-medium"
+          className="btn btn-ghost btn-sm"
           disabled={isLoading}
         >
           ← Anterior
         </button>
 
         <div className="text-center">
-          <h2 className="text-xl font-semibold capitalize">{monthName}</h2>
-          <p className="text-sm text-gray-500">
+          <h2 className="text-xl font-semibold capitalize text-base-content">{monthName}</h2>
+          <p className="text-sm text-base-content/40">
             {new Date(year, month - 1, 1).toLocaleDateString('es-ES', {
               weekday: 'long',
             })}
@@ -95,14 +95,14 @@ export default function ModeratorRoster() {
         <div className="flex gap-2">
           <button
             onClick={handleToday}
-            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm font-medium"
+            className="btn btn-primary btn-sm"
             disabled={isLoading}
           >
             Hoy
           </button>
           <button
             onClick={handleNextMonth}
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm font-medium"
+            className="btn btn-ghost btn-sm"
             disabled={isLoading}
           >
             Siguiente →
@@ -112,18 +112,18 @@ export default function ModeratorRoster() {
 
       {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-700 font-medium">⚠️ Error</p>
-          <p className="text-red-600 text-sm mt-1">{error}</p>
+        <div className="alert alert-error mb-6">
+          <span className="font-medium">Error</span>
+          <span className="text-sm">{error}</span>
         </div>
       )}
 
       {/* Loading State */}
       {isLoading && (
-        <div className="flex items-center justify-center h-96 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-center h-96 bg-base-200 rounded-lg">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-            <p className="mt-4 text-gray-600">Cargando roster...</p>
+            <span className="loading loading-spinner loading-lg text-primary"></span>
+            <p className="mt-4 text-base-content/60">Cargando roster...</p>
           </div>
         </div>
       )}
@@ -139,24 +139,26 @@ export default function ModeratorRoster() {
       )}
 
       {/* Legend */}
-      <div className="mt-8 bg-white rounded-lg shadow p-4">
-        <h3 className="font-semibold text-sm mb-3">Leyenda</h3>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-yellow-300 rounded"></div>
-            <span>Turno Mañana</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-blue-500 rounded"></div>
-            <span>Turno Noche</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🏖️</span>
-            <span>Vacaciones Aprobadas</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-lg">⏳</span>
-            <span>Vacaciones Pendientes</span>
+      <div className="mt-8 card bg-base-100 shadow-sm">
+        <div className="card-body">
+          <h3 className="font-semibold text-sm mb-3 text-base-content">Leyenda</h3>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-warning rounded"></div>
+              <span className="text-base-content">Turno Mañana</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-info rounded"></div>
+              <span className="text-base-content">Turno Noche</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🏖️</span>
+              <span className="text-base-content">Vacaciones Aprobadas</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">⏳</span>
+              <span className="text-base-content">Vacaciones Pendientes</span>
+            </div>
           </div>
         </div>
       </div>

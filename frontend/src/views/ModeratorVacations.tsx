@@ -69,14 +69,14 @@ export default function ModeratorVacations() {
   };
 
   const handleRequestApproved = async () => {
-    setSuccessMessage('✅ Solicitud aprobada exitosamente');
+    setSuccessMessage('Solicitud aprobada exitosamente');
     setSelectedRequestId(null);
     await fetchRequests();
     setTimeout(() => setSuccessMessage(null), 5000);
   };
 
   const handleRequestRejected = async () => {
-    setSuccessMessage('❌ Solicitud rechazada');
+    setSuccessMessage('Solicitud rechazada');
     setSelectedRequestId(null);
     await fetchRequests();
     setTimeout(() => setSuccessMessage(null), 5000);
@@ -86,24 +86,24 @@ export default function ModeratorVacations() {
     <div className="p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Solicitudes de Vacaciones</h1>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold mb-2 text-base-content">Solicitudes de Vacaciones</h1>
+        <p className="text-base-content/60">
           Revisa y aprueba/rechaza solicitudes de vacaciones de tu equipo
         </p>
       </div>
 
       {/* Success Message */}
       {successMessage && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-700">{successMessage}</p>
+        <div className="alert alert-success mb-4">
+          <span>{successMessage}</span>
         </div>
       )}
 
       {/* Error Message */}
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-700 font-medium">⚠️ Error</p>
-          <p className="text-red-600 text-sm mt-1">{error}</p>
+        <div className="alert alert-error mb-4">
+          <span className="font-medium">Error</span>
+          <span className="text-sm">{error}</span>
         </div>
       )}
 

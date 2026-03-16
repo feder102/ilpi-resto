@@ -4,8 +4,8 @@
 export default function ModeratorReports() {
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-4">Reportes</h1>
-      <p className="text-gray-600">Reportes de asistencia y vacaciones - En desarrollo</p>
+      <h1 className="text-3xl font-bold mb-4 text-base-content">Reportes</h1>
+      <p className="text-base-content/60">Reportes de asistencia y vacaciones - En desarrollo</p>
     </div>
   );
 }

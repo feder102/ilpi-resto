@@ -55,10 +55,9 @@ export default function ResetTokenVerification({ token }: ResetTokenVerification
   if (state === 'checking') {
     // Show loading spinner while verifying
     return (
-      <div className="reset-token-verification checking">
-        <div className="spinner">
-          <p>Verificando enlace...</p>
-        </div>
+      <div className="text-center py-8">
+        <span className="loading loading-spinner loading-lg text-primary"></span>
+        <p className="mt-4 text-base-content/60">Verificando enlace...</p>
       </div>
     );
   }
@@ -70,22 +69,22 @@ export default function ResetTokenVerification({ token }: ResetTokenVerification
 
   // Token invalid or expired - show error with retry option
   return (
-    <div className="reset-token-verification error">
-      <div className="error-icon">✗</div>
-      <h2>Enlace no válido</h2>
-      <p className="error-message">{error}</p>
+    <div className="text-center space-y-4">
+      <div className="text-5xl text-error">✗</div>
+      <h2 className="text-2xl font-bold text-base-content">Enlace no válido</h2>
+      <p className="text-base-content/60">{error}</p>
 
-      <div className="error-actions">
-        <a href="/password-reset" className="btn-primary">
+      <div className="flex flex-col gap-3">
+        <a href="/password-reset" className="btn btn-primary w-full">
           Solicitar nuevo enlace
         </a>
-        <a href="/login" className="btn-secondary">
+        <a href="/login" className="btn btn-secondary btn-outline w-full">
           Volver a iniciar sesión
         </a>
       </div>
 
       {expiresAt && (
-        <p className="token-info">
+        <p className="text-xs text-base-content/40">
           Enlace expiró: {new Date(expiresAt).toLocaleString()}
         </p>
       )}

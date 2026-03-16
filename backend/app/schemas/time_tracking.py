@@ -138,3 +138,30 @@ class BatchProcessResponse(BaseModel):
     message: str
     estimated_entries: Optional[int] = None
     completed_at: Optional[datetime] = None
+
+
+# ========== Feature 005: Employee Portal Statistics ==========
+
+class DailyRecordResponse(BaseModel):
+    """Daily work record for employee statistics."""
+    date: str  # YYYY-MM-DD
+    entry_time: Optional[str] = None  # HH:MM or null
+    exit_time: Optional[str] = None  # HH:MM or null
+    duration_hours: str | float  # "8.5" or 8.5
+
+
+class WeeklyBreakdownResponse(BaseModel):
+    """Weekly hours breakdown for employee statistics.
+
+    Uses ISO 8601 week numbering (week 1-53 per year).
+    Week 1 is the first week with Thursday of the year.
+    """
+    week: int  # ISO week number (1-53)
+    hours: str | float  # Total hours in that week
+
+
+class EmployeeStatisticsPublicResponse(BaseModel):
+    """Statistics response for current logged-in employee."""
+    total_hours: str | float  # Total hours for the month
+    weekly_breakdown: List[WeeklyBreakdownResponse]  # Breakdown by week
+    daily_records: List[DailyRecordResponse]  # Daily records with times
