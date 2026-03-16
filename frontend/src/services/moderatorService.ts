@@ -13,10 +13,11 @@
 
 import axios from 'axios';
 import type { AxiosInstance } from 'axios';
+import { API_BASE_URL } from '../config/constants';
 
-// API client instance (uses base URL from environment)
+// API client instance (uses standardized base URL from constants)
 const apiClient: AxiosInstance = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/moderator`,
+  baseURL: `${API_BASE_URL}/moderator`,
   headers: {
     'Content-Type': 'application/json',
   },
