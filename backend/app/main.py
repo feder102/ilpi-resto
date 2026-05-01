@@ -147,7 +147,11 @@ def create_app() -> FastAPI:
     # Global exception handler
     @app.exception_handler(DomainException)
     async def domain_exception_handler(request: Request, exc: DomainException) -> JSONResponse:
-        status_code = EXCEPTION_STATUS_MAP.get(type(exc), 400)
+        # PASSWORD_SETUP_REQUIRED is semantically Forbidden (403), not Unprocessable (422)
+        if exc.code == "PASSWORD_SETUP_REQUIRED":
+            status_code = 403
+        else:
+            status_code = EXCEPTION_STATUS_MAP.get(type(exc), 400)
         return JSONResponse(
             status_code=status_code,
             content={"error": {"code": exc.code, "message": exc.message}},

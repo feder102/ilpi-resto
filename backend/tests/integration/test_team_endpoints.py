@@ -1,37 +1,50 @@
 """T072c: Integration tests for team endpoints."""
 
 import uuid
+import pytest
+
+
+@pytest.fixture
+def shift_type_id(client, admin_headers):
+    """Create a shift type and return its ID."""
+    resp = client.post("/api/v1/shift-types", json={
+        "name": "Mañana Test",
+        "type": "MANANA",
+        "time_windows": [{"start": "09:00", "end": "17:00"}],
+        "expected_hours": 8.0,
+    }, headers=admin_headers)
+    assert resp.status_code == 201, f"Failed to create shift type: {resp.json()}"
+    return resp.json()["id"]
 
 
 class TestTeamCRUD:
-    TEAM_DATA = {
-        "name": "Equipo Test",
-        "department": "Cocina",
-        "shift_type": "Mañana",
-        "shift_start": "09:00",
-        "shift_end": "17:00",
-    }
+    def _team_data(self, shift_type_id: str) -> dict:
+        return {
+            "name": "Equipo Test",
+            "department": "Cocina",
+            "shift_type_id": shift_type_id,
+        }
 
-    def test_create_team(self, client, admin_headers):
-        resp = client.post("/api/v1/teams", json=self.TEAM_DATA, headers=admin_headers)
+    def test_create_team(self, client, admin_headers, shift_type_id):
+        resp = client.post("/api/v1/teams", json=self._team_data(shift_type_id), headers=admin_headers)
         assert resp.status_code == 201
         assert resp.json()["name"] == "Equipo Test"
 
-    def test_list_teams(self, client, admin_headers):
-        client.post("/api/v1/teams", json=self.TEAM_DATA, headers=admin_headers)
+    def test_list_teams(self, client, admin_headers, shift_type_id):
+        client.post("/api/v1/teams", json=self._team_data(shift_type_id), headers=admin_headers)
         resp = client.get("/api/v1/teams", headers=admin_headers)
         assert resp.status_code == 200
         assert resp.json()["total"] >= 1
 
-    def test_list_by_department(self, client, admin_headers):
-        client.post("/api/v1/teams", json=self.TEAM_DATA, headers=admin_headers)
+    def test_list_by_department(self, client, admin_headers, shift_type_id):
+        client.post("/api/v1/teams", json=self._team_data(shift_type_id), headers=admin_headers)
         resp = client.get("/api/v1/teams?department=Cocina", headers=admin_headers)
         assert resp.status_code == 200
         assert resp.json()["total"] >= 1
 
-    def test_add_member(self, client, admin_headers):
+    def test_add_member(self, client, admin_headers, shift_type_id):
         # Create team
-        team_resp = client.post("/api/v1/teams", json=self.TEAM_DATA, headers=admin_headers)
+        team_resp = client.post("/api/v1/teams", json=self._team_data(shift_type_id), headers=admin_headers)
         team_id = team_resp.json()["id"]
 
         # Create employee
