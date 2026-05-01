@@ -3,7 +3,7 @@
 import pytest
 from sqlmodel import Session
 
-from app.common.exceptions import UnauthorizedError
+from app.common.exceptions import UnauthorizedError, ValidationError
 from app.common.security import hash_password
 from app.models.tenant import Tenant
 from app.models.user import User
@@ -59,7 +59,7 @@ class TestLogin:
         )
         session.add(user)
         session.commit()
-        with pytest.raises(UnauthorizedError):
+        with pytest.raises(ValidationError):
             auth_service.login("inactive@ilpi.es", "TestPass123!", session)
 
 

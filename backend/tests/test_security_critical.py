@@ -149,7 +149,7 @@ class TestPasswordSetupBlockingEnforced:
         """
         # Attempt login
         response = client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={
                 "email": "inactive@test.com",
                 "password": "CorrectPassword123"
@@ -203,7 +203,7 @@ class TestEmployeeRouteRequiresIsActive:
 
         # Attempt to access employee-only route
         response = client.get(
-            "/employee/time-tracking/records",
+            "/api/v1/employee/time-tracking/records",
             headers={"Authorization": f"Bearer {token}"}
         )
 
@@ -289,7 +289,7 @@ class TestCrossEmployeeAccessBlocked:
             data={
                 "sub": str(active_user.id),
                 "tenant_id": str(active_user.tenant_id),
-                "emp_id": str(active_user.employee_id),
+                "employee_id": str(active_user.employee_id),
                 "email": active_user.email,
                 "role": active_user.role,
                 "is_active": True
@@ -298,7 +298,7 @@ class TestCrossEmployeeAccessBlocked:
 
         # Query records as Employee A
         response = client.get(
-            "/employee/time-tracking/records",
+            "/api/v1/employee/time-tracking/records",
             headers={"Authorization": f"Bearer {token}"}
         )
 

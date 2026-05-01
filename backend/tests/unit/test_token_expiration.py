@@ -55,13 +55,12 @@ class TestTokenExpiration:
         # Setup: Create user with existing unused token
         user = User(
             email="user@example.com",
-            password_hash="hashed_password",
-            first_name="Test",
-            last_name="User",
+            hashed_password="hashed_password",
+            role="Empleado",
             tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
         )
-        db.add(user)
-        db.flush()
+        session.add(user)
+        session.flush()
 
         now = datetime.now(timezone.utc)
 
@@ -76,15 +75,15 @@ class TestTokenExpiration:
             created_at=now,
             used_at=None,  # NOT used
         )
-        db.add(token1)
-        db.flush()
+        session.add(token1)
+        session.flush()
 
         # Action: Request new password reset (should invalidate token1)
-        service = PasswordResetService(db=db, tenant_id=UUID("12345678-1234-5678-1234-567812345678"))
+        service = PasswordResetService(db=session, tenant_id=UUID("12345678-1234-5678-1234-567812345678"))
         service.request_password_reset(email="user@example.com", ip_address="192.168.1.1")
 
         # Assert: Token1 now has used_at set (invalidated)
-        db.refresh(token1)
+        session.refresh(token1)
         assert token1.used_at is not None
 
     def test_old_password_stops_working_after_reset(self, session: Session):
@@ -93,27 +92,26 @@ class TestTokenExpiration:
         old_password_hash = "old_bcrypt_hash_12345"
         user = User(
             email="user@example.com",
-            password_hash=old_password_hash,
-            first_name="Test",
-            last_name="User",
+            hashed_password=old_password_hash,
+            role="Empleado",
             tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
         )
-        db.add(user)
-        db.flush()
+        session.add(user)
+        session.flush()
 
-        old_password_hash_check = user.password_hash
+        old_password_hash_check = user.hashed_password
         assert old_password_hash_check == old_password_hash
 
-        # Action: Simulate password reset (would change password_hash in Phase 5)
+        # Action: Simulate password reset (would change hashed_password in Phase 5)
         new_password_hash = "new_bcrypt_hash_67890"
-        user.password_hash = new_password_hash
-        db.add(user)
-        db.commit()
+        user.hashed_password = new_password_hash
+        session.add(user)
+        session.commit()
 
         # Assert: Old password no longer matches
-        db.refresh(user)
-        assert user.password_hash != old_password_hash
-        assert user.password_hash == new_password_hash
+        session.refresh(user)
+        assert user.hashed_password != old_password_hash
+        assert user.hashed_password == new_password_hash
 
 
 # ============================================================================
@@ -124,7 +122,7 @@ class TestTokenExpiration:
 @pytest.fixture
 def password_reset_service(session: Session):
     """Create service instance for testing."""
-    return PasswordResetService(db=db, tenant_id=UUID("12345678-1234-5678-1234-567812345678"))
+    return PasswordResetService(db=session, tenant_id=UUID("12345678-1234-5678-1234-567812345678"))
 
 
 def test_token_not_expired_before_24_hours(session: Session, password_reset_service):
@@ -152,13 +150,12 @@ def test_multiple_tokens_same_user_independent_expiration(session: Session):
     """Multiple tokens for same user have independent expiration times."""
     user = User(
         email="user@example.com",
-        password_hash="hashed_password",
-        first_name="Test",
-        last_name="User",
+        hashed_password="hashed_password",
+        role="Empleado",
         tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
     )
-    db.add(user)
-    db.flush()
+    session.add(user)
+    session.flush()
 
     now = datetime.now(timezone.utc)
 
@@ -183,9 +180,9 @@ def test_multiple_tokens_same_user_independent_expiration(session: Session):
         used_at=None,
     )
 
-    db.add(token1)
-    db.add(token2)
-    db.commit()
+    session.add(token1)
+    session.add(token2)
+    session.commit()
 
     # Assert: Different expiration times
     assert token1.expires_at != token2.expires_at

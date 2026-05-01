@@ -1,6 +1,7 @@
 """T072b: Unit tests for TeamService."""
 
 import pytest
+from datetime import date
 from sqlmodel import Session, SQLModel, create_engine
 
 from app.common.exceptions import DuplicateError, NotFoundError, ValidationError
@@ -46,7 +47,7 @@ def employee(session, tenant):
         role="Empleado",
         department="Cocina",
         status="Activo",
-        hire_date="2024-01-15",
+        hire_date=date(2024, 1, 15),
     )
     session.add(emp)
     session.commit()

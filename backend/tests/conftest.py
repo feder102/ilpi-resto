@@ -23,6 +23,29 @@ def test_hash_password(password: str) -> str:
 TEST_DATABASE_URL = "sqlite:///./test.db"
 test_engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
 
+# Patch app.database.engine so integration tests that import it directly use SQLite
+import app.database as _db_module  # noqa: E402
+_db_module.engine = test_engine
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    """Reset all slowapi rate limiter storages between tests to prevent cross-test interference."""
+    import app.routers.auth as _auth_router
+    import app.routers.password_reset_router as _pwd_router
+    from app.main import limiter as _main_limiter
+
+    def _reset_all() -> None:
+        for lim in (_main_limiter, _auth_router.limiter, _pwd_router.limiter):
+            try:
+                lim.reset()
+            except Exception:
+                pass
+
+    _reset_all()
+    yield
+    _reset_all()
+
 
 @pytest.fixture(name="session")
 def session_fixture():

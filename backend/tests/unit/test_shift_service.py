@@ -1,7 +1,7 @@
 """T072b: Unit tests for ShiftService."""
 
 import uuid
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 from sqlmodel import Session, SQLModel, create_engine
@@ -119,7 +119,7 @@ def shift_type(session, tenant):
 
 class TestCreateShift:
     def test_create_shift_success(self, session, tenant, employee, shift_type):
-        shift_date = date(2026, 3, 15)
+        shift_date = date.today() + timedelta(days=45)
         result = shift_service.create_shift(
             tenant_id=tenant.id,
             session=session,
@@ -129,14 +129,14 @@ class TestCreateShift:
             created_by=uuid.uuid4(),
         )
         assert result["shift"]["employee_id"] == str(employee.id)
-        assert result["shift"]["date"] == "2026-03-15"
+        assert result["shift"]["date"] == shift_date.isoformat()
         assert result["shift"]["shift_type_name"] == "Mañana"
 
     def test_create_shift_vacation_conflict(self, session, tenant, employee, shift_type):
         """Test that shift creation fails when employee has approved vacation."""
-        vacation_start = date(2026, 3, 10)
-        vacation_end = date(2026, 3, 20)
-        shift_date = date(2026, 3, 15)
+        vacation_start = date.today() + timedelta(days=30)
+        vacation_end = date.today() + timedelta(days=40)
+        shift_date = date.today() + timedelta(days=35)
 
         # Create approved vacation
         vacation = VacationRequest(
@@ -163,9 +163,9 @@ class TestCreateShift:
 
     def test_create_shift_outside_vacation_allowed(self, session, tenant, employee, shift_type):
         """Test that shift creation succeeds when outside vacation period."""
-        vacation_start = date(2026, 3, 10)
-        vacation_end = date(2026, 3, 20)
-        shift_date = date(2026, 3, 25)
+        vacation_start = date.today() + timedelta(days=30)
+        vacation_end = date.today() + timedelta(days=40)
+        shift_date = date.today() + timedelta(days=45)
 
         # Create approved vacation
         vacation = VacationRequest(
@@ -188,13 +188,13 @@ class TestCreateShift:
             shift_type_id=shift_type.id,
             created_by=uuid.uuid4(),
         )
-        assert result["shift"]["date"] == "2026-03-25"
+        assert result["shift"]["date"] == shift_date.isoformat()
 
     def test_create_shift_pending_vacation_allowed(self, session, tenant, employee, shift_type):
         """Test that shift creation succeeds with pending vacation (not approved)."""
-        vacation_start = date(2026, 3, 10)
-        vacation_end = date(2026, 3, 20)
-        shift_date = date(2026, 3, 15)
+        vacation_start = date.today() + timedelta(days=30)
+        vacation_end = date.today() + timedelta(days=40)
+        shift_date = date.today() + timedelta(days=35)
 
         # Create pending vacation (not approved)
         vacation = VacationRequest(
@@ -217,4 +217,4 @@ class TestCreateShift:
             shift_type_id=shift_type.id,
             created_by=uuid.uuid4(),
         )
-        assert result["shift"]["date"] == "2026-03-15"
+        assert result["shift"]["date"] == shift_date.isoformat()

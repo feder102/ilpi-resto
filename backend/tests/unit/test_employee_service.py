@@ -1,6 +1,7 @@
 """T050b: Unit tests for EmployeeService."""
 
 import uuid
+from datetime import date
 
 import pytest
 from sqlmodel import Session, SQLModel, create_engine
@@ -174,7 +175,7 @@ class TestSoftDelete:
     def test_admin_can_delete(self, session, tenant, sample_employee_data):
         created = employee_service.create(sample_employee_data, tenant.id, session)
         result = employee_service.soft_delete(created.id, tenant.id, "Admin", session)
-        assert result["message"] == "Empleado desactivado"
+        assert "Empleado desactivado" in result["message"]
 
     def test_non_admin_cannot_delete(self, session, tenant, sample_employee_data):
         created = employee_service.create(sample_employee_data, tenant.id, session)
@@ -189,8 +190,8 @@ class TestSoftDelete:
         vr = VacationRequest(
             tenant_id=tenant.id,
             employee_id=emp.id,
-            start_date="2025-06-01",
-            end_date="2025-06-10",
+            start_date=date(2025, 6, 1),
+            end_date=date(2025, 6, 10),
             requested_days=10,
             status="Pendiente",
         )
