@@ -537,6 +537,7 @@ async def get_vacation_summary(
     year: int = Query(..., ge=2020, le=2100),
     status: str = Query(None),
     current_user: dict = Depends(require_role_and_active("Moderador")),
+    session: Session = Depends(get_session),
 ):
     """
     Get vacation summary for moderator's department.
@@ -549,8 +550,7 @@ async def get_vacation_summary(
 
     Filtered to moderator's department only.
     """
-    # Implementation will be added in Phase 6 (T072)
-    pass
+    return moderator_service.get_vacation_summary(current_user, session, year, status)
 
 
 @router.get("/reports/attendance", response_model=AttendanceReportDTO)
@@ -558,6 +558,7 @@ async def get_attendance_report(
     date_from: str = Query(..., regex=r"^\d{4}-\d{2}-\d{2}$"),
     date_to: str = Query(..., regex=r"^\d{4}-\d{2}-\d{2}$"),
     current_user: dict = Depends(require_role_and_active("Moderador")),
+    session: Session = Depends(get_session),
 ):
     """
     Get attendance report for moderator's department.
@@ -567,5 +568,4 @@ async def get_attendance_report(
 
     Filtered to moderator's department only.
     """
-    # Implementation will be added in Phase 6 (T074)
-    pass
+    return moderator_service.get_attendance_report(current_user, session, date_from, date_to)
