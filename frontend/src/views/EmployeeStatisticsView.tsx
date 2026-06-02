@@ -198,30 +198,28 @@ export default function EmployeeStatisticsView() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-base-200 py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl sm:text-4xl font-bold text-base-content mb-2">
-            Mis Estadísticas de Trabajo
-          </h1>
-          <p className="text-lg text-base-content/60 mb-8">
-            Consulta tus horas de trabajo y registros diarios
-          </p>
-          <Spinner size="lg" label="Cargando estadísticas..." />
-        </div>
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-2xl sm:text-3xl font-bold text-base-content mb-2">
+          Mis Estadísticas de Trabajo
+        </h1>
+        <p className="text-base sm:text-lg text-base-content/60 mb-8">
+          Consulta tus horas de trabajo y registros diarios
+        </p>
+        <Spinner size="lg" label="Cargando estadísticas..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-base-200 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto">
+      <div>
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-base-content flex items-center gap-2 mb-2">
-            <BarChart3 className="w-8 h-8 text-primary" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-base-content flex items-center gap-2 mb-2">
+            <BarChart3 className="w-7 h-7 text-primary" />
             Mis Estadísticas de Trabajo
           </h1>
-          <p className="text-lg text-base-content/60">
+          <p className="text-base sm:text-lg text-base-content/60">
             Consulta tus horas de trabajo y registros diarios
           </p>
         </div>

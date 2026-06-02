@@ -74,11 +74,11 @@ export default function EmployeeVacationView() {
   };
 
   return (
-    <div className="min-h-screen bg-base-200 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto">
+      <div>
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-base-content">Mis Vacaciones</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-base-content">Mis Vacaciones</h1>
           <p className="mt-2 text-lg text-base-content/60">
             Solicita, consulta y gestiona tus días de vacaciones
           </p>

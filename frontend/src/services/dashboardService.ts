@@ -7,12 +7,20 @@ export async function getStats(): Promise<DashboardStats> {
   return data;
 }
 
-export async function getHoursByDay(): Promise<HoursByDayItem[]> {
-  const { data } = await apiClient.get('/reports/hours-by-day');
+export interface ReportFilters {
+  date_from?: string;
+  date_to?: string;
+  department?: string;
+}
+
+export async function getHoursByDay(filters: ReportFilters = {}): Promise<HoursByDayItem[]> {
+  const { data } = await apiClient.get('/reports/hours-by-day', { params: filters });
   return data;
 }
 
-export async function getDepartmentDistribution(): Promise<DepartmentDistItem[]> {
-  const { data } = await apiClient.get('/reports/department-distribution');
+export async function getDepartmentDistribution(
+  filters: Pick<ReportFilters, 'department'> = {},
+): Promise<DepartmentDistItem[]> {
+  const { data } = await apiClient.get('/reports/department-distribution', { params: filters });
   return data;
 }

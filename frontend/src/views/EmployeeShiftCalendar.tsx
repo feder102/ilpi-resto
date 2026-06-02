@@ -170,8 +170,8 @@ export default function EmployeeShiftCalendar() {
   };
 
   return (
-    <div className="min-h-screen bg-base-200 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto">
+      <div>
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-4">
