@@ -10,7 +10,28 @@ import type {
   TimeEntryListResponse,
   BatchProcessResponse,
   TimeEntryFilterRequest,
+  TimeEntry,
+  ExtraHoursCreate,
 } from "../types/timeTracking";
+
+/**
+ * Register extra (overtime) hours for an employee (Admin/Moderador only)
+ */
+export async function createExtraHours(
+  body: ExtraHoursCreate
+): Promise<TimeEntry> {
+  try {
+    const response = await apiClient.post(
+      `/employee/time-tracking/extra-hours`,
+      body
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      `Error al cargar horas extra: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
 
 /**
  * Get monthly work statistics for a specific employee

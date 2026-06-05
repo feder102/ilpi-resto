@@ -11,13 +11,19 @@ import { getTimeEntries } from "../../services/statisticsService";
 import type { TimeEntry, TimeEntryListResponse } from "../../types/timeTracking";
 import { TimeEntrySourceEnum } from "../../types/timeTracking";
 
+const sourceLabel = (source: string): string => {
+  if (source === "extra") return "Extra";
+  if (source === "manual") return "Manual";
+  return "Turno";
+};
+
 interface TimeEntriesTableProps {
   filters?: {
     start_date?: string;
     end_date?: string;
     employee_id?: string;
     department?: string;
-    source?: "shift" | "manual";
+    source?: "shift" | "manual" | "extra";
   };
   pageSize?: number;
 }
@@ -77,7 +83,7 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
           {finalFilters.end_date}
           {finalFilters.employee_id && ` | Empleado: ${finalFilters.employee_id}`}
           {finalFilters.department && ` | Departamento: ${finalFilters.department}`}
-          {finalFilters.source && ` | Origen: ${finalFilters.source === "shift" ? "Turno" : "Manual"}`}
+          {finalFilters.source && ` | Origen: ${sourceLabel(finalFilters.source)}`}
         </div>
       </Card>
 
@@ -128,8 +134,8 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
                       <td className="px-4 py-3 text-gray-600">
                         {entry.employee_dni}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">{entry.start_time}</td>
-                      <td className="px-4 py-3 text-gray-600">{entry.end_time}</td>
+                      <td className="px-4 py-3 text-gray-600">{entry.start_time ?? "—"}</td>
+                      <td className="px-4 py-3 text-gray-600">{entry.end_time ?? "—"}</td>
                       <td className="px-4 py-3 text-right font-medium text-gray-900">
                         {typeof entry.hours_worked === 'string'
                           ? parseFloat(entry.hours_worked).toFixed(2)
@@ -137,8 +143,15 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
                         h
                       </td>
                       <td className="px-4 py-3">
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                          {entry.source === "shift" ? "Turno" : "Manual"}
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            entry.source === "extra"
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-blue-100 text-blue-800"
+                          }`}
+                          title={entry.note ?? undefined}
+                        >
+                          {sourceLabel(entry.source)}
                         </span>
                       </td>
                     </tr>

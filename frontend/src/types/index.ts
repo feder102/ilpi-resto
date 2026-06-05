@@ -40,15 +40,9 @@ export type {
 // Employee-specific types
 export type {
   EmployeeUser,
-  TimeRecord,
-  TimeRecordSummary,
-  ClockInResponse,
-  ClockOutResponse,
-  TimeRecordListResponse,
   Shift,
   ShiftsResponse,
   DashboardData,
-  TimeTrackingContextType,
 } from './employee';
 
 // Error types

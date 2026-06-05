@@ -24,6 +24,8 @@ interface DailyRecord {
   entry_time: string | null; // HH:MM or null
   exit_time: string | null; // HH:MM or null
   duration_hours: number | string;
+  is_extra?: boolean;
+  note?: string | null;
 }
 
 interface WeeklyBreakdown {
@@ -33,6 +35,7 @@ interface WeeklyBreakdown {
 
 interface StatisticsResponse {
   total_hours: number | string;
+  extra_hours?: number | string;
   weekly_breakdown: WeeklyBreakdown[];
   daily_records: DailyRecord[];
 }
@@ -254,7 +257,7 @@ export default function EmployeeStatisticsView() {
 
         {/* Summary Cards */}
         {!error && data && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {/* Total Hours Card */}
             <Card className="bg-primary/10 border-2 border-primary/30">
               <div className="flex items-start justify-between mb-3">
@@ -269,7 +272,25 @@ export default function EmployeeStatisticsView() {
                 <Clock className="w-8 h-8 text-primary/60" />
               </div>
               <p className="text-xs text-base-content/50">
-                {getMonthName(selectedMonth)} {selectedYear}
+                {getMonthName(selectedMonth)} {selectedYear} (incluye horas extra)
+              </p>
+            </Card>
+
+            {/* Extra Hours Card */}
+            <Card className="bg-warning/10 border-2 border-warning/30">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <p className="text-sm font-medium text-base-content/60">
+                    Horas Extra
+                  </p>
+                  <p className="text-3xl font-bold text-warning mt-1">
+                    {formatHours(data.extra_hours ?? 0)}
+                  </p>
+                </div>
+                <TrendingUp className="w-8 h-8 text-warning/60" />
+              </div>
+              <p className="text-xs text-base-content/50">
+                cargadas por el administrador
               </p>
             </Card>
 
@@ -393,6 +414,11 @@ export default function EmployeeStatisticsView() {
                             {today && (
                               <Badge variant="info" className="text-xs">
                                 HOY
+                              </Badge>
+                            )}
+                            {record.is_extra && (
+                              <Badge variant="warning" className="text-xs" title={record.note ?? undefined}>
+                                EXTRA
                               </Badge>
                             )}
                           </div>

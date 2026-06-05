@@ -188,7 +188,7 @@ class TestEmployeeRouteRequiresIsActive:
 
         Scenario:
         1. Create JWT for inactive employee
-        2. Attempt GET /employee/time-tracking/records
+        2. Attempt GET /employee/shifts/today (employee-only route)
         3. Expected: 401 Unauthorized (password setup required)
         """
         # Create JWT token for inactive user
@@ -203,7 +203,7 @@ class TestEmployeeRouteRequiresIsActive:
 
         # Attempt to access employee-only route
         response = client.get(
-            "/api/v1/employee/time-tracking/records",
+            "/api/v1/employee/shifts/today",
             headers={"Authorization": f"Bearer {token}"}
         )
 
@@ -296,9 +296,9 @@ class TestCrossEmployeeAccessBlocked:
             }
         )
 
-        # Query records as Employee A
+        # Query records as Employee A (employee-only, RLS-scoped route)
         response = client.get(
-            "/api/v1/employee/time-tracking/records",
+            "/api/v1/employee/shifts",
             headers={"Authorization": f"Bearer {token}"}
         )
 

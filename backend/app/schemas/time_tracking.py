@@ -1,54 +1,18 @@
-"""Time Tracking Pydantic DTOs for Features 005 & 008.
+"""Time Tracking Pydantic DTOs for Feature 008 & 010.
 
 Schemas for:
-- Feature 005: Clock-in/out operations and time record management (manual tracking - Phase 2)
-- Feature 008: Automatic time entry tracking and work statistics (automatic shift-based tracking - Phase 1)
+- Feature 008: Automatic time entry tracking and work statistics (automatic shift-based tracking)
+- Feature 010: Admin-driven shift hours + extra hours (overtime). Manual employee
+  clock-in/out has been removed; worked hours derive from assigned shifts.
 """
 
 import uuid
-from datetime import datetime, date, time
+from datetime import date, datetime, time
 from decimal import Decimal
-from typing import Optional, List, Dict, Any
 from enum import Enum
+from typing import Dict, List, Optional
+
 from pydantic import BaseModel, Field
-
-
-class TimeRecordResponse(BaseModel):
-    """Read-only time record response."""
-    id: uuid.UUID
-    employee_id: uuid.UUID
-    date: str  # YYYY-MM-DD format
-    clock_in_timestamp: datetime
-    clock_out_timestamp: datetime | None
-    class Config:
-        from_attributes = True
-
-
-class ClockInResponse(BaseModel):
-    """Clock-in successful response."""
-    time_record: TimeRecordResponse
-    status: str  # "clocked-in"
-    message: str
-
-
-class ClockOutResponse(BaseModel):
-    """Clock-out successful response."""
-    time_record: TimeRecordResponse
-    status: str  # "clocked-out"
-    summary: dict[str, Any]  # {total_hours, total_minutes, formatted, clock_in, clock_out}
-    message: str
-
-
-class TimeRecordListResponse(BaseModel):
-    """Paginated time records response."""
-    items: list[TimeRecordResponse]
-    total: int
-    page: int
-    size: int
-    pages: int
-    class Config:
-        from_attributes = True
-
 
 # ========== Feature 008: Automatic Time Tracking Schemas ==========
 
@@ -56,6 +20,7 @@ class TimeEntrySource(str, Enum):
     """Source of time entry."""
     SHIFT = "shift"
     MANUAL = "manual"
+    EXTRA = "extra"
 
 
 # Request Schemas
@@ -84,6 +49,17 @@ class BatchProcessRequest(BaseModel):
     overwrite_existing: bool = False
 
 
+class ExtraHoursCreate(BaseModel):
+    """Request to register extra hours (overtime) for an employee.
+
+    Admin/Moderador only. Recorded as a separate category (source="extra").
+    """
+    employee_id: uuid.UUID
+    work_date: date
+    hours: Decimal = Field(gt=0, le=24, description="Extra hours (> 0 and <= 24)")
+    note: Optional[str] = Field(default=None, max_length=255, description="Reason for the extra hours")
+
+
 # Response Schemas
 
 class TimeEntryResponse(BaseModel):
@@ -93,10 +69,11 @@ class TimeEntryResponse(BaseModel):
     employee_name: str
     employee_dni: str
     shift_date: date
-    start_time: time
-    end_time: time
+    start_time: Optional[time] = None
+    end_time: Optional[time] = None
     hours_worked: Decimal
     source: TimeEntrySource
+    note: Optional[str] = None
     shift_type_id: Optional[uuid.UUID] = None
     created_at: datetime
 
@@ -113,10 +90,15 @@ class TimeEntryListResponse(BaseModel):
 
 
 class EmployeeStatisticsResponse(BaseModel):
-    """Statistics for a single employee."""
+    """Statistics for a single employee.
+
+    `total_hours` includes both shift hours and extra hours.
+    `extra_hours` is the overtime portion, reported separately.
+    """
     employee_id: uuid.UUID
     period: str  # "2026-03"
     total_hours: Decimal
+    extra_hours: Decimal = Decimal(0)
     days_worked: int
     avg_hours_per_day: Decimal
     breakdown_by_shift_type: Dict[str, Decimal]
@@ -148,6 +130,8 @@ class DailyRecordResponse(BaseModel):
     entry_time: Optional[str] = None  # HH:MM or null
     exit_time: Optional[str] = None  # HH:MM or null
     duration_hours: str | float  # "8.5" or 8.5
+    is_extra: bool = False  # True if this is an extra-hours (overtime) entry
+    note: Optional[str] = None  # Reason, for extra-hours entries
 
 
 class WeeklyBreakdownResponse(BaseModel):
@@ -161,7 +145,12 @@ class WeeklyBreakdownResponse(BaseModel):
 
 
 class EmployeeStatisticsPublicResponse(BaseModel):
-    """Statistics response for current logged-in employee."""
-    total_hours: str | float  # Total hours for the month
+    """Statistics response for current logged-in employee.
+
+    `total_hours` includes shift hours + extra hours; `extra_hours` is the
+    overtime portion reported separately.
+    """
+    total_hours: str | float  # Total hours for the month (shift + extra)
+    extra_hours: str | float = 0  # Extra (overtime) hours portion
     weekly_breakdown: List[WeeklyBreakdownResponse]  # Breakdown by week
     daily_records: List[DailyRecordResponse]  # Daily records with times

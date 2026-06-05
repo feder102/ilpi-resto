@@ -1,394 +1,38 @@
-"""Time Tracking Service for Features 005 & 008.
+"""Time Tracking Service for Features 008 & 010.
 
-Feature 005: Clock-in/out operations, time record management, and related queries.
 Feature 008: Automatic time entry tracking from shifts and statistics queries.
-All operations enforce Row-Level Security (RLS) - employees can only access their own records.
+Feature 010: Admin-driven extra hours (overtime). Manual employee clock-in/out
+has been removed; worked hours derive from assigned shifts (TimeEntry).
+All read operations enforce tenant isolation; mutations enforce RBAC.
 """
 
 import logging
 import uuid
-from datetime import UTC, datetime, date as date_type, timedelta
+from datetime import UTC, datetime, timedelta
+from datetime import date as date_type
 from decimal import Decimal
 from typing import Any, Optional
 
 from sqlmodel import Session, func, select
 
-from app.common.exceptions import ValidationError, NotFoundError, ForbiddenError
-from app.common.time_tracking_exceptions import BatchProcessingError, NoShiftsFoundError, HoursCalculationError
-from app.models.time_record import TimeRecord
-from app.models.shift_record import ShiftRecord
-from app.models.time_entry import TimeEntry, TimeEntrySource
-from app.models.shift_type import ShiftType
+from app.common.exceptions import ForbiddenError, NotFoundError, ValidationError
+from app.common.time_tracking_exceptions import (
+    BatchProcessingError,
+    HoursCalculationError,
+    NoShiftsFoundError,
+)
 from app.models.employee import Employee
-from app.schemas.time_tracking import TimeRecordResponse, ClockInResponse, ClockOutResponse, EmployeeStatisticsResponse, DepartmentStatisticsResponse, TimeEntryResponse, TimeEntryListResponse
+from app.models.shift_record import ShiftRecord
+from app.models.shift_type import ShiftType
+from app.models.time_entry import TimeEntry, TimeEntrySource
+from app.schemas.time_tracking import (
+    DepartmentStatisticsResponse,
+    EmployeeStatisticsResponse,
+    TimeEntryListResponse,
+    TimeEntryResponse,
+)
 
-
-def _check_employee_has_shift_today(
-    employee_id: uuid.UUID,
-    tenant_id: uuid.UUID,
-    session: Session
-) -> bool:
-    """Check if employee has a shift scheduled for today."""
-    today = date_type.today()
-    statement = select(ShiftRecord).where(
-        ShiftRecord.employee_id == employee_id,
-        ShiftRecord.tenant_id == tenant_id,
-        ShiftRecord.date == today
-    )
-    shift = session.exec(statement).first()
-    return shift is not None
-
-
-def _calculate_time_summary(
-    clock_in: datetime,
-    clock_out: Optional[datetime]
-) -> dict[str, Any]:
-    """Calculate time summary between clock in and clock out."""
-    # Handle timezone-aware vs naive datetimes
-    if clock_in.tzinfo is None:
-        clock_in = clock_in.replace(tzinfo=UTC)
-    if clock_out is not None and clock_out.tzinfo is None:
-        clock_out = clock_out.replace(tzinfo=UTC)
-
-    if clock_out is None:
-        return {
-            "total_hours": 0,
-            "total_minutes": 0,
-            "formatted": "En progreso",
-            "clock_in": clock_in.strftime("%I:%M %p"),
-            "clock_out": None,
-        }
-
-    duration = clock_out - clock_in
-    total_seconds = int(duration.total_seconds())
-    total_minutes = total_seconds // 60
-    total_hours = total_minutes / 60
-
-    hours = total_minutes // 60
-    minutes = total_minutes % 60
-
-    return {
-        "total_hours": round(total_hours, 2),
-        "total_minutes": total_minutes,
-        "formatted": f"{hours}h {minutes}m",
-        "clock_in": clock_in.strftime("%I:%M %p"),
-        "clock_out": clock_out.strftime("%I:%M %p"),
-    }
-
-
-def _to_time_record_response(record: TimeRecord) -> TimeRecordResponse:
-    """Convert TimeRecord model to response DTO."""
-    return TimeRecordResponse(
-        id=record.id,
-        employee_id=record.employee_id,
-        date=record.date.isoformat(),
-        clock_in_timestamp=record.clock_in_timestamp,
-        clock_out_timestamp=record.clock_out_timestamp,
-    )
-
-
-def clock_in(
-    employee_id: uuid.UUID,
-    tenant_id: uuid.UUID,
-    current_user: dict,
-    session: Session
-) -> ClockInResponse:
-    """Clock in employee for their shift.
-
-    Args:
-        employee_id: Employee UUID
-        tenant_id: Tenant UUID
-        current_user: JWT token payload (for RLS)
-        session: Database session
-
-    Returns:
-        ClockInResponse with time record and status
-
-    Raises:
-        ForbiddenError: User is not the employee (RLS violation)
-        ValidationError: No shift today, already clocked in, future timestamp, etc
-    """
-    # Row-Level Security: Verify employee can only clock in for themselves
-    if current_user.get("role") == "Empleado":
-        if str(employee_id) != current_user.get("employee_id"):
-            raise ForbiddenError("Solo puedes registrar tu propio fichaje")
-
-    # Validate: Employee has shift scheduled for today
-    if not _check_employee_has_shift_today(employee_id, tenant_id, session):
-        raise ValidationError(
-            code="NO_SHIFT_TODAY",
-            message="No tienes un turno programado para hoy"
-        )
-
-    # Validate: Check for existing active clock-in (no double clock-in)
-    today = date_type.today()
-    statement = select(TimeRecord).where(
-        TimeRecord.employee_id == employee_id,
-        TimeRecord.tenant_id == tenant_id,
-        TimeRecord.date == today,
-        TimeRecord.clock_out_timestamp.is_(None)  # Active clock-in
-    )
-    existing = session.exec(statement).first()
-
-    if existing:
-        raise ValidationError(
-            code="ALREADY_CLOCKED_IN",
-            message="Ya has registrado entrada. Por favor, registra la salida primero"
-        )
-
-    # Create new time record
-    now = datetime.now(UTC)
-    time_record = TimeRecord(
-        id=uuid.uuid4(),
-        tenant_id=tenant_id,
-        employee_id=employee_id,
-        date=today,
-        clock_in_timestamp=now,
-        clock_out_timestamp=None,
-        created_at=now,
-        updated_at=now,
-    )
-
-    session.add(time_record)
-    session.commit()
-    session.refresh(time_record)
-
-    return ClockInResponse(
-        time_record=_to_time_record_response(time_record),
-        status="clocked-in",
-        message=f"Entrada registrada correctamente a las {now.strftime('%H:%M')}"
-    )
-
-
-def clock_out(
-    employee_id: uuid.UUID,
-    tenant_id: uuid.UUID,
-    current_user: dict,
-    session: Session
-) -> ClockOutResponse:
-    """Clock out employee from their shift.
-
-    Args:
-        employee_id: Employee UUID
-        tenant_id: Tenant UUID
-        current_user: JWT token payload (for RLS)
-        session: Database session
-
-    Returns:
-        ClockOutResponse with time record, summary, and status
-
-    Raises:
-        ForbiddenError: User is not the employee (RLS violation)
-        ValidationError: Not currently clocked in, future timestamp, etc
-    """
-    # Row-Level Security: Verify employee can only clock out for themselves
-    if current_user.get("role") == "Empleado":
-        if str(employee_id) != current_user.get("employee_id"):
-            raise ForbiddenError("Solo puedes registrar tu propia salida")
-
-    # Validate: Employee is currently clocked in
-    today = date_type.today()
-    statement = select(TimeRecord).where(
-        TimeRecord.employee_id == employee_id,
-        TimeRecord.tenant_id == tenant_id,
-        TimeRecord.date == today,
-        TimeRecord.clock_out_timestamp.is_(None)  # Active clock-in
-    )
-    time_record = session.exec(statement).first()
-
-    if not time_record:
-        raise ValidationError(
-            code="NOT_CLOCKED_IN",
-            message="No estás registrado como entrada. Por favor, registra entrada primero"
-        )
-
-    # Validate: No future timestamps
-    now = datetime.now(UTC)
-    clock_in = time_record.clock_in_timestamp
-
-    # Handle timezone-aware vs naive datetimes
-    if clock_in.tzinfo is None:
-        clock_in = clock_in.replace(tzinfo=UTC)
-
-    if now < clock_in:
-        raise ValidationError(
-            code="FUTURE_TIMESTAMP",
-            message="La hora de salida no puede ser anterior a la de entrada"
-        )
-
-    # Update time record with clock-out timestamp
-    time_record.clock_out_timestamp = now
-    time_record.updated_at = now
-
-    session.add(time_record)
-    session.commit()
-    session.refresh(time_record)
-
-    summary = _calculate_time_summary(time_record.clock_in_timestamp, time_record.clock_out_timestamp)
-
-    return ClockOutResponse(
-        time_record=_to_time_record_response(time_record),
-        status="clocked-out",
-        summary=summary,
-        message=f"Salida registrada correctamente a las {now.strftime('%H:%M')}"
-    )
-
-
-def get_today_status(
-    employee_id: uuid.UUID,
-    tenant_id: uuid.UUID,
-    current_user: dict,
-    session: Session
-) -> dict[str, Any]:
-    """Get current clock-in/out status for today.
-
-    Returns status indicating if employee is currently clocked in, clocked out, or has no record.
-    Used by dashboard widget to display live clock status.
-
-    Args:
-        employee_id: Employee UUID
-        tenant_id: Tenant UUID
-        current_user: JWT token payload (for RLS)
-        session: Database session
-
-    Returns:
-        Dict with status, record (if exists), and elapsed_seconds (if clocked in)
-
-    Raises:
-        ForbiddenError: User is not the employee (RLS violation)
-    """
-    # Row-Level Security: Verify employee can only see own status
-    if current_user.get("role") == "Empleado":
-        if str(employee_id) != current_user.get("employee_id"):
-            raise ForbiddenError("Solo puedes ver tu propio estado de fichaje")
-
-    today = date_type.today()
-    statement = select(TimeRecord).where(
-        TimeRecord.employee_id == employee_id,
-        TimeRecord.tenant_id == tenant_id,
-        TimeRecord.date == today,
-    ).order_by(TimeRecord.created_at.desc())
-
-    record = session.exec(statement).first()
-
-    if not record:
-        return {
-            "status": "not_clocked_in",
-            "record": None,
-            "elapsed_seconds": 0,
-            "message": "No hay registro de entrada para hoy",
-        }
-
-    if record.clock_out_timestamp is None:
-        # Employee is currently clocked in
-        clock_in = record.clock_in_timestamp
-
-        # Handle timezone-aware vs naive datetimes
-        if clock_in.tzinfo is None:
-            clock_in = clock_in.replace(tzinfo=UTC)
-
-        elapsed = datetime.now(UTC) - clock_in
-        elapsed_seconds = int(elapsed.total_seconds())
-
-        return {
-            "status": "clocked_in",
-            "record": _to_time_record_response(record),
-            "elapsed_seconds": elapsed_seconds,
-            "message": f"Entrada registrada a las {record.clock_in_timestamp.strftime('%H:%M')}",
-        }
-    else:
-        # Employee is clocked out
-        summary = _calculate_time_summary(record.clock_in_timestamp, record.clock_out_timestamp)
-        return {
-            "status": "clocked_out",
-            "record": _to_time_record_response(record),
-            "elapsed_seconds": 0,
-            "summary": summary,
-            "message": f"Salida registrada a las {record.clock_out_timestamp.strftime('%H:%M')}",
-        }
-
-
-def get_time_records(
-    employee_id: uuid.UUID,
-    tenant_id: uuid.UUID,
-    current_user: dict,
-    date_from: Optional[date_type] = None,
-    date_to: Optional[date_type] = None,
-    page: int = 1,
-    size: int = 20,
-    session: Session = None
-) -> dict[str, Any]:
-    """Get employee's time records for a date range.
-
-    Args:
-        employee_id: Employee UUID
-        tenant_id: Tenant UUID
-        current_user: JWT token payload (for RLS)
-        date_from: Start date (default: 30 days ago)
-        date_to: End date (default: today)
-        page: Page number (1-indexed)
-        size: Items per page (max 100)
-        session: Database session
-
-    Returns:
-        Dict with items, total, page, size, pages
-
-    Raises:
-        ForbiddenError: User is not the employee (RLS violation)
-        ValidationError: Invalid date range
-    """
-    # Row-Level Security: Verify employee can only see own records
-    if current_user.get("role") == "Empleado":
-        if str(employee_id) != current_user.get("employee_id"):
-            raise ForbiddenError("Solo puedes ver tus propios registros de fichaje")
-
-    # Default date range: last 30 days
-    if date_to is None:
-        date_to = date_type.today()
-    if date_from is None:
-        date_from = date_to - timedelta(days=30)
-
-    # Validate date range
-    if date_from > date_to:
-        raise ValidationError(
-            code="INVALID_DATE_RANGE",
-            message="date_from debe ser anterior a date_to"
-        )
-
-    # Query time records
-    statement = select(TimeRecord).where(
-        TimeRecord.tenant_id == tenant_id,
-        TimeRecord.employee_id == employee_id,
-        TimeRecord.date >= date_from,
-        TimeRecord.date <= date_to,
-    ).order_by(TimeRecord.date.desc())
-
-    # Count total
-    count_statement = select(TimeRecord).where(
-        TimeRecord.tenant_id == tenant_id,
-        TimeRecord.employee_id == employee_id,
-        TimeRecord.date >= date_from,
-        TimeRecord.date <= date_to,
-    )
-    total = len(session.exec(count_statement).all())
-
-    # Pagination
-    offset = (page - 1) * size
-    records = session.exec(statement.offset(offset).limit(size)).all()
-
-    # Convert to response DTOs
-    items = [_to_time_record_response(record) for record in records]
-
-    # Calculate pages
-    pages = (total + size - 1) // size
-
-    return {
-        "items": items,
-        "total": total,
-        "page": page,
-        "size": size,
-        "pages": pages,
-    }
+logger = logging.getLogger(__name__)
 
 
 # Feature 008: Automatic Time Tracking Service
@@ -547,6 +191,142 @@ class TimeTrackingService:
             raise BatchProcessingError(f"Batch processing failed: {str(e)}")
 
     @staticmethod
+    def create_extra_hours(
+        db: Session,
+        tenant_id: uuid.UUID,
+        current_user: dict,
+        employee_id: uuid.UUID,
+        work_date: date_type,
+        hours: Decimal,
+        note: Optional[str] = None,
+    ) -> TimeEntryResponse:
+        """Register extra hours (overtime) for an employee as a separate category.
+
+        Only Admin/Moderador may create extra hours (RBAC enforced here).
+        Extra entries use source=EXTRA with no schedule (start/end/shift_type are NULL).
+
+        Args:
+            db: Database session
+            tenant_id: Tenant UUID (from the caller's JWT)
+            current_user: JWT payload (for RBAC + audit)
+            employee_id: Target employee UUID
+            work_date: Date the extra hours apply to
+            hours: Extra hours (> 0 and <= 24)
+            note: Optional reason
+
+        Returns:
+            TimeEntryResponse for the created extra-hours entry
+
+        Raises:
+            ForbiddenError: Caller is not Admin/Moderador
+            ValidationError: hours out of range
+            NotFoundError: Employee not found in tenant
+        """
+        # RBAC: only Admin/Moderador can register extra hours
+        if current_user.get("role") not in ("Admin", "Moderador"):
+            raise ForbiddenError("Solo Admin o Moderador pueden cargar horas extra")
+
+        if hours <= Decimal(0) or hours > Decimal(24):
+            raise ValidationError(
+                code="INVALID_EXTRA_HOURS",
+                message="Las horas extra deben ser mayores que 0 y como máximo 24",
+            )
+
+        # Validate target employee exists and belongs to the caller's tenant
+        employee = db.exec(
+            select(Employee).where(
+                Employee.id == employee_id,
+                Employee.tenant_id == tenant_id,
+            )
+        ).first()
+        if not employee:
+            raise NotFoundError("Empleado no encontrado")
+
+        hours_quantized = Decimal(hours).quantize(Decimal("0.00"))
+        entry = TimeEntry(
+            id=uuid.uuid4(),
+            tenant_id=tenant_id,
+            employee_id=employee_id,
+            shift_date=work_date,
+            start_time=None,
+            end_time=None,
+            hours_worked=hours_quantized,
+            source=TimeEntrySource.EXTRA,
+            note=note,
+            shift_record_id=None,
+            shift_type_id=None,
+        )
+        db.add(entry)
+        db.commit()
+        db.refresh(entry)
+
+        # Audit log (security-relevant: manual hours mutation)
+        logger.info(
+            "Extra hours created",
+            extra={
+                "action": "create_extra_hours",
+                "tenant_id": str(tenant_id),
+                "actor_user_id": current_user.get("sub"),
+                "actor_role": current_user.get("role"),
+                "employee_id": str(employee_id),
+                "work_date": work_date.isoformat(),
+                "hours": str(hours_quantized),
+            },
+        )
+
+        return TimeEntryResponse(
+            id=entry.id,
+            employee_id=entry.employee_id,
+            employee_name=f"{employee.first_name} {employee.last_name}",
+            employee_dni=employee.dni,
+            shift_date=entry.shift_date,
+            start_time=entry.start_time,
+            end_time=entry.end_time,
+            hours_worked=entry.hours_worked,
+            source=entry.source,
+            note=entry.note,
+            shift_type_id=entry.shift_type_id,
+            created_at=entry.created_at,
+        )
+
+    @staticmethod
+    def delete_extra_hours(
+        db: Session,
+        tenant_id: uuid.UUID,
+        current_user: dict,
+        entry_id: uuid.UUID,
+    ) -> None:
+        """Delete an extra-hours entry (Admin/Moderador only).
+
+        Only entries with source=EXTRA can be deleted (never shift entries).
+        """
+        if current_user.get("role") not in ("Admin", "Moderador"):
+            raise ForbiddenError("Solo Admin o Moderador pueden eliminar horas extra")
+
+        entry = db.exec(
+            select(TimeEntry).where(
+                TimeEntry.id == entry_id,
+                TimeEntry.tenant_id == tenant_id,
+            )
+        ).first()
+        if not entry or entry.source != TimeEntrySource.EXTRA:
+            raise NotFoundError("Registro de horas extra no encontrado")
+
+        db.delete(entry)
+        db.commit()
+
+        logger.info(
+            "Extra hours deleted",
+            extra={
+                "action": "delete_extra_hours",
+                "tenant_id": str(tenant_id),
+                "actor_user_id": current_user.get("sub"),
+                "actor_role": current_user.get("role"),
+                "entry_id": str(entry_id),
+            },
+        )
+
+    @staticmethod
     def get_employee_statistics(
         db: Session,
         tenant_id: uuid.UUID,
@@ -581,10 +361,7 @@ class TimeTrackingService:
             )
         ).first()
         if not employee:
-            from app.common.exceptions import NotFoundError
-            raise NotFoundError(f"Empleado no encontrado")
-
-        from app.models.time_entry import TimeEntrySource
+            raise NotFoundError("Empleado no encontrado")
 
         query = select(TimeEntry).where(
             TimeEntry.tenant_id == tenant_id,
@@ -599,14 +376,21 @@ class TimeTrackingService:
 
         query = query.where(TimeEntry.shift_date <= end_date)
 
+        # Always include shift + extra hours. Legacy MANUAL entries are gated behind include_manual.
         if not include_manual:
-            query = query.where(TimeEntry.source == TimeEntrySource.SHIFT)
+            query = query.where(TimeEntry.source != TimeEntrySource.MANUAL)
 
         entries = db.exec(query).all()
 
         total_hours = sum((e.hours_worked for e in entries), Decimal(0))
-        days_worked = len(set(e.shift_date for e in entries))
-        avg_hours = total_hours / days_worked if days_worked > 0 else Decimal(0)
+        extra_hours = sum(
+            (e.hours_worked for e in entries if e.source == TimeEntrySource.EXTRA),
+            Decimal(0),
+        )
+        # "Días trabajados" cuenta fechas con turno (no las cargas de horas extra)
+        days_worked = len({e.shift_date for e in entries if e.source != TimeEntrySource.EXTRA})
+        shift_hours = total_hours - extra_hours
+        avg_hours = shift_hours / days_worked if days_worked > 0 else Decimal(0)
 
         # Build breakdown keyed by shift type name for readability
         shift_type_ids = {e.shift_type_id for e in entries if e.shift_type_id}
@@ -619,7 +403,10 @@ class TimeTrackingService:
 
         breakdown_by_shift: dict[str, Decimal] = {}
         for entry in entries:
-            key = shift_type_names.get(entry.shift_type_id, "Sin tipo") if entry.shift_type_id else "Sin tipo"
+            if entry.source == TimeEntrySource.EXTRA:
+                key = "Horas extra"
+            else:
+                key = shift_type_names.get(entry.shift_type_id, "Sin tipo") if entry.shift_type_id else "Sin tipo"
             if key not in breakdown_by_shift:
                 breakdown_by_shift[key] = Decimal(0)
             breakdown_by_shift[key] += entry.hours_worked
@@ -628,6 +415,7 @@ class TimeTrackingService:
             employee_id=employee_id,
             period=f"{year}-{month:02d}",
             total_hours=total_hours,
+            extra_hours=extra_hours,
             days_worked=days_worked,
             avg_hours_per_day=avg_hours,
             breakdown_by_shift_type=breakdown_by_shift,
@@ -673,7 +461,7 @@ class TimeTrackingService:
             end_date = date_type(year, month + 1, 1) - timedelta(days=1)
         start_date = date_type(year, month, 1)
 
-        # Query time entries for the month
+        # Query time entries for the month (shift hours + extra hours, excluding legacy manual)
         entries = db.exec(
             select(TimeEntry)
             .where(
@@ -681,31 +469,37 @@ class TimeTrackingService:
                 TimeEntry.employee_id == employee_id,
                 TimeEntry.shift_date >= start_date,
                 TimeEntry.shift_date <= end_date,
-                TimeEntry.source == TimeEntrySource.SHIFT,  # Only shift-based entries
+                TimeEntry.source != TimeEntrySource.MANUAL,
             )
             .order_by(TimeEntry.shift_date)
         ).all()
 
-        # Calculate total hours
+        # Calculate totals (total includes extra; extra reported separately)
         total_hours = sum((e.hours_worked for e in entries), Decimal(0))
+        extra_hours = sum(
+            (e.hours_worked for e in entries if e.source == TimeEntrySource.EXTRA),
+            Decimal(0),
+        )
 
-        # Build daily records
+        # Build daily records (extra-hours entries have no entry/exit time)
         daily_records: list[dict[str, Any]] = []
         for entry in entries:
+            is_extra = entry.source == TimeEntrySource.EXTRA
             daily_records.append({
                 "date": entry.shift_date.isoformat(),
                 "entry_time": entry.start_time.strftime("%H:%M") if entry.start_time else None,
                 "exit_time": entry.end_time.strftime("%H:%M") if entry.end_time else None,
                 "duration_hours": float(entry.hours_worked),
+                "is_extra": is_extra,
+                "note": entry.note if is_extra else None,
             })
 
-        # Build weekly breakdown
+        # Build weekly breakdown (includes extra hours so weekly totals match the monthly total)
         weekly_hours: dict[int, Decimal] = {}
         for entry in entries:
             # Get ISO calendar (year, week, weekday)
-            iso_year, iso_week, _ = entry.shift_date.isocalendar()
+            _, iso_week, _ = entry.shift_date.isocalendar()
 
-            # Use week number from ISO calendar
             week_key = iso_week
             if week_key not in weekly_hours:
                 weekly_hours[week_key] = Decimal(0)
@@ -718,6 +512,7 @@ class TimeTrackingService:
 
         return {
             "total_hours": float(total_hours),
+            "extra_hours": float(extra_hours),
             "weekly_breakdown": weekly_breakdown,
             "daily_records": daily_records,
         }
@@ -764,9 +559,9 @@ class TimeTrackingService:
         if department:
             query = query.where(Employee.department == department)
 
+        # Include shift + extra hours; legacy MANUAL entries gated behind include_manual.
         if not include_manual:
-            from app.models.time_entry import TimeEntrySource
-            query = query.where(TimeEntry.source == TimeEntrySource.SHIFT)
+            query = query.where(TimeEntry.source != TimeEntrySource.MANUAL)
 
         results = db.exec(query).all()
 
@@ -869,6 +664,7 @@ class TimeTrackingService:
                 end_time=entry.end_time,
                 hours_worked=entry.hours_worked,
                 source=entry.source,
+                note=entry.note,
                 shift_type_id=entry.shift_type_id,
                 created_at=entry.created_at,
             )
@@ -884,9 +680,6 @@ class TimeTrackingService:
 
 
 # T021: Batch Job Wrapper for APScheduler
-logger = logging.getLogger(__name__)
-
-
 def run_daily_batch_job(db: Session, tenant_id: uuid.UUID, process_date: Optional[date_type] = None) -> dict[str, Any]:
     """Wrapper function called by APScheduler for daily automatic time entry generation.
 
