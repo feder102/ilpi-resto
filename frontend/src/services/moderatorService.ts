@@ -14,6 +14,7 @@
 import axios from 'axios';
 import type { AxiosInstance } from 'axios';
 import { API_BASE_URL } from '../config/constants';
+import { getAccessToken } from './apiClient';
 
 // API client instance (uses standardized base URL from constants)
 const apiClient: AxiosInstance = axios.create({
@@ -22,6 +23,15 @@ const apiClient: AxiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: true,
+});
+
+// Attach the JWT access token (shared with the main apiClient) on every request.
+apiClient.interceptors.request.use((config) => {
+  const token = getAccessToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 // ============================================================================

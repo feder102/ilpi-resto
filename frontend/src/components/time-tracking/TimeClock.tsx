@@ -201,7 +201,7 @@ export default function TimeClock({ onStatusChange }: TimeClockProps) {
           </div>
         )}
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
           {/* Left: Status and Time */}
           <div className="flex flex-col items-center justify-center">
             {/* Status Badge */}
@@ -230,7 +230,7 @@ export default function TimeClock({ onStatusChange }: TimeClockProps) {
             {isClockedIn && (
               <div className="mb-6 text-center">
                 <p className="text-xs text-base-content/60 uppercase tracking-wide mb-2">Tiempo Transcurrido</p>
-                <div className="text-5xl font-mono font-bold text-success">
+                <div className="text-4xl sm:text-5xl font-mono font-bold text-success">
                   {elapsedTime}
                 </div>
               </div>
@@ -272,7 +272,7 @@ export default function TimeClock({ onStatusChange }: TimeClockProps) {
             <button
               onClick={isClockedIn ? handleClockOut : handleClockIn}
               disabled={submitting}
-              className={`flex flex-col items-center justify-center w-48 h-48 rounded-full text-white font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg ${
+              className={`flex flex-col items-center justify-center w-40 h-40 sm:w-48 sm:h-48 rounded-full text-white font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg ${
                 isClockedIn ? 'bg-error hover:bg-error/80' : 'bg-success hover:bg-success/80'
               }`}
             >

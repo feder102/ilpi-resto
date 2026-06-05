@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Calendar, BarChart3, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Calendar, Palmtree, BarChart3, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 interface NavItem {
@@ -12,6 +12,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Panel Principal', path: '/employee/dashboard', icon: <LayoutDashboard size={20} /> },
   { label: 'Mi Calendario', path: '/employee/shifts', icon: <Calendar size={20} /> },
+  { label: 'Mis Vacaciones', path: '/employee/vacations', icon: <Palmtree size={20} /> },
   { label: 'Mis Estadísticas', path: '/employee/statistics', icon: <BarChart3 size={20} /> },
 ];
 
@@ -37,7 +38,7 @@ export default function EmployeeLayout() {
           </div>
         </div>
 
-        <main className="flex-1 p-6 bg-base-200">
+        <main className="flex-1 p-4 sm:p-6 bg-base-200">
           <Outlet />
         </main>
       </div>
@@ -77,8 +78,9 @@ export default function EmployeeLayout() {
 
           <div className="p-3">
             <div className="card bg-neutral-content/10 p-3">
-              <div className="text-xs opacity-60 mb-2">
-                {user?.email}
+              <div className="mb-2">
+                <div className="text-sm font-medium truncate">{user?.email}</div>
+                <div className="text-xs opacity-60">{user?.role ?? 'Empleado'}</div>
               </div>
               <button className="btn btn-error btn-sm w-full gap-2" onClick={logout}>
                 <LogOut size={16} /> Cerrar Sesión
