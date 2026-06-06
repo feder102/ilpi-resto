@@ -155,8 +155,8 @@ def get_shifts_for_month(
     """
     try:
         year, month_num = map(int, month.split("-"))
-    except (ValueError, IndexError):
-        raise ValidationError("Invalid month format. Use YYYY-MM")
+    except (ValueError, IndexError) as e:
+        raise ValidationError("Invalid month format. Use YYYY-MM") from e
 
     # Apply RBAC: Empleado can only see own shifts
     if current_user and current_user.get("role") == "Empleado":
@@ -165,8 +165,8 @@ def get_shifts_for_month(
             raise ValidationError("Employee ID not found in token")
         try:
             employee_id = uuid.UUID(emp_id_str)
-        except ValueError:
-            raise ValidationError("Invalid employee ID format in token")
+        except ValueError as e:
+            raise ValidationError("Invalid employee ID format in token") from e
 
     # Get first and last day of month
     first_day = date(year, month_num, 1)
@@ -453,7 +453,7 @@ def get_employee_month_shifts(
         first_day = date(year, month, 1)
         last_day = date(year, month, monthrange(year, month)[1])
     except (ValueError, IndexError) as e:
-        raise ValidationError(f"Invalid year/month: {e}")
+        raise ValidationError(f"Invalid year/month: {e}") from e
 
     # RLS: Only filter by current employee_id (from JWT, not user input)
     query = select(ShiftRecord).where(

@@ -7,7 +7,6 @@ Manual employee clock-in/out has been removed.
 
 import uuid
 from datetime import date as date_type
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
@@ -93,8 +92,8 @@ def _parse_employee_uuid(employee_id: str) -> uuid.UUID:
     """Parse and validate employee_id as UUID."""
     try:
         return uuid.UUID(employee_id)
-    except ValueError:
-        raise ValidationError(f"Formato de ID de empleado inválido: {employee_id}")
+    except ValueError as e:
+        raise ValidationError(f"Formato de ID de empleado inválido: {employee_id}") from e
 
 
 @router.post(
@@ -194,7 +193,7 @@ def get_employee_statistics(
 def get_department_statistics(
     year: int = Query(..., ge=2020, le=2100),
     month: int = Query(..., ge=1, le=12),
-    department: Optional[str] = Query(None),
+    department: str | None = Query(None),
     include_manual: bool = Query(False),
     current_user: dict = Depends(require_admin_or_moderator),
     db: Session = Depends(get_db),
@@ -219,8 +218,8 @@ def get_department_statistics(
 def get_time_entries(
     start_date: date_type = Query(...),
     end_date: date_type = Query(...),
-    employee_id: Optional[str] = Query(None),
-    department: Optional[str] = Query(None),
+    employee_id: str | None = Query(None),
+    department: str | None = Query(None),
     source: str = Query("shift", regex="^(shift|manual|extra)$"),
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
