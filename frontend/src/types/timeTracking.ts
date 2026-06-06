@@ -6,6 +6,7 @@
 export const TimeEntrySourceEnum = {
   SHIFT: "shift",
   MANUAL: "manual",
+  EXTRA: "extra",
 } as const;
 
 export type TimeEntrySourceEnum = typeof TimeEntrySourceEnum[keyof typeof TimeEntrySourceEnum];
@@ -16,10 +17,11 @@ export interface TimeEntry {
   employee_name: string;
   employee_dni: string;
   shift_date: string; // YYYY-MM-DD
-  start_time: string; // HH:MM
-  end_time: string; // HH:MM
+  start_time: string | null; // HH:MM (null for extra-hours entries)
+  end_time: string | null; // HH:MM (null for extra-hours entries)
   hours_worked: number | string; // Backend Decimal may serialize as string
   source: TimeEntrySourceEnum;
+  note?: string | null;
   shift_type_id?: string;
   created_at: string;
 }
@@ -27,10 +29,19 @@ export interface TimeEntry {
 export interface EmployeeStatistics {
   employee_id: string;
   period: string; // YYYY-MM
-  total_hours: number | string; // Backend Decimal may serialize as string
+  total_hours: number | string; // Backend Decimal may serialize as string (shift + extra)
+  extra_hours: number | string; // Overtime portion, reported separately
   days_worked: number;
   avg_hours_per_day: number | string;
   breakdown_by_shift_type: Record<string, number | string>;
+}
+
+/** Request to register extra hours (overtime) for an employee. Admin/Moderador only. */
+export interface ExtraHoursCreate {
+  employee_id: string;
+  work_date: string; // YYYY-MM-DD
+  hours: number;
+  note?: string;
 }
 
 export interface DepartmentStatistics {

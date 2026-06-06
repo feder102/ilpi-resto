@@ -251,7 +251,7 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
         <>
           {/* Stats Summary */}
           <Card className="bg-white">
-            <div className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="p-4 grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600">
                   {typeof stats.total_hours === 'string'
@@ -261,6 +261,17 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
                 <div className="text-sm text-gray-600 flex items-center justify-center gap-1 mt-1">
                   <Clock className="w-4 h-4" />
                   Horas Totales
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-amber-600">
+                  {typeof stats.extra_hours === 'string'
+                    ? parseFloat(stats.extra_hours)
+                    : (stats.extra_hours ?? 0)}
+                </div>
+                <div className="text-sm text-gray-600 flex items-center justify-center gap-1 mt-1">
+                  <Clock className="w-4 h-4" />
+                  Horas Extra
                 </div>
               </div>
               <div className="text-center">

@@ -1,17 +1,15 @@
 /**
  * Employee Dashboard - Panel principal del empleado
- * Feature 009: Rediseño consistente con el portal admin + mobile-friendly
- *
- * Muestra métricas reales (StatCards), el widget de fichaje (TimeClock) y
- * accesos rápidos, reutilizando los componentes UI compartidos.
+ * Feature 010: Las horas se derivan de los turnos cargados por el administrador.
+ * El empleado ya no ficha entrada/salida; solo consulta sus horas mensuales
+ * (incluyendo horas extra) en modo lectura.
  */
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Palmtree, BarChart3, Clock, CalendarCheck, AlertCircle } from 'lucide-react';
+import { Calendar, Palmtree, BarChart3, Clock, CalendarCheck, AlertCircle, Plus } from 'lucide-react';
 import { Card, Button, Alert } from '../components/ui';
 import StatCard from '../components/StatCard';
-import TimeClock from '../components/time-tracking/TimeClock';
 import { useAuth } from '../hooks/useAuth';
 import { getEmployeeVacationBalance } from '../services/vacationService';
 import apiClient from '../services/apiClient';
@@ -28,6 +26,7 @@ interface QuickAccessCard {
 
 interface MonthStatistics {
   total_hours: number | string;
+  extra_hours?: number | string;
   daily_records: Array<{ date: string }>;
 }
 
@@ -43,6 +42,7 @@ export default function EmployeeDashboardView() {
 
   const [remainingDays, setRemainingDays] = useState<number | null>(null);
   const [monthHours, setMonthHours] = useState<number | null>(null);
+  const [extraHours, setExtraHours] = useState<number | null>(null);
   const [daysWorked, setDaysWorked] = useState<number | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -61,6 +61,7 @@ export default function EmployeeDashboardView() {
         ]);
         setRemainingDays(balance.remaining_days);
         setMonthHours(toNumber(statsResp.data.total_hours));
+        setExtraHours(toNumber(statsResp.data.extra_hours));
         setDaysWorked(statsResp.data.daily_records?.length ?? 0);
       } catch {
         setLoadError('No se pudieron cargar algunas métricas. Intenta recargar la página.');
@@ -130,27 +131,32 @@ export default function EmployeeDashboardView() {
           color="green"
         />
         <StatCard
+          title="Horas extra"
+          value={formatHours(extraHours)}
+          icon={<Plus size={24} />}
+          color="yellow"
+        />
+        <StatCard
           title="Días trabajados"
           value={daysWorked ?? '—'}
           icon={<CalendarCheck size={24} />}
           color="indigo"
         />
-        <StatCard
-          title="Rol"
-          value={user?.role ?? 'Empleado'}
-          icon={<BarChart3 size={24} />}
-          color="indigo"
-        />
       </div>
 
-      {/* Fichaje + accesos rápidos */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div className="lg:col-span-2">
-          <TimeClock />
-        </div>
+      {/* Aviso: control de horas por turnos */}
+      <Alert variant="info">
+        <AlertCircle size={20} />
+        <span>
+          Tus horas se calculan automáticamente a partir de los turnos que te asigna el
+          administrador. Las horas extra, si las hubiera, también las carga el administrador.
+        </span>
+      </Alert>
 
-        <div className="space-y-3 sm:space-y-4">
-          <h2 className="text-base sm:text-lg font-semibold text-base-content">Acceso Rápido</h2>
+      {/* Accesos rápidos */}
+      <div className="space-y-3 sm:space-y-4">
+        <h2 className="text-base sm:text-lg font-semibold text-base-content">Acceso Rápido</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {quickAccess.map((item) => (
             <Card
               key={item.id}
@@ -180,12 +186,6 @@ export default function EmployeeDashboardView() {
           ))}
         </div>
       </div>
-
-      {/* Info de privacidad */}
-      <Alert variant="info">
-        <AlertCircle size={20} />
-        <span>Tu información está protegida y solo es visible para ti y los administradores.</span>
-      </Alert>
     </div>
   );
 }

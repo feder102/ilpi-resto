@@ -6,25 +6,26 @@ Provides REST API endpoints for password recovery flow:
 - POST /auth/password-reset/verify - Verify token and reset password (T042)
 """
 
-from fastapi import APIRouter, Request, Depends, HTTPException
-from sqlmodel import Session, select
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from uuid import UUID
 
+from fastapi import APIRouter, Depends, HTTPException, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from sqlmodel import Session, select
+
+from app.common.exceptions import (
+    InvalidResetTokenError,
+    PasswordValidationError,
+    RateLimitExceededError,
+    TokenExpiredError,
+)
 from app.dependencies import get_db
 from app.models.tenant import Tenant
-from app.common.exceptions import (
-    RateLimitExceededError,
-    InvalidResetTokenError,
-    TokenExpiredError,
-    PasswordValidationError,
-)
 from app.schemas.password_reset import (
-    PasswordResetRequestSchema,
     PasswordResetRequestResponse,
-    PasswordResetVerifySchema,
+    PasswordResetRequestSchema,
     PasswordResetVerifyResponse,
+    PasswordResetVerifySchema,
 )
 from app.services.password_reset_service import PasswordResetService
 
@@ -48,8 +49,8 @@ def _get_tenant_id_from_request(request: Request, db: Session) -> UUID:
         # If header provided, validate and use it
         try:
             return UUID(tenant_id_str)
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid tenant ID format")
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail="Invalid tenant ID format") from e
 
     # Fallback to default "ilpi" tenant for public endpoints
     statement = select(Tenant).where(Tenant.slug == "ilpi")
@@ -128,7 +129,7 @@ async def request_password_reset(
                 }
             },
             headers={"Retry-After": "600"},
-        )
+        ) from e
     except Exception as e:
         # Log unexpected errors
         import logging
@@ -138,7 +139,7 @@ async def request_password_reset(
         raise HTTPException(
             status_code=500,
             detail="Error processing password reset request",
-        )
+        ) from e
 
 
 # ============================================================================
@@ -182,12 +183,12 @@ async def check_token_validity(
         raise HTTPException(
             status_code=410,  # 410 Gone - resource no longer available
             detail={"error": {"code": e.code, "message": e.message}},
-        )
+        ) from e
     except InvalidResetTokenError as e:
         raise HTTPException(
             status_code=400,
             detail={"error": {"code": e.code, "message": e.message}},
-        )
+        ) from e
 
 
 # ============================================================================
@@ -247,17 +248,17 @@ async def verify_and_reset_password(
         raise HTTPException(
             status_code=410,
             detail={"error": {"code": e.code, "message": e.message}},
-        )
+        ) from e
     except InvalidResetTokenError as e:
         raise HTTPException(
             status_code=400,
             detail={"error": {"code": e.code, "message": e.message}},
-        )
+        ) from e
     except PasswordValidationError as e:
         raise HTTPException(
             status_code=422,
             detail={"error": {"code": e.code, "message": e.message}},
-        )
+        ) from e
     except Exception as e:
         import logging
         logger = logging.getLogger(__name__)
@@ -266,4 +267,4 @@ async def verify_and_reset_password(
         raise HTTPException(
             status_code=500,
             detail="Error processing password reset",
-        )
+        ) from e

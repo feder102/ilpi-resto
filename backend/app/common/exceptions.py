@@ -1,7 +1,13 @@
 """T015: Domain exception hierarchy."""
 
+from collections.abc import Callable
+from functools import wraps
+from typing import Any
 
-class DomainException(Exception):
+from fastapi import HTTPException
+
+
+class DomainError(Exception):
     """Base domain exception."""
 
     def __init__(self, message: str, code: str = "DOMAIN_ERROR") -> None:
@@ -10,42 +16,42 @@ class DomainException(Exception):
         super().__init__(message)
 
 
-class NotFoundError(DomainException):
+class NotFoundError(DomainError):
     def __init__(self, message: str = "Recurso no encontrado") -> None:
         super().__init__(message, "NOT_FOUND")
 
 
-class DuplicateError(DomainException):
+class DuplicateError(DomainError):
     def __init__(self, message: str = "El recurso ya existe", code: str = "DUPLICATE") -> None:
         super().__init__(message, code)
 
 
-class ValidationError(DomainException):
+class ValidationError(DomainError):
     def __init__(self, message: str = "Error de validación", code: str = "VALIDATION_ERROR") -> None:
         super().__init__(message, code)
 
 
-class UnauthorizedError(DomainException):
+class UnauthorizedError(DomainError):
     def __init__(self, message: str = "No autorizado") -> None:
         super().__init__(message, "UNAUTHORIZED")
 
 
-class ForbiddenError(DomainException):
+class ForbiddenError(DomainError):
     def __init__(self, message: str = "Acceso denegado") -> None:
         super().__init__(message, "FORBIDDEN")
 
 
-class ConflictError(DomainException):
+class ConflictError(DomainError):
     def __init__(self, message: str = "Conflicto de versión") -> None:
         super().__init__(message, "CONFLICT")
 
 
-class BalanceExceededError(DomainException):
+class BalanceExceededError(DomainError):
     def __init__(self, message: str = "Saldo insuficiente") -> None:
         super().__init__(message, "BALANCE_EXCEEDED")
 
 
-class ShiftTypeInUseError(DomainException):
+class ShiftTypeInUseError(DomainError):
     """T004: Raised when trying to delete a shift type with active team assignments."""
 
     def __init__(
@@ -54,7 +60,7 @@ class ShiftTypeInUseError(DomainException):
         super().__init__(message, "SHIFT_TYPE_IN_USE")
 
 
-class InvalidShiftTypeError(DomainException):
+class InvalidShiftTypeError(DomainError):
     """T004: Raised when shift type is invalid or doesn't exist."""
 
     def __init__(
@@ -68,15 +74,15 @@ class InvalidShiftTypeError(DomainException):
 # ============================================================================
 
 
-class ShiftConflictError(DomainException):
+class ShiftConflictError(DomainError):
     """Raised when trying to assign a shift to an employee who already has a shift on that date."""
 
     def __init__(self, message: str = "El empleado ya tiene un turno asignado en esa fecha") -> None:
         super().__init__(message, "SHIFT_CONFLICT_001")
 
 
-class VacationOverlapWarning(DomainException):
-    """Warning raised when assigning a shift to an employee with approved vacation on that date."""
+class VacationOverlapError(DomainError):
+    """Raised when assigning a shift to an employee with approved vacation on that date."""
 
     def __init__(
         self, message: str = "El empleado tiene vacaciones aprobadas en esa fecha"
@@ -89,7 +95,7 @@ class VacationOverlapWarning(DomainException):
 # ============================================================================
 
 
-class EmployeeNotInDepartmentError(DomainException):
+class EmployeeNotInDepartmentError(DomainError):
     """Raised when trying to manage an employee outside moderator's department."""
 
     def __init__(
@@ -103,7 +109,7 @@ class EmployeeNotInDepartmentError(DomainException):
 # ============================================================================
 
 
-class InvalidResetTokenError(DomainException):
+class InvalidResetTokenError(DomainError):
     """Raised when password reset token is invalid, expired, or already used."""
 
     def __init__(
@@ -112,21 +118,21 @@ class InvalidResetTokenError(DomainException):
         super().__init__(message, "INVALID_RESET_TOKEN")
 
 
-class TokenExpiredError(DomainException):
+class TokenExpiredError(DomainError):
     """Raised when password reset token has expired (>24 hours)."""
 
     def __init__(self, message: str = "El enlace ha expirado. Solicita uno nuevo") -> None:
         super().__init__(message, "TOKEN_EXPIRED")
 
 
-class RateLimitExceededError(DomainException):
+class RateLimitExceededError(DomainError):
     """Raised when rate limit is exceeded for password reset requests."""
 
     def __init__(self, message: str = "Demasiados intentos. Intenta de nuevo más tarde") -> None:
         super().__init__(message, "RATE_LIMIT_EXCEEDED")
 
 
-class PasswordValidationError(DomainException):
+class PasswordValidationError(DomainError):
     """Raised when new password doesn't meet security requirements."""
 
     def __init__(
@@ -135,7 +141,7 @@ class PasswordValidationError(DomainException):
         super().__init__(message, "PASSWORD_VALIDATION_FAILED")
 
 
-class VacationConflictError(DomainException):
+class VacationConflictError(DomainError):
     """Raised when trying to assign a shift during an approved vacation."""
 
     def __init__(
@@ -144,7 +150,7 @@ class VacationConflictError(DomainException):
         super().__init__(message, "VACATION_CONFLICT")
 
 
-class ShiftExistsError(DomainException):
+class ShiftExistsError(DomainError):
     """Raised when employee already has a shift assigned on that date."""
 
     def __init__(
@@ -157,37 +163,33 @@ class ShiftExistsError(DomainException):
 # EXCEPTION HANDLER DECORATOR (for FastAPI routes)
 # ============================================================================
 
-from typing import Any, Callable
-from functools import wraps
-from fastapi import HTTPException
-
 
 def handle_exceptions(func: Callable[..., Any]) -> Callable[..., Any]:
     """
     Decorator to handle domain exceptions in FastAPI routes.
 
-    Converts DomainException instances to appropriate HTTP responses:
+    Converts DomainError instances to appropriate HTTP responses:
     - NotFoundError → 404
     - UnauthorizedError → 401
     - ForbiddenError → 403
     - ValidationError → 400
     - ConflictError/ShiftConflictError → 409
-    - Other DomainException → 400
+    - Other DomainError → 400
     """
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
             return func(*args, **kwargs)
         except UnauthorizedError as e:
-            raise HTTPException(status_code=401, detail={"error": {"message": e.message, "code": e.code}})
+            raise HTTPException(status_code=401, detail={"error": {"message": e.message, "code": e.code}}) from e
         except ForbiddenError as e:
-            raise HTTPException(status_code=403, detail={"error": {"message": e.message, "code": e.code}})
+            raise HTTPException(status_code=403, detail={"error": {"message": e.message, "code": e.code}}) from e
         except NotFoundError as e:
-            raise HTTPException(status_code=404, detail={"error": {"message": e.message, "code": e.code}})
+            raise HTTPException(status_code=404, detail={"error": {"message": e.message, "code": e.code}}) from e
         except ValidationError as e:
-            raise HTTPException(status_code=400, detail={"error": {"message": e.message, "code": e.code}})
+            raise HTTPException(status_code=400, detail={"error": {"message": e.message, "code": e.code}}) from e
         except (ConflictError, ShiftConflictError) as e:
-            raise HTTPException(status_code=409, detail={"error": {"message": e.message, "code": e.code}})
-        except DomainException as e:
-            raise HTTPException(status_code=400, detail={"error": {"message": e.message, "code": e.code}})
+            raise HTTPException(status_code=409, detail={"error": {"message": e.message, "code": e.code}}) from e
+        except DomainError as e:
+            raise HTTPException(status_code=400, detail={"error": {"message": e.message, "code": e.code}}) from e
     return wrapper

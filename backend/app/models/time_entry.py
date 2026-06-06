@@ -6,12 +6,13 @@ Designed to support both automatic (shift-based) and future manual tracking.
 """
 
 import uuid
-from datetime import UTC, datetime, date, time
+from datetime import UTC, date, datetime, time
 from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING, Optional
-from sqlmodel import SQLModel, Field, Relationship
+
 from sqlalchemy import UniqueConstraint
+from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from app.models.employee import Employee
@@ -22,7 +23,8 @@ if TYPE_CHECKING:
 class TimeEntrySource(str, Enum):
     """Enum for time entry source tracking."""
     SHIFT = "shift"      # Auto-generated from shift assignment
-    MANUAL = "manual"    # User-clocked in (future phase)
+    MANUAL = "manual"    # User-clocked in (legacy/future phase)
+    EXTRA = "extra"      # Overtime added manually by Admin/Moderador
 
 
 class TimeEntry(SQLModel, table=True):
@@ -44,20 +46,24 @@ class TimeEntry(SQLModel, table=True):
 
     # Shift Information
     shift_date: date = Field(index=True)                    # Date of the shift/work
-    start_time: time = Field()                             # Shift start time (e.g., 22:00)
-    end_time: time = Field()                               # Shift end time (e.g., 06:00)
+    # Nullable: extra-hours entries (source=EXTRA) have no schedule
+    start_time: time | None = Field(default=None, nullable=True)  # Shift start time (e.g., 22:00)
+    end_time: time | None = Field(default=None, nullable=True)    # Shift end time (e.g., 06:00)
     hours_worked: Decimal = Field(decimal_places=2, max_digits=5)  # Duration in hours
 
-    # Source Tracking (for future manual entries)
+    # Source Tracking (shift = auto from roster, extra = overtime added by admin)
     source: TimeEntrySource = Field(default=TimeEntrySource.SHIFT)
+
+    # Optional reason/note (used for extra-hours entries)
+    note: str | None = Field(default=None, max_length=255, nullable=True)
 
     # Timestamps
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Foreign Keys (optional for relationships)
-    shift_record_id: Optional[uuid.UUID] = Field(default=None, foreign_key="shift_record.id", nullable=True)
-    shift_type_id: Optional[uuid.UUID] = Field(default=None, foreign_key="shift_type.id", nullable=True)
+    shift_record_id: uuid.UUID | None = Field(default=None, foreign_key="shift_record.id", nullable=True)
+    shift_type_id: uuid.UUID | None = Field(default=None, foreign_key="shift_type.id", nullable=True)
 
     # Relationships
     employee: Optional["Employee"] = Relationship(back_populates="time_entries")

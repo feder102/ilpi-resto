@@ -6,8 +6,9 @@ from datetime import date, timedelta
 import pytest
 from sqlmodel import Session, SQLModel, create_engine
 
-from app.common.exceptions import NotFoundError, ShiftConflictError, ValidationError
+from app.common.exceptions import ShiftConflictError
 from app.models.employee import Employee
+from app.models.shift_record import ShiftRecord
 from app.models.shift_type import ShiftType
 from app.models.tenant import Tenant
 from app.models.vacation_request import VacationRequest
@@ -58,45 +59,21 @@ def employee(session, tenant):
     return emp
 
 
-class TestClockIn:
-    def test_clock_in(self, session, tenant, employee):
-        result = shift_service.clock_in(employee.id, tenant.id, session)
-        assert result.employee_id == employee.id
-        assert result.exit_time is None
-        assert result.employee_name == "Luis Martín"
-
-    def test_clock_in_with_task(self, session, tenant, employee):
-        result = shift_service.clock_in(
-            employee.id, tenant.id, session, task_label="Parrilla"
-        )
-        assert result.task_label == "Parrilla"
-
-    def test_duplicate_active_shift(self, session, tenant, employee):
-        shift_service.clock_in(employee.id, tenant.id, session)
-        with pytest.raises(ValidationError, match="turno activo"):
-            shift_service.clock_in(employee.id, tenant.id, session)
-
-
-class TestClockOut:
-    def test_clock_out(self, session, tenant, employee):
-        shift = shift_service.clock_in(employee.id, tenant.id, session)
-        result = shift_service.clock_out(shift.id, tenant.id, session)
-        assert result.exit_time is not None
-
-    def test_clock_out_already_closed(self, session, tenant, employee):
-        shift = shift_service.clock_in(employee.id, tenant.id, session)
-        shift_service.clock_out(shift.id, tenant.id, session)
-        with pytest.raises(ValidationError, match="cerrado"):
-            shift_service.clock_out(shift.id, tenant.id, session)
-
-
 class TestList:
     def test_list_empty(self, session, tenant):
         result = shift_service.list_shifts(tenant.id, session)
         assert result["total"] == 0
 
     def test_list_with_records(self, session, tenant, employee):
-        shift_service.clock_in(employee.id, tenant.id, session)
+        # Manual clock-in was removed; insert a ShiftRecord directly (roster assignment).
+        session.add(
+            ShiftRecord(
+                tenant_id=tenant.id,
+                employee_id=employee.id,
+                date=date.today(),
+            )
+        )
+        session.commit()
         result = shift_service.list_shifts(tenant.id, session)
         assert result["total"] == 1
 

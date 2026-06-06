@@ -12,49 +12,6 @@ export interface EmployeeUser {
   last_login: string | null;
 }
 
-export interface TimeRecord {
-  id: string;
-  employee_id: string;
-  date: string; // YYYY-MM-DD
-  clock_in_timestamp: string; // ISO 8601
-  clock_out_timestamp: string | null; // ISO 8601 or null if not clocked out
-}
-
-export interface TimeRecordSummary extends TimeRecord {
-  total_hours: number;
-  total_minutes: number;
-  formatted: string; // "9h 0m"
-  clock_in_time: string; // "08:30 AM"
-  clock_out_time: string | null; // "05:30 PM"
-}
-
-export interface ClockInResponse {
-  time_record: TimeRecord;
-  status: "clocked-in";
-  message: string;
-}
-
-export interface ClockOutResponse {
-  time_record: TimeRecord;
-  status: "clocked-out";
-  summary: {
-    total_hours: number;
-    total_minutes: number;
-    formatted: string;
-    clock_in: string;
-    clock_out: string;
-  };
-  message: string;
-}
-
-export interface TimeRecordListResponse {
-  items: TimeRecordSummary[];
-  total: number;
-  page: number;
-  size: number;
-  pages: number;
-}
-
 export interface Shift {
   id: string;
   date: string; // YYYY-MM-DD
@@ -133,14 +90,3 @@ export interface DashboardData {
   }>;
 }
 
-export interface TimeTrackingContextType {
-  clockStatus: "not-clocked-in" | "clocked-in" | "clocked-out";
-  currentRecord: TimeRecord | null;
-  elapsedTime: number; // seconds
-  isLoading: boolean;
-  error: string | null;
-  clockIn: () => Promise<void>;
-  clockOut: () => Promise<void>;
-  getRecords: (dateFrom?: string, dateTo?: string) => Promise<TimeRecordListResponse>;
-  clearError: () => void;
-}

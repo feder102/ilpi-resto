@@ -38,85 +38,6 @@ def _to_response(rec: ShiftRecord, session: Session) -> ShiftRecordResponse:
     )
 
 
-def clock_in(
-    employee_id: uuid.UUID,
-    tenant_id: uuid.UUID,
-    session: Session,
-    location_lat: float | None = None,
-    location_lng: float | None = None,
-    task_label: str | None = None,
-) -> ShiftRecordResponse:
-    # Check no active shift exists
-    active = session.exec(
-        select(ShiftRecord).where(
-            ShiftRecord.employee_id == employee_id,
-            ShiftRecord.tenant_id == tenant_id,
-            ShiftRecord.exit_time == None,  # noqa: E711
-        )
-    ).first()
-    if active:
-        raise ValidationError("El empleado ya tiene un turno activo")
-
-    # Verify employee exists
-    employee = session.exec(
-        select(Employee).where(
-            Employee.id == employee_id,
-            Employee.tenant_id == tenant_id,
-            Employee.is_active == True,  # noqa: E712
-        )
-    ).first()
-    if not employee:
-        raise NotFoundError("Empleado no encontrado")
-
-    now = datetime.now(UTC)
-    record = ShiftRecord(
-        tenant_id=tenant_id,
-        employee_id=employee_id,
-        date=now.date(),
-        entry_time=now,
-        location_lat=location_lat,
-        location_lng=location_lng,
-        task_label=task_label,
-    )
-    session.add(record)
-    session.commit()
-    session.refresh(record)
-    return _to_response(record, session)
-
-
-def clock_out(
-    shift_id: uuid.UUID,
-    tenant_id: uuid.UUID,
-    session: Session,
-    location_lat: float | None = None,
-    location_lng: float | None = None,
-) -> ShiftRecordResponse:
-    record = session.exec(
-        select(ShiftRecord).where(
-            ShiftRecord.id == shift_id,
-            ShiftRecord.tenant_id == tenant_id,
-        )
-    ).first()
-    if not record:
-        raise NotFoundError("Registro de turno no encontrado")
-
-    if record.exit_time:
-        raise ValidationError("El turno ya fue cerrado")
-
-    now = datetime.now(UTC)
-    record.exit_time = now
-    record.updated_at = now
-    if location_lat is not None:
-        record.location_lat = location_lat
-    if location_lng is not None:
-        record.location_lng = location_lng
-
-    session.add(record)
-    session.commit()
-    session.refresh(record)
-    return _to_response(record, session)
-
-
 def list_shifts(
     tenant_id: uuid.UUID,
     session: Session,
@@ -234,8 +155,8 @@ def get_shifts_for_month(
     """
     try:
         year, month_num = map(int, month.split("-"))
-    except (ValueError, IndexError):
-        raise ValidationError("Invalid month format. Use YYYY-MM")
+    except (ValueError, IndexError) as e:
+        raise ValidationError("Invalid month format. Use YYYY-MM") from e
 
     # Apply RBAC: Empleado can only see own shifts
     if current_user and current_user.get("role") == "Empleado":
@@ -244,8 +165,8 @@ def get_shifts_for_month(
             raise ValidationError("Employee ID not found in token")
         try:
             employee_id = uuid.UUID(emp_id_str)
-        except ValueError:
-            raise ValidationError("Invalid employee ID format in token")
+        except ValueError as e:
+            raise ValidationError("Invalid employee ID format in token") from e
 
     # Get first and last day of month
     first_day = date(year, month_num, 1)
@@ -532,7 +453,7 @@ def get_employee_month_shifts(
         first_day = date(year, month, 1)
         last_day = date(year, month, monthrange(year, month)[1])
     except (ValueError, IndexError) as e:
-        raise ValidationError(f"Invalid year/month: {e}")
+        raise ValidationError(f"Invalid year/month: {e}") from e
 
     # RLS: Only filter by current employee_id (from JWT, not user input)
     query = select(ShiftRecord).where(

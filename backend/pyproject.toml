@@ -10,7 +10,32 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "SIM", "TCH"]
-ignore = ["E501"]
+# E501: line length handled by formatter.
+# UP042: the project intentionally uses `class X(str, Enum)` for Pydantic/native
+#        DB enums (consistent across the codebase); StrEnum would change the
+#        enum's string representation and is avoided on purpose.
+ignore = ["E501", "UP042"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI dependency-injection idiom: these are intentionally called in argument
+# defaults (Depends/Query/... and the project's role dependency factories), which
+# is the documented FastAPI pattern. Treat them as immutable calls so B008 does
+# not flag them.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Form",
+    "fastapi.File",
+    "fastapi.Header",
+    "fastapi.Cookie",
+    "fastapi.Security",
+    "app.dependencies.require_role",
+    "app.dependencies.require_role_and_active",
+    "app.routers.time_tracking.require_admin_or_moderator",
+    "app.routers.time_tracking.require_admin",
+]
 
 [tool.mypy]
 python_version = "3.12"

@@ -5,7 +5,12 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from app.dependencies import DbSession, RefreshToken
-from app.schemas.auth import LoginRequest, LoginResponse, PasswordSetupRequest, PasswordSetupResponse
+from app.schemas.auth import (
+    LoginRequest,
+    LoginResponse,
+    PasswordSetupRequest,
+    PasswordSetupResponse,
+)
 from app.services import auth_service
 
 router = APIRouter(tags=["auth"])

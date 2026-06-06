@@ -10,9 +10,9 @@ Feature 005: Employee Workspace Portal
 - Add last_login (nullable)
 - Make hashed_password nullable for password setup flow
 """
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = 'f5e9c1a2b3d4'

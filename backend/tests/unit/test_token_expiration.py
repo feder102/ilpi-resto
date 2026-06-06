@@ -7,16 +7,16 @@ Tests token expiration validation:
 - Old password stops working after reset
 """
 
-import pytest
-from datetime import datetime, timedelta, timezone, UTC
-from uuid import UUID
 import hashlib
+from datetime import UTC, datetime, timedelta
+from uuid import UUID
+
+import pytest
 from sqlmodel import Session
 
-from app.services.password_reset_service import PasswordResetService
 from app.models.password_reset_token import PasswordResetToken
 from app.models.user import User
-from app.common.exceptions import TokenExpiredError, InvalidResetTokenError
+from app.services.password_reset_service import PasswordResetService
 
 
 class TestTokenExpiration:
@@ -25,7 +25,7 @@ class TestTokenExpiration:
     def test_token_expiration_after_24_hours(self):
         """T046: Token created at T, at T+24h+1min expires_at < now()."""
         # Setup: Simulate token creation time
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Token expires exactly 24 hours after creation
         expires_at = now - timedelta(hours=24, minutes=1)  # 24h 1min ago = EXPIRED
@@ -41,7 +41,7 @@ class TestTokenExpiration:
     def test_token_reuse_prevention(self):
         """T047: Token marked used_at cannot be used again."""
         # Setup: Token with used_at set (not NULL)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         used_at_time = now - timedelta(minutes=5)
 
         # If used_at is not NULL, token is already used
@@ -62,10 +62,10 @@ class TestTokenExpiration:
         session.add(user)
         session.flush()
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Create first token
-        token1_hash = hashlib.sha256("token1".encode()).hexdigest()
+        token1_hash = hashlib.sha256(b"token1").hexdigest()
         token1 = PasswordResetToken(
             tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
             user_id=user.id,
@@ -127,7 +127,7 @@ def password_reset_service(session: Session):
 
 def test_token_not_expired_before_24_hours(session: Session, password_reset_service):
     """Token valid within 24 hours."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     expires_at = now + timedelta(hours=23, minutes=59)
 
     # Token expires in the future
@@ -136,7 +136,7 @@ def test_token_not_expired_before_24_hours(session: Session, password_reset_serv
 
 def test_token_exactly_24_hours(session: Session, password_reset_service):
     """Token exactly at 24-hour boundary is expired."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Token created exactly 24 hours ago
     created_at = now - timedelta(hours=24)
@@ -157,13 +157,13 @@ def test_multiple_tokens_same_user_independent_expiration(session: Session):
     session.add(user)
     session.flush()
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Create two tokens with different expiration times
     token1 = PasswordResetToken(
         tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
         user_id=user.id,
-        token_hash=hashlib.sha256("token1".encode()).hexdigest(),
+        token_hash=hashlib.sha256(b"token1").hexdigest(),
         expires_at=now + timedelta(hours=24),
         ip_address="192.168.1.1",
         created_at=now,
@@ -173,7 +173,7 @@ def test_multiple_tokens_same_user_independent_expiration(session: Session):
     token2 = PasswordResetToken(
         tenant_id=UUID("12345678-1234-5678-1234-567812345678"),
         user_id=user.id,
-        token_hash=hashlib.sha256("token2".encode()).hexdigest(),
+        token_hash=hashlib.sha256(b"token2").hexdigest(),
         expires_at=now + timedelta(hours=12),  # Expires sooner
         ip_address="192.168.1.1",
         created_at=now,

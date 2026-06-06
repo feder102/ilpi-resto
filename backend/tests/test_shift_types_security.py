@@ -1,18 +1,17 @@
 """T067, T068: Shift Types RBAC security tests."""
 
 import pytest
-from sqlmodel import Session, select
+from sqlmodel import Session
 
-pytestmark = pytest.mark.skip(reason="Requires live database with initialized schema")
-
-from app.common.exceptions import ForbiddenError
+from app.common.security import hash_password
+from app.database import engine
+from app.models.employee import Employee
 from app.models.shift_type import ShiftType
 from app.models.tenant import Tenant
 from app.models.user import User
-from app.models.employee import Employee
-from app.database import engine
-from app.common.security import hash_password
 from app.services.shift_type_service import list_shift_types
+
+pytestmark = pytest.mark.skip(reason="Requires live database with initialized schema")
 
 
 class TestShiftTypesRBAC:
@@ -22,6 +21,7 @@ class TestShiftTypesRBAC:
     def setup_with_users(self):
         """Create tenant, users with different roles, and a shift type."""
         import uuid
+
         from sqlalchemy import delete
 
         unique_slug = f"test-{uuid.uuid4().hex[:8]}"

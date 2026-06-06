@@ -9,12 +9,11 @@ New endpoints for shift roster calendar (Feature 004):
 
 import uuid
 from datetime import date
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 
 from app.dependencies import DbSession, TenantId, require_role, require_role_and_active
-from app.schemas.shift import ClockInRequest, ClockOutRequest, ShiftCreate, ShiftUpdate
+from app.schemas.shift import ShiftCreate, ShiftUpdate
 from app.services import shift_service
 
 router = APIRouter(tags=["shifts"])
@@ -47,48 +46,6 @@ def list_shifts(
 
     return shift_service.list_shifts(
         tenant_id, session, employee_id, date_from, date_to, page, size
-    )
-
-
-@router.post("/shifts/clock-in", status_code=201)
-def clock_in(
-    body: ClockInRequest,
-    session: DbSession,
-    tenant_id: TenantId,
-    current_user: dict = Depends(require_role("Admin", "Moderador", "Empleado")),
-):
-    """
-    Clock in for a shift (time tracking).
-
-    - Admin/Moderador: can clock in for any employee
-    - Empleado: can clock in for themselves only (enforced in service layer)
-    """
-    return shift_service.clock_in(
-        body.employee_id,
-        tenant_id,
-        session,
-        body.location_lat,
-        body.location_lng,
-        body.task_label,
-    )
-
-
-@router.post("/shifts/{shift_id}/clock-out")
-def clock_out(
-    shift_id: uuid.UUID,
-    body: ClockOutRequest,
-    session: DbSession,
-    tenant_id: TenantId,
-    current_user: dict = Depends(require_role("Admin", "Moderador", "Empleado")),
-):
-    """
-    Clock out from an active shift (time tracking).
-
-    - Admin/Moderador: can clock out any shift
-    - Empleado: can clock out their own shifts only (enforced in service layer)
-    """
-    return shift_service.clock_out(
-        shift_id, tenant_id, session, body.location_lat, body.location_lng
     )
 
 
@@ -217,8 +174,8 @@ def get_employee_month_shifts(
 def get_employee_shifts(
     session: DbSession,
     current_user: dict = Depends(require_role_and_active("Empleado")),
-    date_from: Optional[date] = Query(None, description="Start date (YYYY-MM-DD)"),
-    date_to: Optional[date] = Query(None, description="End date (YYYY-MM-DD)"),
+    date_from: date | None = Query(None, description="Start date (YYYY-MM-DD)"),
+    date_to: date | None = Query(None, description="End date (YYYY-MM-DD)"),
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     size: int = Query(50, ge=1, le=100, description="Items per page (max 100)"),
 ):

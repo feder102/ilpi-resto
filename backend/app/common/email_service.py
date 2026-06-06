@@ -4,11 +4,12 @@ Development: Uses MailHog SMTP server (no credentials required)
 Production: Should use actual SMTP service with proper authentication
 """
 
+import hashlib
 import logging
 import os
 import smtplib
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +94,7 @@ ILPI - Kitchen Staff Management
                 server.send_message(msg)
 
         logger.info(
-            f"Password reset email sent successfully",
+            "Password reset email sent successfully",
             extra={
                 "to": email,
                 "smtp_host": smtp_host,
@@ -104,24 +105,24 @@ ILPI - Kitchen Staff Management
         # Never log the plaintext reset_link or token
         token_hash_prefix = hashlib.sha256(reset_link.split('token=')[-1].encode()).hexdigest()[:8]
         print(f"\n{'='*80}")
-        print(f"📧 PASSWORD RESET EMAIL SENT")
+        print("📧 PASSWORD RESET EMAIL SENT")
         print(f"{'='*80}")
         print(f"To: {email}")
-        print(f"Subject: Recupera tu contraseña - ILPI")
+        print("Subject: Recupera tu contraseña - ILPI")
         print(f"SMTP Server: {smtp_host}:{smtp_port}")
         print(f"Token Hash Prefix: {token_hash_prefix}")
         print(f"{'='*80}\n")
 
     except Exception as e:
         logger.error(
-            f"Failed to send password reset email",
+            "Failed to send password reset email",
             extra={
                 "to": email,
                 "error": str(e),
             },
         )
         print(f"\n{'='*80}")
-        print(f"❌ EMAIL SENDING FAILED")
+        print("❌ EMAIL SENDING FAILED")
         print(f"{'='*80}")
         print(f"To: {email}")
         print(f"Error: {str(e)}")

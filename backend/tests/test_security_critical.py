@@ -6,16 +6,17 @@ SIMPLIFIED VERSION focusing on core security validations
 """
 
 import uuid
-from datetime import datetime, UTC, timedelta
-from fastapi.testclient import TestClient
-import pytest
-from sqlmodel import Session, select
+from datetime import UTC, datetime, timedelta
 
-from app.common.security import hash_password, create_access_token
-from app.models.user import User
+import pytest
+from fastapi.testclient import TestClient
+from sqlmodel import Session
+
+from app.common.security import create_access_token, hash_password
+from app.main import app
 from app.models.employee import Employee
 from app.models.tenant import Tenant
-from app.main import app
+from app.models.user import User
 
 
 @pytest.fixture
@@ -188,7 +189,7 @@ class TestEmployeeRouteRequiresIsActive:
 
         Scenario:
         1. Create JWT for inactive employee
-        2. Attempt GET /employee/time-tracking/records
+        2. Attempt GET /employee/shifts/today (employee-only route)
         3. Expected: 401 Unauthorized (password setup required)
         """
         # Create JWT token for inactive user
@@ -203,7 +204,7 @@ class TestEmployeeRouteRequiresIsActive:
 
         # Attempt to access employee-only route
         response = client.get(
-            "/api/v1/employee/time-tracking/records",
+            "/api/v1/employee/shifts/today",
             headers={"Authorization": f"Bearer {token}"}
         )
 
@@ -296,9 +297,9 @@ class TestCrossEmployeeAccessBlocked:
             }
         )
 
-        # Query records as Employee A
+        # Query records as Employee A (employee-only, RLS-scoped route)
         response = client.get(
-            "/api/v1/employee/time-tracking/records",
+            "/api/v1/employee/shifts",
             headers={"Authorization": f"Bearer {token}"}
         )
 

@@ -11,18 +11,6 @@ from datetime import date as date_type
 from pydantic import BaseModel, Field
 
 
-class ClockInRequest(BaseModel):
-    employee_id: uuid.UUID
-    location_lat: float | None = None
-    location_lng: float | None = None
-    task_label: str | None = None
-
-
-class ClockOutRequest(BaseModel):
-    location_lat: float | None = None
-    location_lng: float | None = None
-
-
 class ShiftRecordResponse(BaseModel):
     id: uuid.UUID
     employee_id: uuid.UUID

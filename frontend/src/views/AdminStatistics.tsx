@@ -9,10 +9,11 @@
 import React, { useState, useMemo } from "react";
 import { Card, Button } from "../components/ui";
 import Alert from "../components/ui/Alert";
-import { BarChart3, Users, Clock, RefreshCw, ChevronDown } from "lucide-react";
+import { BarChart3, Users, Clock, RefreshCw, ChevronDown, Plus } from "lucide-react";
 import { EmployeeStatisticsCard } from "../components/time-tracking/EmployeeStatisticsCard";
 import { DepartmentStatisticsCard } from "../components/time-tracking/DepartmentStatisticsCard";
 import { TimeEntriesTable } from "../components/time-tracking/TimeEntriesTable";
+import { ExtraHoursModal } from "../components/time-tracking/ExtraHoursModal";
 import { triggerBatchProcess } from "../services/statisticsService";
 import { useAuth } from "../hooks/useAuth";
 
@@ -63,6 +64,8 @@ export const AdminStatistics: React.FC = () => {
   const [batchMessage, setBatchMessage] = useState<string | null>(null);
   const [batchError, setBatchError] = useState<string | null>(null);
   const [batchDate, setBatchDate] = useState(new Date().toISOString().split("T")[0]);
+  const [extraModalOpen, setExtraModalOpen] = useState(false);
+  const [entriesRefreshKey, setEntriesRefreshKey] = useState(0);
 
   // Time Entries tab filter state
   const today = new Date().toISOString().split("T")[0];
@@ -129,11 +132,17 @@ export const AdminStatistics: React.FC = () => {
       <div className="space-y-8 max-w-7xl mx-auto">
         {/* Header */}
         <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-primary/20 rounded-xl">
-              <BarChart3 className="w-8 h-8 text-primary" />
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-primary/20 rounded-xl">
+                <BarChart3 className="w-8 h-8 text-primary" />
+              </div>
+              <h1 className="text-4xl font-bold text-base-content">Análisis de Seguimiento de Tiempo</h1>
             </div>
-            <h1 className="text-4xl font-bold text-base-content">Análisis de Seguimiento de Tiempo</h1>
+            <Button variant="primary" onClick={() => setExtraModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-1" />
+              Cargar horas extra
+            </Button>
           </div>
           <p className="text-base-content/70 text-lg max-w-2xl">
             Monitorea horas de trabajo, productividad de empleados y generación automática de entradas de tiempo
@@ -282,6 +291,7 @@ export const AdminStatistics: React.FC = () => {
 
               {/* Time Entries Table */}
               <TimeEntriesTable
+                key={entriesRefreshKey}
                 filters={timeEntriesFilters}
                 pageSize={20}
               />
@@ -381,6 +391,13 @@ export const AdminStatistics: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Extra hours modal */}
+      <ExtraHoursModal
+        isOpen={extraModalOpen}
+        onClose={() => setExtraModalOpen(false)}
+        onSuccess={() => setEntriesRefreshKey((k) => k + 1)}
+      />
     </div>
   );
 };

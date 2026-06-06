@@ -1,10 +1,11 @@
 """T072b: Unit tests for TeamService."""
 
-import pytest
 from datetime import date
+
+import pytest
 from sqlmodel import Session, SQLModel, create_engine
 
-from app.common.exceptions import DuplicateError, NotFoundError, ValidationError
+from app.common.exceptions import DuplicateError, ValidationError
 from app.models.employee import Employee
 from app.models.tenant import Tenant
 from app.models.vacation_request import VacationRequest
@@ -58,8 +59,8 @@ def employee(session, tenant):
 @pytest.fixture
 def team_data(session, tenant):
     """Create team data with shift_type_id FK."""
-    from app.schemas.team import TeamCreate
     from app.models.shift_type import ShiftType
+    from app.schemas.team import TeamCreate
 
     # Create a shift type for testing
     shift_type = ShiftType(

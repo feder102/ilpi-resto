@@ -11,13 +11,14 @@ All moderator endpoints use these utilities to prevent cross-department access.
 
 import uuid
 from datetime import date as date_type
-from typing import Optional
+
 from sqlmodel import Session, select
+
+from app.common.exceptions import ForbiddenError, NotFoundError, UnauthorizedError
 from app.models import Employee
 from app.models.time_entry import TimeEntry
 from app.models.vacation_balance import VacationBalance
 from app.models.vacation_request import VacationRequest
-from app.common.exceptions import UnauthorizedError, ForbiddenError, NotFoundError
 
 
 def get_moderator_department(current_user: dict, session: Session) -> str:
@@ -95,7 +96,7 @@ def enforce_department_scope(
     return True
 
 
-def get_department_name(employee_id: str, session: Session) -> Optional[str]:
+def get_department_name(employee_id: str, session: Session) -> str | None:
     """
     Convenience method to get department name for any employee.
 
@@ -178,7 +179,7 @@ def get_vacation_summary(
     current_user: dict,
     session: Session,
     year: int,
-    status: Optional[str] = None,
+    status: str | None = None,
 ) -> dict:
     """Build the vacation summary for the moderator's department (T072).
 
