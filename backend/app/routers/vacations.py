@@ -12,7 +12,11 @@ from app.dependencies import (
     require_role,
     require_role_and_active,
 )
-from app.schemas.vacation import VacationActionRequest, VacationRequestCreate, VacationRequestCreateEmployee
+from app.schemas.vacation import (
+    VacationActionRequest,
+    VacationRequestCreate,
+    VacationRequestCreateEmployee,
+)
 from app.services import vacation_service
 
 router = APIRouter(tags=["vacations"])

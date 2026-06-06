@@ -1,8 +1,10 @@
 """T017-T018: Unit tests for ShiftType model."""
 
-import pytest
-from app.models.shift_type import ShiftType
 import uuid
+
+import pytest
+
+from app.models.shift_type import ShiftType
 
 
 @pytest.fixture

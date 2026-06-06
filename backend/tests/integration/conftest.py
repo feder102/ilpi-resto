@@ -1,9 +1,11 @@
 """Integration test configuration - disables rate limiting for tests."""
 
-import pytest
+import contextlib
 from unittest.mock import MagicMock
-from app.main import limiter
 
+import pytest
+
+from app.main import limiter
 
 # Store the original storage for restoration
 _original_storage = None
@@ -44,9 +46,7 @@ def reset_rate_limiter_per_test():
 
     # Clear the mock storage state
     if hasattr(limiter, "_storage") and hasattr(limiter._storage, "reset_mock"):
-        try:
+        with contextlib.suppress(Exception):
             limiter._storage.reset_mock()
-        except Exception:
-            pass
 
     yield

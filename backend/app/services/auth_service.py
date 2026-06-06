@@ -1,22 +1,20 @@
 """T037: Authentication service."""
 
 import uuid
-import re
-
 from datetime import UTC, datetime
 
 from sqlmodel import Session, select
 
-from app.common.exceptions import UnauthorizedError, ValidationError, NotFoundError
+from app.common.exceptions import NotFoundError, UnauthorizedError, ValidationError
 from app.common.security import (
     create_access_token,
     create_refresh_token,
+    hash_password,
     verify_password,
     verify_token,
-    hash_password,
 )
 from app.models.user import User
-from app.schemas.auth import LoginResponse, UserResponse, PasswordSetupResponse
+from app.schemas.auth import LoginResponse, PasswordSetupResponse, UserResponse
 
 # Simple in-memory blacklist for MVP (use Redis in production)
 _blacklisted_tokens: set[str] = set()

@@ -93,7 +93,6 @@ def require_role_and_active(*roles: str):
 
         # Feature 005: Check is_active status for employee routes
         # Query the User table to verify is_active flag
-        from sqlmodel import select
         from app.models.user import User
 
         user_id = current_user.get("sub")

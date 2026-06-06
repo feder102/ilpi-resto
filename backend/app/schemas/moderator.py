@@ -6,9 +6,8 @@ All schemas follow strict type safety with no Optional fields unless explicitly 
 """
 
 from datetime import datetime
-from typing import List, Optional
-from pydantic import BaseModel, Field
 
+from pydantic import BaseModel, Field
 
 # ============================================================================
 # Shift Roster DTOs
@@ -24,13 +23,13 @@ class RosterDayDTO(BaseModel):
     date: str = Field(..., description="Shift date (YYYY-MM-DD)")
     shift_type_id: str = Field(..., description="Shift type ID")
     shift_type_name: str = Field(..., description="Shift type name (Mañana, Noche, etc.)")
-    entry_time: Optional[str] = Field(
+    entry_time: str | None = Field(
         None, description="Clock-in time (HH:MM) or null for roster-only shifts"
     )
-    exit_time: Optional[str] = Field(
+    exit_time: str | None = Field(
         None, description="Clock-out time (HH:MM) or null for roster-only shifts"
     )
-    vacation_status: Optional[str] = Field(
+    vacation_status: str | None = Field(
         None, description="If employee has approved vacation: 'Aprobado', else null"
     )
 
@@ -56,7 +55,7 @@ class RosterDTO(BaseModel):
     year: int = Field(..., ge=2020, le=2100)
     month: int = Field(..., ge=1, le=12)
     department: str = Field(..., description="Moderator's department")
-    shifts: List[RosterDayDTO] = Field(default_factory=list)
+    shifts: list[RosterDayDTO] = Field(default_factory=list)
 
     class Config:
         json_schema_extra = {
@@ -100,13 +99,13 @@ class VacationRequestDTO(BaseModel):
         ..., description="Status: Pendiente, Aprobado, Rechazado, Cancelado"
     )
     created_at: datetime = Field(..., description="Request creation timestamp")
-    reviewed_by: Optional[str] = Field(
+    reviewed_by: str | None = Field(
         None, description="User ID of moderator who approved/rejected"
     )
-    reviewed_at: Optional[datetime] = Field(
+    reviewed_at: datetime | None = Field(
         None, description="Timestamp when request was reviewed"
     )
-    rejection_reason: Optional[str] = Field(None, description="Reason for rejection")
+    rejection_reason: str | None = Field(None, description="Reason for rejection")
 
     class Config:
         json_schema_extra = {
@@ -130,7 +129,7 @@ class VacationRequestDTO(BaseModel):
 class VacationApprovalRequest(BaseModel):
     """Request body for approve/reject vacation endpoints"""
 
-    reason: Optional[str] = Field(
+    reason: str | None = Field(
         None,
         max_length=500,
         description="Optional reason for rejection (for reject endpoint only)",
@@ -198,8 +197,8 @@ class ShiftDTO(BaseModel):
     employee_name: str
     date: str
     shift_type_name: str
-    entry_time: Optional[str] = None
-    exit_time: Optional[str] = None
+    entry_time: str | None = None
+    exit_time: str | None = None
     message: str = Field(default="", description="Status message for user")
 
     class Config:
@@ -246,7 +245,7 @@ class VacationSummaryDTO(BaseModel):
 
     year: int
     department: str
-    summary: List[VacationSummaryRowDTO]
+    summary: list[VacationSummaryRowDTO]
     department_total: DepartmentTotalDTO
 
     class Config:
@@ -275,9 +274,9 @@ class AttendanceRecordDTO(BaseModel):
     employee_id: str
     employee_name: str
     date: str = Field(..., description="Date (YYYY-MM-DD)")
-    clock_in: Optional[str] = Field(..., description="Clock-in time (HH:MM)")
-    clock_out: Optional[str] = Field(..., description="Clock-out time (HH:MM)")
-    hours_worked: Optional[float] = Field(..., description="Hours worked (decimal)")
+    clock_in: str | None = Field(..., description="Clock-in time (HH:MM)")
+    clock_out: str | None = Field(..., description="Clock-out time (HH:MM)")
+    hours_worked: float | None = Field(..., description="Hours worked (decimal)")
     shift_type: str = Field(..., description="Shift type name")
 
 
@@ -287,7 +286,7 @@ class AttendanceReportDTO(BaseModel):
     date_from: str
     date_to: str
     department: str
-    records: List[AttendanceRecordDTO]
+    records: list[AttendanceRecordDTO]
 
     class Config:
         json_schema_extra = {

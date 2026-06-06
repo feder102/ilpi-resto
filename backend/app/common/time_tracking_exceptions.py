@@ -7,25 +7,24 @@ and work statistics calculations.
 
 import uuid
 from datetime import date, time
-from typing import Optional
 
-from app.common.exceptions import DomainException
+from app.common.exceptions import DomainError
 
 
-class TimeTrackingException(DomainException):
+class TimeTrackingError(DomainError):
     """Base exception for time tracking operations."""
     def __init__(self, message: str = "Error en seguimiento de tiempo", code: str = "TIME_TRACKING_ERROR") -> None:
         super().__init__(message, code)
 
 
-class InvalidShiftError(TimeTrackingException):
+class InvalidShiftError(TimeTrackingError):
     """Raised when a shift configuration is invalid."""
-    def __init__(self, message: str, shift_id: Optional[uuid.UUID] = None) -> None:
+    def __init__(self, message: str, shift_id: uuid.UUID | None = None) -> None:
         self.shift_id = shift_id
         super().__init__(message, "INVALID_SHIFT")
 
 
-class DuplicateTimeEntryError(TimeTrackingException):
+class DuplicateTimeEntryError(TimeTrackingError):
     """Raised when attempting to create a duplicate time entry."""
     def __init__(self, employee_id: uuid.UUID, shift_date: date, shift_type_id: uuid.UUID) -> None:
         self.employee_id = employee_id
@@ -35,35 +34,35 @@ class DuplicateTimeEntryError(TimeTrackingException):
         super().__init__(message, "DUPLICATE_TIME_ENTRY")
 
 
-class StatisticsCalculationError(TimeTrackingException):
+class StatisticsCalculationError(TimeTrackingError):
     """Raised when statistics calculation fails."""
-    def __init__(self, message: str, employee_id: Optional[uuid.UUID] = None, period: Optional[str] = None) -> None:
+    def __init__(self, message: str, employee_id: uuid.UUID | None = None, period: str | None = None) -> None:
         self.employee_id = employee_id
         self.period = period
         super().__init__(message, "STATISTICS_CALCULATION_ERROR")
 
 
-class NoShiftsFoundError(TimeTrackingException):
+class NoShiftsFoundError(TimeTrackingError):
     """Raised when no shifts are found for a given employee or date."""
-    def __init__(self, employee_id: Optional[uuid.UUID] = None, target_date: Optional[date] = None) -> None:
+    def __init__(self, employee_id: uuid.UUID | None = None, target_date: date | None = None) -> None:
         self.employee_id = employee_id
         self.target_date = target_date
         message = f"No se encontraron turnos para el empleado {employee_id} en {target_date}"
         super().__init__(message, "NO_SHIFTS_FOUND")
 
 
-class HoursCalculationError(TimeTrackingException):
+class HoursCalculationError(TimeTrackingError):
     """Raised when hours calculation fails (e.g., invalid start/end times)."""
-    def __init__(self, start_time: time, end_time: time, message: Optional[str] = None) -> None:
+    def __init__(self, start_time: time, end_time: time, message: str | None = None) -> None:
         self.start_time = start_time
         self.end_time = end_time
         default_msg = f"Error al calcular horas entre {start_time} y {end_time}"
         super().__init__(message or default_msg, "HOURS_CALCULATION_ERROR")
 
 
-class BatchProcessingError(TimeTrackingException):
+class BatchProcessingError(TimeTrackingError):
     """Raised when batch processing encounters an error."""
-    def __init__(self, message: str, target_date: Optional[date] = None, entries_processed: int = 0) -> None:
+    def __init__(self, message: str, target_date: date | None = None, entries_processed: int = 0) -> None:
         self.target_date = target_date
         self.entries_processed = entries_processed
         super().__init__(message, "BATCH_PROCESSING_ERROR")

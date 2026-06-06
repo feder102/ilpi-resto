@@ -1,6 +1,5 @@
 """T050c: Integration tests for employee endpoints."""
 
-import pytest
 
 
 EMPLOYEE_DATA = {

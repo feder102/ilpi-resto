@@ -2,10 +2,10 @@
 
 import uuid
 from datetime import UTC, date, datetime
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from sqlalchemy import UniqueConstraint
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from app.models.time_entry import TimeEntry
@@ -41,4 +41,4 @@ class Employee(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Relationships
-    time_entries: List["TimeEntry"] = Relationship(back_populates="employee")
+    time_entries: list["TimeEntry"] = Relationship(back_populates="employee")

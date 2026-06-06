@@ -1,17 +1,18 @@
 """T064, T065: Teams integration tests - shift type changes, timezone handling."""
 
+
 import pytest
 from sqlmodel import Session
-from datetime import datetime, time
 
-pytestmark = pytest.mark.skip(reason="Requires live database with initialized schema")
-
+from app.database import engine
 from app.models.shift_type import ShiftType
 from app.models.team import Team
 from app.models.tenant import Tenant
-from app.database import engine
-from app.services.team_service import get_by_id as get_team_by_id, list_teams
-from app.services.shift_type_service import get_by_id as get_shift_by_id, update as update_shift_type
+from app.services.shift_type_service import get_by_id as get_shift_by_id
+from app.services.shift_type_service import update as update_shift_type
+from app.services.team_service import get_by_id as get_team_by_id
+
+pytestmark = pytest.mark.skip(reason="Requires live database with initialized schema")
 
 
 class TestTeamShiftTypeChanges:
@@ -21,6 +22,7 @@ class TestTeamShiftTypeChanges:
     def setup_team_with_shift(self):
         """Create tenant, shift type, and team."""
         import uuid
+
         from sqlalchemy import delete
 
         unique_slug = f"test-{uuid.uuid4().hex[:8]}"
@@ -71,7 +73,6 @@ class TestTeamShiftTypeChanges:
             # Get initial team state
             team = get_team_by_id(team_id, tenant_id, session)
             assert team.name == "Team Original"
-            initial_shift_name = team.shift_type_id
 
             # Update shift type
             updated_shift = update_shift_type(
@@ -112,6 +113,7 @@ class TestTimezonHandling:
     def setup_with_timezone(self):
         """Create tenant with specific timezone."""
         import uuid
+
         from sqlalchemy import delete
 
         unique_slug = f"tz-test-{uuid.uuid4().hex[:8]}"
@@ -157,8 +159,6 @@ class TestTimezonHandling:
 
     def test_tenant_timezone_affects_calculations(self, setup_with_timezone):
         """Verify tenant timezone is stored and accessible."""
-        tenant_id = setup_with_timezone
-
         with Session(engine) as session:
             tenant = session.exec(
                 "SELECT * FROM tenant WHERE id = ?"

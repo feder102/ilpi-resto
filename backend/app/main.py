@@ -12,7 +12,7 @@ from slowapi.util import get_remote_address
 from app.common.exceptions import (
     BalanceExceededError,
     ConflictError,
-    DomainException,
+    DomainError,
     DuplicateError,
     ForbiddenError,
     InvalidShiftTypeError,
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 limiter = Limiter(key_func=get_remote_address)
 
-EXCEPTION_STATUS_MAP: dict[type[DomainException], int] = {
+EXCEPTION_STATUS_MAP: dict[type[DomainError], int] = {
     NotFoundError: 404,
     UnauthorizedError: 401,
     ForbiddenError: 403,
@@ -145,8 +145,8 @@ def create_app() -> FastAPI:
         return response
 
     # Global exception handler
-    @app.exception_handler(DomainException)
-    async def domain_exception_handler(request: Request, exc: DomainException) -> JSONResponse:
+    @app.exception_handler(DomainError)
+    async def domain_exception_handler(request: Request, exc: DomainError) -> JSONResponse:
         # PASSWORD_SETUP_REQUIRED is semantically Forbidden (403), not Unprocessable (422)
         if exc.code == "PASSWORD_SETUP_REQUIRED":
             status_code = 403
@@ -180,7 +180,19 @@ def _configure_logging() -> None:
 
 
 def _include_routers(app: FastAPI) -> None:
-    from app.routers import auth, dashboard, employees, moderator, password_reset_router, shift_types, shifts, teams, time_tracking, users, vacations
+    from app.routers import (
+        auth,
+        dashboard,
+        employees,
+        moderator,
+        password_reset_router,
+        shift_types,
+        shifts,
+        teams,
+        time_tracking,
+        users,
+        vacations,
+    )
 
     prefix = "/api/v1"
     app.include_router(auth.router, prefix=prefix)

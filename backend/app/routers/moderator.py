@@ -14,20 +14,16 @@ Endpoints are organized by functionality:
 - Reports: Vacation and attendance summaries
 """
 
-from typing import List
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
 
-from app.dependencies import require_role_and_active, get_session
 from app.common.exceptions import ForbiddenError
+from app.dependencies import get_session, require_role_and_active
 from app.schemas.moderator import (
-    RosterDTO,
-    VacationRequestDTO,
-    VacationApprovalRequest,
-    ShiftAssignmentRequest,
-    ShiftDTO,
-    VacationSummaryDTO,
     AttendanceReportDTO,
+    ShiftAssignmentRequest,
+    VacationApprovalRequest,
+    VacationSummaryDTO,
 )
 from app.services import moderator_service, moderator_shift_service, vacation_service
 
@@ -102,7 +98,7 @@ async def get_roster(
 
 @router.get("/shifts")
 async def get_shifts_for_date(
-    date: str = Query(..., regex=r"^\d{4}-\d{2}-\d{2}$"),
+    date: str = Query(..., pattern=r"^\d{4}-\d{2}-\d{2}$"),
     session: Session = Depends(get_session),
     current_user: dict = Depends(require_role_and_active("Moderador")),
 ):
@@ -163,8 +159,8 @@ async def get_shifts_for_date(
 async def list_pending_requests(
     status: str = Query(None),
     employee_id: str = Query(None),
-    date_from: str = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
-    date_to: str = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
+    date_from: str = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    date_to: str = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
     session: Session = Depends(get_session),
     current_user: dict = Depends(require_role_and_active("Moderador")),
 ):
@@ -433,7 +429,6 @@ async def assign_shift(
             "message": str
         }
     """
-    import uuid
     from datetime import datetime
 
     # Parse date
@@ -476,7 +471,6 @@ async def update_shift(
     Returns:
         Updated shift record
     """
-    import uuid
 
     # Get moderator's employee ID
     moderator_employee_id = current_user.get("employee_id")
@@ -512,7 +506,6 @@ async def delete_shift(
     Returns:
         204 No Content
     """
-    import uuid
 
     # Get moderator's employee ID
     moderator_employee_id = current_user.get("employee_id")
@@ -555,8 +548,8 @@ async def get_vacation_summary(
 
 @router.get("/reports/attendance", response_model=AttendanceReportDTO)
 async def get_attendance_report(
-    date_from: str = Query(..., regex=r"^\d{4}-\d{2}-\d{2}$"),
-    date_to: str = Query(..., regex=r"^\d{4}-\d{2}-\d{2}$"),
+    date_from: str = Query(..., pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    date_to: str = Query(..., pattern=r"^\d{4}-\d{2}-\d{2}$"),
     current_user: dict = Depends(require_role_and_active("Moderador")),
     session: Session = Depends(get_session),
 ):

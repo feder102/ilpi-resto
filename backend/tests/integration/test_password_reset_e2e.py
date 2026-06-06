@@ -7,18 +7,19 @@ Tests the end-to-end password recovery process:
 - Multi-user isolation
 """
 
-import pytest
-from datetime import datetime, timedelta, UTC
-from fastapi.testclient import TestClient
-from sqlmodel import Session
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from app.main import app
-from app.models.user import User
-from app.models.password_reset_token import PasswordResetToken
-from app.dependencies import get_db
-from app.services.password_reset_service import PasswordResetService
+import pytest
+from fastapi.testclient import TestClient
 from passlib.context import CryptContext
+from sqlmodel import Session
+
+from app.dependencies import get_db
+from app.main import app
+from app.models.password_reset_token import PasswordResetToken
+from app.models.user import User
+from app.services.password_reset_service import PasswordResetService
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

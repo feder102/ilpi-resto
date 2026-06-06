@@ -7,20 +7,22 @@ skipped automatically in environments without one.
 
 import pytest
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
-pytestmark = pytest.mark.skip(reason="Requires live PostgreSQL with applied migrations")
-
+from app.database import engine
 from app.models.shift_type import ShiftType
 from app.models.team import Team
 from app.models.tenant import Tenant
-from app.database import engine
+
+pytestmark = pytest.mark.skip(reason="Requires live PostgreSQL with applied migrations")
 
 
 @pytest.fixture
 def test_tenant():
     """Create a test tenant."""
     import uuid
+
     from sqlalchemy import delete
 
     unique_slug = f"test-org-{uuid.uuid4().hex[:8]}"
@@ -182,7 +184,7 @@ class TestTeamMigration:
             )
             session.add(team)
 
-            with pytest.raises(Exception):  # Database FK constraint violation
+            with pytest.raises(IntegrityError):  # Database FK constraint violation
                 session.commit()
 
     def test_multiple_teams_different_shift_types(self, test_tenant, test_shift_types):

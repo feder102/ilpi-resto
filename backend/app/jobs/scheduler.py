@@ -5,9 +5,10 @@ Sets up APScheduler for nightly automatic time entry generation.
 Processes all shifts for previous day and creates TimeEntry records.
 """
 
+import contextlib
 import logging
 import uuid
-from datetime import timedelta, date
+from datetime import date, timedelta
 
 try:
     from apscheduler.schedulers.background import BackgroundScheduler
@@ -20,10 +21,10 @@ except ImportError:
 
 from sqlmodel import select
 
+from app.common.time_tracking_exceptions import NoShiftsFoundError
 from app.database import SessionLocal
 from app.models.tenant import Tenant
 from app.services.time_tracking_service import run_daily_batch_job as batch_wrapper
-from app.common.time_tracking_exceptions import NoShiftsFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +117,7 @@ def run_daily_batch_job() -> None:
                 )
 
         logger.info(
-            f"Daily batch job completed",
+            "Daily batch job completed",
             extra={
                 "process_date": str(yesterday),
                 "total_entries_created": total_entries,
@@ -136,10 +137,8 @@ def run_daily_batch_job() -> None:
         )
     finally:
         if db:
-            try:
+            with contextlib.suppress(Exception):
                 db.close()
-            except Exception:
-                pass
 
 
 def start_scheduler(batch_hour: int = 1, batch_minute: int = 0) -> None:

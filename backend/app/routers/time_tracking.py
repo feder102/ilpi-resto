@@ -220,7 +220,7 @@ def get_time_entries(
     end_date: date_type = Query(...),
     employee_id: str | None = Query(None),
     department: str | None = Query(None),
-    source: str = Query("shift", regex="^(shift|manual|extra)$"),
+    source: str = Query("shift", pattern="^(shift|manual|extra)$"),
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     current_user: dict = Depends(require_admin_or_moderator),

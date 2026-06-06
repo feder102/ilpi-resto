@@ -1,20 +1,21 @@
 """T063, T066: Shift Types integration tests - deletion with team refs, pagination."""
 
 import pytest
-from sqlmodel import Session, select
-
-pytestmark = pytest.mark.skip(reason="Requires live database with initialized schema")
+from sqlmodel import Session
 
 from app.common.exceptions import ValidationError
+from app.database import engine
 from app.models.shift_type import ShiftType
 from app.models.team import Team
 from app.models.tenant import Tenant
-from app.database import engine
 from app.services.shift_type_service import (
     delete as delete_shift_type,
-    list_shift_types,
-    get_by_id,
 )
+from app.services.shift_type_service import (
+    list_shift_types,
+)
+
+pytestmark = pytest.mark.skip(reason="Requires live database with initialized schema")
 
 
 class TestShiftTypeDeletion:
@@ -24,6 +25,7 @@ class TestShiftTypeDeletion:
     def setup_with_team(self):
         """Create tenant, shift type, and team."""
         import uuid
+
         from sqlalchemy import delete
 
         unique_slug = f"test-{uuid.uuid4().hex[:8]}"
@@ -79,6 +81,7 @@ class TestShiftTypeDeletion:
     def test_can_delete_shift_type_without_teams(self):
         """Verify shift type can be deleted when no teams assigned."""
         import uuid
+
         from sqlalchemy import delete as sql_delete
 
         unique_slug = f"test-{uuid.uuid4().hex[:8]}"
@@ -115,6 +118,7 @@ class TestShiftTypesPagination:
     def setup_multiple_shifts(self):
         """Create tenant with multiple shift types."""
         import uuid
+
         from sqlalchemy import delete
 
         unique_slug = f"test-{uuid.uuid4().hex[:8]}"

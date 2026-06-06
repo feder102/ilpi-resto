@@ -4,7 +4,8 @@ Schemas for employee dashboard overview and related data.
 """
 
 import uuid
-from datetime import datetime, date
+from datetime import date
+
 from pydantic import BaseModel
 
 

@@ -1,5 +1,6 @@
 """T023b: Test infrastructure with SQLite in-memory database."""
 
+import contextlib
 import uuid
 
 import pytest
@@ -25,6 +26,7 @@ test_engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread"
 
 # Patch app.database.engine so integration tests that import it directly use SQLite
 import app.database as _db_module  # noqa: E402
+
 _db_module.engine = test_engine
 
 
@@ -37,10 +39,8 @@ def reset_rate_limiter():
 
     def _reset_all() -> None:
         for lim in (_main_limiter, _auth_router.limiter, _pwd_router.limiter):
-            try:
+            with contextlib.suppress(Exception):
                 lim.reset()
-            except Exception:
-                pass
 
     _reset_all()
     yield
@@ -80,6 +80,7 @@ def test_tenant(session: Session):
 @pytest.fixture
 def test_employee(session: Session, test_tenant):
     from datetime import date
+
     from app.models.employee import Employee
 
     employee = Employee(

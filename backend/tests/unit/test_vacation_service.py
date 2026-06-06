@@ -6,11 +6,14 @@ from datetime import date, timedelta
 import pytest
 from sqlmodel import Session, SQLModel, create_engine
 
-from app.common.exceptions import BalanceExceededError, ConflictError, ForbiddenError, ValidationError
+from app.common.exceptions import (
+    BalanceExceededError,
+    ConflictError,
+    ForbiddenError,
+    ValidationError,
+)
 from app.models.employee import Employee
 from app.models.tenant import Tenant
-from app.models.vacation_balance import VacationBalance
-from app.models.vacation_request import VacationRequest
 from app.services import vacation_service
 
 TEST_DB = "sqlite:///./test_vacation_service.db"

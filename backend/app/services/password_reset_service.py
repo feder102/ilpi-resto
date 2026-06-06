@@ -12,10 +12,10 @@ import hashlib
 import logging
 import os
 import re
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from secrets import token_urlsafe
 from uuid import UUID
-from concurrent.futures import ThreadPoolExecutor
 
 from sqlmodel import Session, select, update
 
@@ -84,7 +84,7 @@ class PasswordResetService:
             # User doesn't exist - return success message without creating token
             # This prevents email enumeration attacks
             logger.info(
-                f"Password reset requested for non-existent email (enumeration protection)",
+                "Password reset requested for non-existent email (enumeration protection)",
                 extra={
                     "email": email,
                     "ip_address": ip_address,
@@ -99,7 +99,7 @@ class PasswordResetService:
             update(PasswordResetToken).where(
                 PasswordResetToken.user_id == user.id,
                 PasswordResetToken.tenant_id == self.tenant_id,
-                PasswordResetToken.used_at == None,
+                PasswordResetToken.used_at.is_(None),
             ).values(used_at=now)
         )
 
@@ -134,7 +134,7 @@ class PasswordResetService:
 
         # Step 9: Log event
         logger.info(
-            f"Password reset requested",
+            "Password reset requested",
             extra={
                 "user_id": str(user.id),
                 "email": email,
@@ -184,7 +184,7 @@ class PasswordResetService:
 
         if expires_at <= now:
             logger.warning(
-                f"Expired token used",
+                "Expired token used",
                 extra={
                     "token_id": str(token_record.id),
                     "user_id": str(token_record.user_id) if token_record.user_id else None,
@@ -198,7 +198,7 @@ class PasswordResetService:
         # Step 4: Check not already used (used_at IS NULL)
         if token_record.used_at is not None:
             logger.warning(
-                f"Already-used token attempted",
+                "Already-used token attempted",
                 extra={
                     "token_id": str(token_record.id),
                     "user_id": str(token_record.user_id) if token_record.user_id else None,
@@ -211,7 +211,7 @@ class PasswordResetService:
 
         # Step 5: Return valid token record
         logger.info(
-            f"Token verified successfully",
+            "Token verified successfully",
             extra={
                 "token_id": str(token_record.id),
                 "user_id": str(token_record.user_id) if token_record.user_id else None,
@@ -253,7 +253,7 @@ class PasswordResetService:
 
         if not user:
             logger.error(
-                f"User not found for password reset token",
+                "User not found for password reset token",
                 extra={"token_id": str(token_record.id)},
             )
             raise InvalidResetTokenError(
@@ -282,7 +282,7 @@ class PasswordResetService:
             update(PasswordResetToken).where(
                 PasswordResetToken.user_id == user.id,
                 PasswordResetToken.tenant_id == self.tenant_id,
-                PasswordResetToken.used_at == None,
+                PasswordResetToken.used_at.is_(None),
                 PasswordResetToken.id != token_record.id,
             ).values(used_at=now)
         )
@@ -292,7 +292,7 @@ class PasswordResetService:
 
         # Step 9: Log event
         logger.info(
-            f"Password reset successful",
+            "Password reset successful",
             extra={
                 "user_id": str(user.id),
                 "email": user.email,

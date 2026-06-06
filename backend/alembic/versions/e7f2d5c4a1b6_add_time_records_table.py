@@ -9,10 +9,10 @@ Feature 005: Employee Workspace Portal - Time Tracking
 - Add unique constraint for single active clock-in per employee per day
 - Add indexes for query optimization
 """
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = 'e7f2d5c4a1b6'
