@@ -11,7 +11,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from datetime import date as date_type
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 from sqlmodel import Session, func, select
 
@@ -66,7 +66,7 @@ class TimeTrackingService:
             hours = Decimal(total_minutes) / Decimal(60)
             return hours.quantize(Decimal('0.00'))
         except Exception as e:
-            raise HoursCalculationError(start_time, end_time, f"Failed to calculate hours: {str(e)}")
+            raise HoursCalculationError(start_time, end_time, f"Failed to calculate hours: {str(e)}") from e
 
     @staticmethod
     def generate_time_entries_for_date(
@@ -188,7 +188,7 @@ class TimeTrackingService:
             raise  # Re-raise without wrapping
         except Exception as e:
             db.rollback()
-            raise BatchProcessingError(f"Batch processing failed: {str(e)}")
+            raise BatchProcessingError(f"Batch processing failed: {str(e)}") from e
 
     @staticmethod
     def create_extra_hours(
@@ -198,7 +198,7 @@ class TimeTrackingService:
         employee_id: uuid.UUID,
         work_date: date_type,
         hours: Decimal,
-        note: Optional[str] = None,
+        note: str | None = None,
     ) -> TimeEntryResponse:
         """Register extra hours (overtime) for an employee as a separate category.
 
@@ -331,8 +331,8 @@ class TimeTrackingService:
         db: Session,
         tenant_id: uuid.UUID,
         employee_id: uuid.UUID,
-        year: Optional[int] = None,
-        month: Optional[int] = None,
+        year: int | None = None,
+        month: int | None = None,
         include_manual: bool = False,
     ) -> EmployeeStatisticsResponse:
         """Get work statistics for a specific employee.
@@ -521,9 +521,9 @@ class TimeTrackingService:
     def get_department_statistics(
         db: Session,
         tenant_id: uuid.UUID,
-        year: Optional[int] = None,
-        month: Optional[int] = None,
-        department: Optional[str] = None,
+        year: int | None = None,
+        month: int | None = None,
+        department: str | None = None,
         include_manual: bool = False,
     ) -> DepartmentStatisticsResponse:
         """Get aggregated statistics for a department.
@@ -580,11 +580,11 @@ class TimeTrackingService:
     def get_time_entries(
         db: Session,
         tenant_id: uuid.UUID,
-        start_date: Optional[date_type] = None,
-        end_date: Optional[date_type] = None,
-        employee_id: Optional[uuid.UUID] = None,
-        department: Optional[str] = None,
-        source: Optional[str] = None,
+        start_date: date_type | None = None,
+        end_date: date_type | None = None,
+        employee_id: uuid.UUID | None = None,
+        department: str | None = None,
+        source: str | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> TimeEntryListResponse:
@@ -680,7 +680,7 @@ class TimeTrackingService:
 
 
 # T021: Batch Job Wrapper for APScheduler
-def run_daily_batch_job(db: Session, tenant_id: uuid.UUID, process_date: Optional[date_type] = None) -> dict[str, Any]:
+def run_daily_batch_job(db: Session, tenant_id: uuid.UUID, process_date: date_type | None = None) -> dict[str, Any]:
     """Wrapper function called by APScheduler for daily automatic time entry generation.
 
     Args:

@@ -3,11 +3,10 @@
 import uuid
 
 from fastapi.testclient import TestClient
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 from app.models.shift_type import ShiftType
 from app.models.team import Team
-from app.models.user import User
 
 
 class TestPostTeams:

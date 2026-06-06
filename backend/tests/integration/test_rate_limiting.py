@@ -6,16 +6,16 @@ Tests password reset request rate limiting:
 - Rate limit reset after window: After 10min+1sec → allowed
 """
 
-import pytest
-from datetime import datetime, timedelta, UTC
-from fastapi.testclient import TestClient
-from sqlmodel import Session
 from uuid import UUID
 
+import pytest
+from fastapi.testclient import TestClient
+from passlib.context import CryptContext
+from sqlmodel import Session
+
+from app.dependencies import get_db
 from app.main import app
 from app.models.user import User
-from app.dependencies import get_db
-from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -83,7 +83,7 @@ class TestRateLimiting:
 
         # Make 6 requests (or until rate limited)
         responses = []
-        for i in range(6):
+        for _ in range(6):
             response = client.post(
                 "/api/v1/auth/password-reset/request",
                 json={"email": "daily_limit_test@example.com"},

@@ -8,25 +8,25 @@ Provides methods for:
 - Employee filtering by department
 """
 
-from datetime import datetime, date
-from typing import Optional, List
-from sqlmodel import Session, select, and_, or_
+from datetime import date
+
+from sqlmodel import Session, and_, select
+
+from app.common.exceptions import (
+    ForbiddenError,
+    NotFoundError,
+    ValidationError,
+)
 from app.models import (
     Employee,
     ShiftRecord,
     ShiftType,
-    VacationRequest,
     VacationBalance,
-)
-from app.common.exceptions import (
-    ConflictError,
-    ValidationError,
-    NotFoundError,
-    ForbiddenError,
+    VacationRequest,
 )
 
 
-def get_department_employees(department: str, session: Session) -> List[Employee]:
+def get_department_employees(department: str, session: Session) -> list[Employee]:
     """
     Get all active employees in moderator's department.
 
@@ -47,7 +47,7 @@ def get_department_employees(department: str, session: Session) -> List[Employee
             and_(
                 Employee.department == department,
                 Employee.status == "Activo",  # Only active employees
-                Employee.is_active == True,
+                Employee.is_active.is_(True),
             )
         )
         .order_by(Employee.first_name, Employee.last_name)
@@ -55,7 +55,7 @@ def get_department_employees(department: str, session: Session) -> List[Employee
     return session.exec(statement).all()
 
 
-def get_available_shift_types(session: Session) -> List[ShiftType]:
+def get_available_shift_types(session: Session) -> list[ShiftType]:
     """
     Get all shift types available for assignment.
 
@@ -75,7 +75,7 @@ def check_vacation_conflict(
     employee_id: str,
     shift_date: date,
     session: Session,
-) -> Optional[str]:
+) -> str | None:
     """
     Check if employee has approved vacation on shift date.
 
@@ -112,7 +112,7 @@ def check_shift_exists(
     employee_id: str,
     shift_date: date,
     session: Session,
-) -> Optional[ShiftRecord]:
+) -> ShiftRecord | None:
     """
     Check if employee already has shift on this date.
 
@@ -199,7 +199,7 @@ def get_employee_vacation_balance(
     employee_id: str,
     year: int,
     session: Session,
-) -> Optional[VacationBalance]:
+) -> VacationBalance | None:
     """
     Get vacation balance for employee in specific year.
 
@@ -321,8 +321,6 @@ def delete_shift(
         ValidationError: If shift has been worked (entry_time set)
         ForbiddenError: If not in same department
     """
-    from app.common.exceptions import ValidationError
-
     # Get shift
     shift = get_shift_by_id(shift_id, session)
 
@@ -351,7 +349,7 @@ def get_vacation_status_for_date(
     employee_id: str,
     check_date: date,
     session: Session,
-) -> Optional[str]:
+) -> str | None:
     """
     Get vacation status for specific date (if applicable).
 
@@ -385,7 +383,7 @@ def get_department_roster(
     year: int,
     month: int,
     session: Session,
-) -> List[dict]:
+) -> list[dict]:
     """
     Get shift roster for moderator's department for a specific month.
 
@@ -411,7 +409,7 @@ def get_department_roster(
         .where(
             and_(
                 Employee.department == department,
-                Employee.is_active == True,
+                Employee.is_active.is_(True),
             )
         )
         .order_by(ShiftRecord.date, Employee.first_name)
@@ -480,8 +478,8 @@ def assign_shift(
     """
     from app.common.exceptions import (
         EmployeeNotInDepartmentError,
-        VacationConflictError,
         ShiftExistsError,
+        VacationConflictError,
     )
 
     # Get employee to verify department
@@ -539,7 +537,7 @@ def get_shifts_for_date(
     department: str,
     check_date: date,
     session: Session,
-) -> List[dict]:
+) -> list[dict]:
     """
     T018: Get shifts assigned for a specific date in moderator's department.
 
@@ -563,7 +561,7 @@ def get_shifts_for_date(
         .where(
             and_(
                 Employee.department == department,
-                Employee.is_active == True,
+                Employee.is_active.is_(True),
                 ShiftRecord.date == check_date,
             )
         )

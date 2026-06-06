@@ -1,6 +1,7 @@
 """T072c: Integration tests for team endpoints."""
 
 import uuid
+
 import pytest
 
 

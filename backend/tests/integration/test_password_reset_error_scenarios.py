@@ -6,19 +6,19 @@ Tests error cases:
 - Tenant mismatch
 """
 
-import pytest
-from datetime import datetime, timedelta, UTC
-from fastapi.testclient import TestClient
-from sqlmodel import Session
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
-import hashlib
 
-from app.main import app
-from app.models.user import User
-from app.models.password_reset_token import PasswordResetToken
-from app.dependencies import get_db
-from app.services.password_reset_service import PasswordResetService
+import pytest
+from fastapi.testclient import TestClient
 from passlib.context import CryptContext
+from sqlmodel import Session
+
+from app.dependencies import get_db
+from app.main import app
+from app.models.password_reset_token import PasswordResetToken
+from app.models.user import User
+from app.services.password_reset_service import PasswordResetService
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -56,7 +56,6 @@ class TestPasswordResetErrorScenarios:
         tenant_id = UUID("12345678-1234-5678-1234-567812345678")
 
         # Create a valid-looking token hash that doesn't exist in DB
-        import hashlib
         fake_token = "valid-format-token-but-not-in-db-12345"
 
         response = client.get(

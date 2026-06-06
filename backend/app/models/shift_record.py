@@ -7,10 +7,11 @@ Updated for Feature 004: Shift Roster Calendar
 """
 
 import uuid
-from datetime import UTC, datetime, date as date_type
+from datetime import UTC, datetime
+from datetime import date as date_type
 from typing import TYPE_CHECKING, Optional
 
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from app.models.time_entry import TimeEntry

@@ -1,6 +1,5 @@
 """Feature 009: Unit tests for dashboard_service (reports from TimeEntry)."""
 
-import uuid
 from datetime import date, time, timedelta
 from decimal import Decimal
 

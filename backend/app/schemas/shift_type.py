@@ -22,8 +22,8 @@ class TimeWindow(BaseModel):
             h, m = map(int, v.split(":"))
             if not (0 <= h < 24 and 0 <= m < 60):
                 raise ValueError("Invalid time values")
-        except (ValueError, IndexError):
-            raise ValueError("Invalid time format")
+        except (ValueError, IndexError) as e:
+            raise ValueError("Invalid time format") from e
         return v
 
 

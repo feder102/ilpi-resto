@@ -6,16 +6,17 @@ SIMPLIFIED VERSION focusing on core security validations
 """
 
 import uuid
-from datetime import datetime, UTC, timedelta
-from fastapi.testclient import TestClient
-import pytest
-from sqlmodel import Session, select
+from datetime import UTC, datetime, timedelta
 
-from app.common.security import hash_password, create_access_token
-from app.models.user import User
+import pytest
+from fastapi.testclient import TestClient
+from sqlmodel import Session
+
+from app.common.security import create_access_token, hash_password
+from app.main import app
 from app.models.employee import Employee
 from app.models.tenant import Tenant
-from app.main import app
+from app.models.user import User
 
 
 @pytest.fixture

@@ -1,16 +1,17 @@
 """T070: Shift Types performance tests."""
 
-import pytest
 import time
+
+import pytest
 from sqlmodel import Session
 
-pytestmark = pytest.mark.skip(reason="Requires live database with initialized schema")
-
+from app.database import engine
 from app.models.shift_type import ShiftType
 from app.models.team import Team
 from app.models.tenant import Tenant
-from app.database import engine
 from app.services.team_service import list_teams
+
+pytestmark = pytest.mark.skip(reason="Requires live database with initialized schema")
 
 
 class TestShiftTypesPerformance:
@@ -20,6 +21,7 @@ class TestShiftTypesPerformance:
     def setup_many_shifts(self):
         """Create tenant with 50+ shift types and teams."""
         import uuid
+
         from sqlalchemy import delete
 
         unique_slug = f"perf-test-{uuid.uuid4().hex[:8]}"

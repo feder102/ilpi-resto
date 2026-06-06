@@ -1,11 +1,14 @@
 """T012-T016: Contract tests for shift-types API endpoints."""
 
-import pytest
+from typing import TYPE_CHECKING
+
 from fastapi.testclient import TestClient
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 from app.models.shift_type import ShiftType
-from app.models.user import User
+
+if TYPE_CHECKING:
+    from app.models.tenant import Tenant
 
 
 class TestPostShiftTypes:
@@ -126,7 +129,7 @@ class TestGetShiftTypes:
     ):
         """T013: Should list shift types paginated."""
         # Create 3 shift types
-        for i, name in enumerate(["Mañana", "Noche", "Cortado"]):
+        for name in ["Mañana", "Noche", "Cortado"]:
             st = ShiftType(
                 tenant_id=test_tenant.id,
                 name=name,

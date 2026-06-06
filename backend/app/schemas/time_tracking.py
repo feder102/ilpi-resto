@@ -10,7 +10,6 @@ import uuid
 from datetime import date, datetime, time
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -29,9 +28,9 @@ class TimeEntryFilterRequest(BaseModel):
     """Filter parameters for time entry queries."""
     start_date: date
     end_date: date
-    employee_id: Optional[uuid.UUID] = None
-    department: Optional[str] = None
-    source: Optional[TimeEntrySource] = TimeEntrySource.SHIFT
+    employee_id: uuid.UUID | None = None
+    department: str | None = None
+    source: TimeEntrySource | None = TimeEntrySource.SHIFT
     limit: int = Field(default=100, le=1000, ge=1)
     offset: int = Field(default=0, ge=0)
 
@@ -57,7 +56,7 @@ class ExtraHoursCreate(BaseModel):
     employee_id: uuid.UUID
     work_date: date
     hours: Decimal = Field(gt=0, le=24, description="Extra hours (> 0 and <= 24)")
-    note: Optional[str] = Field(default=None, max_length=255, description="Reason for the extra hours")
+    note: str | None = Field(default=None, max_length=255, description="Reason for the extra hours")
 
 
 # Response Schemas
@@ -69,12 +68,12 @@ class TimeEntryResponse(BaseModel):
     employee_name: str
     employee_dni: str
     shift_date: date
-    start_time: Optional[time] = None
-    end_time: Optional[time] = None
+    start_time: time | None = None
+    end_time: time | None = None
     hours_worked: Decimal
     source: TimeEntrySource
-    note: Optional[str] = None
-    shift_type_id: Optional[uuid.UUID] = None
+    note: str | None = None
+    shift_type_id: uuid.UUID | None = None
     created_at: datetime
 
     class Config:
@@ -86,7 +85,7 @@ class TimeEntryListResponse(BaseModel):
     total: int
     limit: int
     offset: int
-    items: List[TimeEntryResponse]
+    items: list[TimeEntryResponse]
 
 
 class EmployeeStatisticsResponse(BaseModel):
@@ -101,7 +100,7 @@ class EmployeeStatisticsResponse(BaseModel):
     extra_hours: Decimal = Decimal(0)
     days_worked: int
     avg_hours_per_day: Decimal
-    breakdown_by_shift_type: Dict[str, Decimal]
+    breakdown_by_shift_type: dict[str, Decimal]
 
 
 class DepartmentStatisticsResponse(BaseModel):
@@ -118,8 +117,8 @@ class BatchProcessResponse(BaseModel):
     job_id: str
     status: str  # "queued", "processing", "completed", "failed"
     message: str
-    estimated_entries: Optional[int] = None
-    completed_at: Optional[datetime] = None
+    estimated_entries: int | None = None
+    completed_at: datetime | None = None
 
 
 # ========== Feature 005: Employee Portal Statistics ==========
@@ -127,11 +126,11 @@ class BatchProcessResponse(BaseModel):
 class DailyRecordResponse(BaseModel):
     """Daily work record for employee statistics."""
     date: str  # YYYY-MM-DD
-    entry_time: Optional[str] = None  # HH:MM or null
-    exit_time: Optional[str] = None  # HH:MM or null
+    entry_time: str | None = None  # HH:MM or null
+    exit_time: str | None = None  # HH:MM or null
     duration_hours: str | float  # "8.5" or 8.5
     is_extra: bool = False  # True if this is an extra-hours (overtime) entry
-    note: Optional[str] = None  # Reason, for extra-hours entries
+    note: str | None = None  # Reason, for extra-hours entries
 
 
 class WeeklyBreakdownResponse(BaseModel):
@@ -152,5 +151,5 @@ class EmployeeStatisticsPublicResponse(BaseModel):
     """
     total_hours: str | float  # Total hours for the month (shift + extra)
     extra_hours: str | float = 0  # Extra (overtime) hours portion
-    weekly_breakdown: List[WeeklyBreakdownResponse]  # Breakdown by week
-    daily_records: List[DailyRecordResponse]  # Daily records with times
+    weekly_breakdown: list[WeeklyBreakdownResponse]  # Breakdown by week
+    daily_records: list[DailyRecordResponse]  # Daily records with times

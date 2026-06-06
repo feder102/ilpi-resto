@@ -6,18 +6,18 @@ Tests the complete password reset flow:
 - Password change invalidates old tokens for same user
 """
 
-import pytest
-from datetime import datetime, timedelta, UTC
-from fastapi.testclient import TestClient
-from sqlmodel import Session, select
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
-import hashlib
-from passlib.context import CryptContext
 
-from app.main import app
-from app.models.user import User
-from app.models.password_reset_token import PasswordResetToken
+import pytest
+from fastapi.testclient import TestClient
+from passlib.context import CryptContext
+from sqlmodel import Session
+
 from app.dependencies import get_db
+from app.main import app
+from app.models.password_reset_token import PasswordResetToken
+from app.models.user import User
 from app.services.password_reset_service import PasswordResetService
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

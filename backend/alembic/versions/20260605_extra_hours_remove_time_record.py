@@ -10,10 +10,10 @@ Changes:
 - Add `time_entries.note` (reason for extra-hours entries).
 - Add the `EXTRA` value to the `timeentrysource` enum.
 """
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "20260605_extra_hours"
@@ -33,12 +33,7 @@ def upgrade() -> None:
     op.alter_column("time_entries", "end_time", existing_type=sa.Time(), nullable=True)
     op.add_column("time_entries", sa.Column("note", sa.String(length=255), nullable=True))
 
-    # --- drop manual time tracking table ---
-    op.drop_index("uq_active_clock_in", table_name="time_record")
-    op.drop_index("ix_time_record_employee_id", table_name="time_record")
-    op.drop_index("ix_time_record_tenant_id", table_name="time_record")
-    op.drop_index("ix_time_record_date", table_name="time_record")
-    op.drop_index("idx_time_record_employee_date", table_name="time_record")
+    # --- drop manual time tracking table (DROP TABLE removes its indexes too) ---
     op.drop_table("time_record")
 
 
