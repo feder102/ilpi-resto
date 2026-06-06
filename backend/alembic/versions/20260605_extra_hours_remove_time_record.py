@@ -33,12 +33,7 @@ def upgrade() -> None:
     op.alter_column("time_entries", "end_time", existing_type=sa.Time(), nullable=True)
     op.add_column("time_entries", sa.Column("note", sa.String(length=255), nullable=True))
 
-    # --- drop manual time tracking table ---
-    op.drop_index("uq_active_clock_in", table_name="time_record")
-    op.drop_index("ix_time_record_employee_id", table_name="time_record")
-    op.drop_index("ix_time_record_tenant_id", table_name="time_record")
-    op.drop_index("ix_time_record_date", table_name="time_record")
-    op.drop_index("idx_time_record_employee_date", table_name="time_record")
+    # --- drop manual time tracking table (DROP TABLE removes its indexes too) ---
     op.drop_table("time_record")
 
 
