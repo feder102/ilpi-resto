@@ -11,6 +11,16 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "http://localhost:5173"
     LOG_LEVEL: str = "INFO"
 
+    # Auth cookie behaviour (refresh_token). For cross-site setups (frontend and
+    # backend on different domains, e.g. Vercel) use COOKIE_SAMESITE="none" and
+    # COOKIE_SECURE=true (SameSite=None requires Secure over HTTPS).
+    COOKIE_SAMESITE: str = "lax"
+    COOKIE_SECURE: bool = False
+
+    # Disable the background APScheduler (Feature 008 nightly batch). Must be true
+    # on serverless platforms (e.g. Vercel) where long-running threads don't persist.
+    DISABLE_SCHEDULER: bool = False
+
     # Feature 008: Automatic Time Tracking
     BATCH_TIME_TRACKING_HOUR: int = 1  # Hour of day (0-23) for batch job (default: 01:00 AM)
     BATCH_TIME_TRACKING_MINUTE: int = 0  # Minute of hour (0-59) for batch job

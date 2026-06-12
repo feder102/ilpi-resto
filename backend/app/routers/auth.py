@@ -4,6 +4,7 @@ from fastapi import APIRouter, Request, Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
+from app.config import settings
 from app.dependencies import DbSession, RefreshToken
 from app.schemas.auth import (
     LoginRequest,
@@ -16,6 +17,13 @@ from app.services import auth_service
 router = APIRouter(tags=["auth"])
 limiter = Limiter(key_func=get_remote_address)
 
+# Cookie attributes for the refresh_token (env-driven for cross-site deployments)
+_COOKIE_KWARGS = {
+    "httponly": True,
+    "secure": settings.COOKIE_SECURE,
+    "samesite": settings.COOKIE_SAMESITE,
+}
+
 
 @router.post("/auth/login", response_model=LoginResponse)
 @limiter.limit("10/minute")
@@ -25,10 +33,8 @@ def login(request: Request, body: LoginRequest, response: Response, session: DbS
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
-            httponly=True,
-            secure=False,  # Set True in production with HTTPS
-            samesite="lax",
             max_age=7 * 24 * 60 * 60,  # 7 days
+            **_COOKIE_KWARGS,
         )
         return login_response
     except Exception as e:
@@ -44,10 +50,8 @@ def refresh(response: Response, session: DbSession, refresh_token: RefreshToken)
     response.set_cookie(
         key="refresh_token",
         value=new_refresh,
-        httponly=True,
-        secure=False,
-        samesite="lax",
         max_age=7 * 24 * 60 * 60,
+        **_COOKIE_KWARGS,
     )
     return login_response
 
@@ -55,7 +59,12 @@ def refresh(response: Response, session: DbSession, refresh_token: RefreshToken)
 @router.post("/auth/logout", status_code=204)
 def logout(response: Response, refresh_token: RefreshToken):
     auth_service.logout(refresh_token)
-    response.delete_cookie("refresh_token")
+    response.delete_cookie(
+        "refresh_token",
+        samesite=settings.COOKIE_SAMESITE,
+        secure=settings.COOKIE_SECURE,
+        httponly=True,
+    )
 
 
 # Feature 005: Password Setup Endpoint
