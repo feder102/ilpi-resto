@@ -5,6 +5,10 @@ RUN npm install
 
 # Production build stage
 FROM base AS build
+# API base baked at build time. Default is the relative path used behind the
+# Caddy reverse proxy (same-origin). Override with --build-arg for other setups.
+ARG VITE_API_URL=/api/v1
+ENV VITE_API_URL=${VITE_API_URL}
 COPY . .
 RUN npm run build
 
