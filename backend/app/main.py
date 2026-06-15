@@ -50,6 +50,9 @@ def create_app() -> FastAPI:
     # Initialize background scheduler for automatic time tracking (Feature 008)
     @app.on_event("startup")
     async def startup_scheduler() -> None:
+        if settings.DISABLE_SCHEDULER:
+            logger.info("Background scheduler disabled (DISABLE_SCHEDULER=true)")
+            return
         try:
             from app.jobs import start_scheduler
             start_scheduler(
