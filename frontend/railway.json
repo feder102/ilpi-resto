@@ -6,7 +6,7 @@
     "dockerBuildTarget": "production"
   },
   "deploy": {
-    "startCommand": "serve -s dist -l $PORT",
+    "startCommand": "serve -s dist --port $PORT",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 5
   }
