@@ -4,7 +4,14 @@ from sqlmodel import Session, create_engine
 
 from app.config import settings
 
-engine = create_engine(settings.DATABASE_URL, echo=False)
+# Managed providers (Railway/Neon/Heroku) sometimes hand out "postgres://" URLs,
+# but SQLAlchemy requires the "postgresql://" scheme.
+_db_url = settings.DATABASE_URL
+if _db_url.startswith("postgres://"):
+    _db_url = _db_url.replace("postgres://", "postgresql://", 1)
+
+# pool_pre_ping recycles stale connections (managed Postgres closes idle ones).
+engine = create_engine(_db_url, echo=False, pool_pre_ping=True)
 
 
 def get_session() -> Session:
