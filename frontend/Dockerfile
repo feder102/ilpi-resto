@@ -27,4 +27,4 @@ WORKDIR /app
 RUN npm install -g serve
 COPY --from=build /app/dist ./dist
 EXPOSE 5173
-CMD ["sh", "-c", "serve -s dist --port ${PORT:-5173}"]
+CMD ["sh", "-c", "serve -s dist -l tcp://0.0.0.0:${PORT:-5173}"]
