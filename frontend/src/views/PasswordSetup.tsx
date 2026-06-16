@@ -151,10 +151,8 @@ export default function PasswordSetup() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Password Field */}
-            <div className="form-control">
-              <label htmlFor="password" className="label">
-                <span className="label-text">Nueva Contraseña</span>
-              </label>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="password" className="text-sm font-medium text-base-content">Nueva Contraseña</label>
               <Input
                 id="password"
                 type="password"
@@ -167,10 +165,8 @@ export default function PasswordSetup() {
             </div>
 
             {/* Password Confirm Field */}
-            <div className="form-control">
-              <label htmlFor="passwordConfirm" className="label">
-                <span className="label-text">Confirmar Contraseña</span>
-              </label>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="passwordConfirm" className="text-sm font-medium text-base-content">Confirmar Contraseña</label>
               <Input
                 id="passwordConfirm"
                 type="password"

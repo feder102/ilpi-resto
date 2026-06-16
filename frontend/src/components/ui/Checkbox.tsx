@@ -22,8 +22,8 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
     }, [indeterminate]);
 
     return (
-      <div className={`form-control ${className || ''}`}>
-        <label className="label cursor-pointer justify-start gap-3" htmlFor={finalId}>
+      <div className={className || ''}>
+        <label className="flex items-center cursor-pointer gap-3" htmlFor={finalId}>
           <input
             ref={checkboxRef}
             id={finalId}
@@ -32,7 +32,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             disabled={disabled}
             {...props}
           />
-          {label && <span className="label-text">{label}</span>}
+          {label && <span className="text-sm">{label}</span>}
         </label>
         {error && <p className="text-error text-xs mt-1 ml-1">{error}</p>}
         {helperText && !error && <p className="text-base-content/60 text-xs mt-1 ml-1">{helperText}</p>}

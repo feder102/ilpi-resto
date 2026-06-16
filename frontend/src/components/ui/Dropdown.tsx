@@ -18,7 +18,7 @@ export interface DropdownProps extends Omit<React.HTMLAttributes<HTMLDivElement>
 const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
   ({ options, value, onChange, placeholder = 'Seleccionar...', disabled = false, className, ...props }, ref) => {
     return (
-      <div ref={ref} className={`form-control w-full ${className || ''}`} {...props}>
+      <div ref={ref} className={`w-full ${className || ''}`} {...props}>
         <select
           className="select select-bordered w-full"
           value={value || ''}

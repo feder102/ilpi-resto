@@ -20,11 +20,11 @@ const RadioGroup = React.forwardRef<HTMLFieldSetElement, RadioGroupProps>(
   ({ options, value, onChange, legend, orientation = 'vertical', error, disabled, className, ...props }, ref) => {
     const groupId = React.useId();
     return (
-      <fieldset ref={ref} className={`form-control ${className || ''}`} disabled={disabled} {...props}>
-        {legend && <legend className="label-text font-medium mb-2">{legend}</legend>}
+      <fieldset ref={ref} className={className || ''} disabled={disabled} {...props}>
+        {legend && <legend className="text-sm font-medium mb-2">{legend}</legend>}
         <div className={orientation === 'horizontal' ? 'flex flex-wrap items-center gap-4' : 'space-y-2'}>
           {options.map((option) => (
-            <label key={option.value} className="label cursor-pointer justify-start gap-3" htmlFor={`${groupId}-${option.value}`}>
+            <label key={option.value} className="flex items-center cursor-pointer gap-3" htmlFor={`${groupId}-${option.value}`}>
               <input
                 type="radio"
                 id={`${groupId}-${option.value}`}
@@ -35,7 +35,7 @@ const RadioGroup = React.forwardRef<HTMLFieldSetElement, RadioGroupProps>(
                 disabled={option.disabled || disabled}
                 className="radio radio-primary"
               />
-              <span className="label-text">{option.label}</span>
+              <span className="text-sm">{option.label}</span>
             </label>
           ))}
         </div>

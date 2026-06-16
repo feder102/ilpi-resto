@@ -62,10 +62,8 @@ export default function LoginView() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="form-control">
-            <label htmlFor="email" className="label">
-              <span className="label-text">Correo electrónico</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="email" className="text-sm font-medium text-base-content">Correo electrónico</label>
             <Input
               id="email"
               type="email"
@@ -76,10 +74,8 @@ export default function LoginView() {
             />
           </div>
 
-          <div className="form-control">
-            <label htmlFor="password" className="label">
-              <span className="label-text">Contraseña</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="password" className="text-sm font-medium text-base-content">Contraseña</label>
             <Input
               id="password"
               type="password"

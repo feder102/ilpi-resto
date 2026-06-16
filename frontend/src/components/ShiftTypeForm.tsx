@@ -130,13 +130,13 @@ export function ShiftTypeForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && <Alert variant="error">{error}</Alert>}
 
-      <div className="form-control">
-        <label htmlFor="shiftName" className="label"><span className="label-text">Nombre del Turno *</span></label>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="shiftName" className="text-sm font-medium text-base-content">Nombre del Turno *</label>
         <input id="shiftName" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Mañana, Noche, Cortado" className="input input-bordered" disabled={loading} />
       </div>
 
-      <div className="form-control">
-        <label htmlFor="shiftType" className="label"><span className="label-text">Tipo de Turno *</span></label>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="shiftType" className="text-sm font-medium text-base-content">Tipo de Turno *</label>
         <select id="shiftType" value={type} onChange={(e) => setType(e.target.value as 'MAÑANA' | 'NOCHE' | 'CORTADO' | 'CORRIDO')} className="select select-bordered" disabled={loading}>
           {Object.entries(shiftTypeLabels).map(([value, label]) => (
             <option key={value} value={value}>{label}</option>
