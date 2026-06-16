@@ -156,10 +156,8 @@ export default function ShiftAssignmentForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Employee Dropdown */}
-      <div className="form-control">
-        <label className="label">
-          <span className="label-text">Empleado</span>
-        </label>
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-base-content">Empleado</label>
         <select
           value={employeeId}
           onChange={e => handleEmployeeChange(e.target.value)}
@@ -180,17 +178,13 @@ export default function ShiftAssignmentForm({
           ))}
         </select>
         {errors.employeeId && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.employeeId}</span>
-          </label>
+          <p className="text-error text-xs mt-1">{errors.employeeId}</p>
         )}
       </div>
 
       {/* Date Picker */}
-      <div className="form-control">
-        <label className="label">
-          <span className="label-text">Fecha del Turno</span>
-        </label>
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-base-content">Fecha del Turno</label>
         <input
           type="date"
           value={date}
@@ -202,28 +196,22 @@ export default function ShiftAssignmentForm({
           }`}
         />
         {errors.date && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.date}</span>
-          </label>
+          <p className="text-error text-xs mt-1">{errors.date}</p>
         )}
         {date && !errors.date && !isWeekend(date) && (
-          <label className="label">
-            <span className="label-text-alt text-success">
-              Fecha válida ({new Date(date).toLocaleDateString('es-ES', {
-                weekday: 'long',
-                day: '2-digit',
-                month: 'long',
-              })})
-            </span>
-          </label>
+          <p className="text-xs text-base-content/60 mt-1">
+            Fecha válida ({new Date(date).toLocaleDateString('es-ES', {
+              weekday: 'long',
+              day: '2-digit',
+              month: 'long',
+            })})
+          </p>
         )}
       </div>
 
       {/* Shift Type Dropdown */}
-      <div className="form-control">
-        <label className="label">
-          <span className="label-text">Tipo de Turno</span>
-        </label>
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-base-content">Tipo de Turno</label>
         <select
           value={shiftTypeId}
           onChange={e => handleShiftTypeChange(e.target.value)}
@@ -244,9 +232,7 @@ export default function ShiftAssignmentForm({
           ))}
         </select>
         {errors.shiftTypeId && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.shiftTypeId}</span>
-          </label>
+          <p className="text-error text-xs mt-1">{errors.shiftTypeId}</p>
         )}
       </div>
 
