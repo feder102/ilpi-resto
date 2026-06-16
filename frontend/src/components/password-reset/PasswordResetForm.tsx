@@ -115,10 +115,8 @@ export default function PasswordResetForm({ token }: PasswordResetFormProps) {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="form-control">
-          <label htmlFor="password" className="label">
-            <span className="label-text">Nueva contraseña</span>
-          </label>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="password" className="text-sm font-medium text-base-content">Nueva contraseña</label>
           <input
             id="password"
             type="password"

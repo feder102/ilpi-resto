@@ -307,10 +307,8 @@ export default function RotaryView() {
         {formError && <Alert variant="error" message={formError} className="mb-4" />}
 
         <div className="space-y-4">
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Nombre *</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Nombre *</label>
             <input
               className="input input-bordered w-full"
               value={teamName}
@@ -319,10 +317,8 @@ export default function RotaryView() {
             />
           </div>
 
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Tipo de turno</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Tipo de turno</label>
             <select
               className="select select-bordered w-full"
               value={selectedShiftTypeId}

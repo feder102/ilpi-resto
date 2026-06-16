@@ -133,10 +133,8 @@ export default function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProp
             </div>
           )}
 
-          <div className="form-control">
-            <label htmlFor="email" className="label">
-              <span className="label-text">Correo electrónico</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="email" className="text-sm font-medium text-base-content">Correo electrónico</label>
             <input
               id="email"
               type="email"

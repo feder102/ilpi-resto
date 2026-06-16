@@ -191,10 +191,8 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
         )}
 
         {/* Employee Selection */}
-        <div className="form-control">
-          <label htmlFor="employee" className="label">
-            <span className="label-text">Empleado</span>
-          </label>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="employee" className="text-sm font-medium text-base-content">Empleado</label>
           <select
             id="employee"
             value={selectedEmployeeId}
@@ -213,10 +211,8 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
         </div>
 
         {/* Shift Type Selection */}
-        <div className="form-control">
-          <label htmlFor="shift_type" className="label">
-            <span className="label-text">Tipo de Turno</span>
-          </label>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="shift_type" className="text-sm font-medium text-base-content">Tipo de Turno</label>
           <select
             id="shift_type"
             value={selectedShiftTypeId}
