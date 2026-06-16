@@ -34,6 +34,32 @@ export interface EmployeeStatistics {
   days_worked: number;
   avg_hours_per_day: number | string;
   breakdown_by_shift_type: Record<string, number | string>;
+  total_absences?: number;
+  justified_absences?: number;
+  unjustified_absences?: number;
+}
+
+export interface AbsenceCreate {
+  employee_id: string;
+  date: string; // YYYY-MM-DD
+  justified: boolean;
+  reason?: string;
+}
+
+export interface Absence {
+  id: string;
+  employee_id: string;
+  employee_name: string;
+  employee_dni: string;
+  date: string; // YYYY-MM-DD
+  justified: boolean;
+  reason: string | null;
+  created_at: string;
+}
+
+export interface AbsenceListResponse {
+  total: number;
+  items: Absence[];
 }
 
 /** Request to register extra hours (overtime) for an employee. Admin/Moderador only. */

@@ -38,6 +38,9 @@ interface StatisticsResponse {
   extra_hours?: number | string;
   weekly_breakdown: WeeklyBreakdown[];
   daily_records: DailyRecord[];
+  total_absences?: number;
+  justified_absences?: number;
+  unjustified_absences?: number;
 }
 
 /**
@@ -257,7 +260,7 @@ export default function EmployeeStatisticsView() {
 
         {/* Summary Cards */}
         {!error && data && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
             {/* Total Hours Card */}
             <Card className="bg-primary/10 border-2 border-primary/30">
               <div className="flex items-start justify-between mb-3">
@@ -334,6 +337,24 @@ export default function EmployeeStatisticsView() {
               </div>
               <p className="text-xs text-base-content/50">
                 Horas promedio por día
+              </p>
+            </Card>
+
+            {/* Absences Card */}
+            <Card className="bg-error/10 border-2 border-error/30">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <p className="text-sm font-medium text-base-content/60">
+                    Ausencias
+                  </p>
+                  <p className="text-3xl font-bold text-error mt-1">
+                    {data.total_absences ?? 0}
+                  </p>
+                </div>
+                <AlertCircle className="w-8 h-8 text-error/60" />
+              </div>
+              <p className="text-xs text-base-content/50">
+                {data.justified_absences ?? 0} justificadas · {data.unjustified_absences ?? 0} injustificadas
               </p>
             </Card>
           </div>

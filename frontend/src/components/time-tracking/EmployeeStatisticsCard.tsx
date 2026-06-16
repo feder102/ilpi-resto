@@ -251,7 +251,7 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
         <>
           {/* Stats Summary */}
           <Card className="bg-white">
-            <div className="p-4 grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="p-4 grid grid-cols-2 md:grid-cols-6 gap-4">
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600">
                   {typeof stats.total_hours === 'string'
@@ -290,6 +290,17 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
                     : stats.avg_hours_per_day.toFixed(2)}
                 </div>
                 <div className="text-sm text-gray-600">Promedio/Día</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-red-600">
+                  {stats.total_absences ?? 0}
+                </div>
+                <div className="text-sm text-gray-600 mt-1">Ausencias</div>
+                {(stats.total_absences ?? 0) > 0 && (
+                  <div className="text-xs text-gray-400 mt-1">
+                    {stats.justified_absences ?? 0}J / {stats.unjustified_absences ?? 0}I
+                  </div>
+                )}
               </div>
               <div className="text-center">
                 <div className="text-sm text-gray-500">

@@ -15,6 +15,9 @@ from app.common.exceptions import ForbiddenError, ValidationError, handle_except
 from app.common.time_tracking_exceptions import NoShiftsFoundError
 from app.dependencies import CurrentUser, DbSession, get_db, require_role_and_active
 from app.schemas.time_tracking import (
+    AbsenceCreate,
+    AbsenceListResponse,
+    AbsenceResponse,
     BatchProcessRequest,
     BatchProcessResponse,
     DepartmentStatisticsResponse,
@@ -24,6 +27,7 @@ from app.schemas.time_tracking import (
     TimeEntryListResponse,
     TimeEntryResponse,
 )
+from app.services.absence_service import AbsenceService
 from app.services.time_tracking_service import TimeTrackingService
 
 router = APIRouter(prefix="/employee/time-tracking", tags=["time-tracking"])
@@ -275,3 +279,83 @@ def trigger_batch_process(
             message=f"No se encontraron turnos para {request.process_date}",
             estimated_entries=0,
         )
+
+
+# ========== Absence Endpoints ==========
+
+
+@router.post(
+    "/absences",
+    response_model=AbsenceResponse,
+    status_code=201,
+    summary="Register an absence for an employee on a shift day",
+)
+@handle_exceptions
+def create_absence(
+    body: AbsenceCreate,
+    current_user: dict = Depends(require_admin_or_moderator),
+    db: Session = Depends(get_db),
+) -> AbsenceResponse:
+    """Register an absence for an employee on a day they had an assigned shift.
+
+    Admin/Moderador only. Removes the SHIFT TimeEntry so stats update immediately.
+
+    Returns:
+    - 201: Created
+    - 400: No shift on that date, or absence already exists
+    - 403: Forbidden
+    - 404: Employee not found
+    """
+    return AbsenceService.create_absence(
+        db=db,
+        tenant_id=uuid.UUID(current_user.get("tenant_id", "")),
+        current_user=current_user,
+        employee_id=body.employee_id,
+        absence_date=body.date,
+        justified=body.justified,
+        reason=body.reason,
+    )
+
+
+@router.get(
+    "/absences",
+    response_model=AbsenceListResponse,
+    summary="List absences",
+)
+@handle_exceptions
+def list_absences(
+    employee_id: str | None = Query(None),
+    year: int | None = Query(None, ge=2020, le=2100),
+    month: int | None = Query(None, ge=1, le=12),
+    current_user: dict = Depends(require_admin_or_moderator),
+    db: Session = Depends(get_db),
+) -> AbsenceListResponse:
+    """List absences with optional filters by employee and/or month."""
+    emp_id = _parse_employee_uuid(employee_id) if employee_id else None
+    return AbsenceService.list_absences(
+        db=db,
+        tenant_id=uuid.UUID(current_user.get("tenant_id", "")),
+        employee_id=emp_id,
+        year=year,
+        month=month,
+    )
+
+
+@router.delete(
+    "/absences/{absence_id}",
+    status_code=204,
+    summary="Delete an absence record",
+)
+@handle_exceptions
+def delete_absence(
+    absence_id: uuid.UUID,
+    current_user: dict = Depends(require_admin_or_moderator),
+    db: Session = Depends(get_db),
+) -> None:
+    """Delete an absence record (Admin/Moderador only). Regenerates the SHIFT TimeEntry."""
+    AbsenceService.delete_absence(
+        db=db,
+        tenant_id=uuid.UUID(current_user.get("tenant_id", "")),
+        current_user=current_user,
+        absence_id=absence_id,
+    )
