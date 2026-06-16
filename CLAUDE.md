@@ -60,6 +60,7 @@ This project follows **5 non-negotiable architectural principles**:
 - **React 19** + TypeScript 5.8+ + Vite 6
 - **Routing**: react-router-dom v7
 - **State**: React Context + hooks
+- **UI / Estilos**: **Tailwind CSS v4** + **DaisyUI v5** — usar siempre API v5
 - **Charts**: Recharts (analytics/dashboards)
 - **Calendar**: react-big-calendar (shift rostering)
 - **QR Scanning**: html5-qrcode
@@ -67,6 +68,12 @@ This project follows **5 non-negotiable architectural principles**:
 - **HTTP**: Axios
 - **Drag & Drop**: @dnd-kit (if needed)
 - **Testing**: Vitest + React Testing Library
+
+> ⚠️ **DaisyUI v5 — clases eliminadas/cambiadas respecto a v3/v4:**
+> - `form-control` → **eliminado**; usar `flex flex-col gap-1` para agrupar label + input
+> - `label.label` (clase DaisyUI sobre `<label>`) → **eliminado**; usar `<label className="text-sm font-medium text-base-content">`
+> - `label-text` / `label-text-alt` → **eliminados**; usar clases Tailwind directas (`text-sm`, `text-xs text-base-content/60`)
+> - Para texto de error/ayuda debajo de un input: usar `<p className="text-error text-xs mt-1">` en lugar de `<label className="label"><span className="label-text-alt">`
 
 ---
 

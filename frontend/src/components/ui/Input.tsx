@@ -17,7 +17,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const finalAriaDescribedBy = ids.length > 0 ? ids.join(' ') : undefined;
 
     return (
-      <div className="form-control w-full">
+      <div className="w-full">
         <div className="relative">
           <input
             ref={ref}
@@ -34,14 +34,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
         {error && (
-          <label className="label" id={`${id}-error`}>
-            <span className="label-text-alt text-error">{error}</span>
-          </label>
+          <p className="text-error text-xs mt-1" id={`${id}-error`}>{error}</p>
         )}
         {helpText && !error && (
-          <label className="label" id={`${id}-help`}>
-            <span className="label-text-alt">{helpText}</span>
-          </label>
+          <p className="text-base-content/60 text-xs mt-1" id={`${id}-help`}>{helpText}</p>
         )}
       </div>
     );

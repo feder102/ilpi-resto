@@ -392,65 +392,47 @@ export default function EmployeeListView() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Personal Info */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Nombre {formErrors.first_name && <span className="text-error">*</span>}</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Nombre {formErrors.first_name && <span className="text-error">*</span>}</label>
             <input className="input input-bordered w-full" value={form.first_name} onChange={(e) => updateField('first_name', e.target.value)} />
             {formErrors.first_name && <p className="mt-1 text-xs text-error">{formErrors.first_name}</p>}
           </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Apellidos {formErrors.last_name && <span className="text-error">*</span>}</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Apellidos {formErrors.last_name && <span className="text-error">*</span>}</label>
             <input className="input input-bordered w-full" value={form.last_name} onChange={(e) => updateField('last_name', e.target.value)} />
             {formErrors.last_name && <p className="mt-1 text-xs text-error">{formErrors.last_name}</p>}
           </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Email {formErrors.email && <span className="text-error">*</span>}</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Email {formErrors.email && <span className="text-error">*</span>}</label>
             <input type="email" className="input input-bordered w-full" value={form.email} onChange={(e) => updateField('email', e.target.value)} />
             {formErrors.email && <p className="mt-1 text-xs text-error">{formErrors.email}</p>}
           </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Teléfono</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Teléfono</label>
             <input className="input input-bordered w-full" value={form.phone || ''} onChange={(e) => updateField('phone', e.target.value)} />
           </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">DNI {formErrors.dni && <span className="text-error">*</span>}</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">DNI {formErrors.dni && <span className="text-error">*</span>}</label>
             <input className="input input-bordered w-full" value={form.dni} onChange={(e) => updateField('dni', e.target.value)} />
             {formErrors.dni && <p className="mt-1 text-xs text-error">{formErrors.dni}</p>}
           </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Fecha de nacimiento</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Fecha de nacimiento</label>
             <input type="date" className="input input-bordered w-full" value={form.birth_date || ''} onChange={(e) => updateField('birth_date', e.target.value)} />
           </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Dirección</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Dirección</label>
             <input className="input input-bordered w-full" value={form.address || ''} onChange={(e) => updateField('address', e.target.value)} />
           </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Género</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Género</label>
             <select className="select select-bordered w-full" value={form.gender || ''} onChange={(e) => updateField('gender', e.target.value)}>
               <option value="">Seleccionar...</option>
               {Object.values(Gender).map((g) => <option key={g} value={g}>{g}</option>)}
             </select>
           </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Estado civil</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Estado civil</label>
             <select className="select select-bordered w-full" value={form.marital_status || ''} onChange={(e) => updateField('marital_status', e.target.value)}>
               <option value="">Seleccionar...</option>
               {Object.values(MaritalStatus).map((m) => <option key={m} value={m}>{m}</option>)}
@@ -458,41 +440,31 @@ export default function EmployeeListView() {
           </div>
 
           {/* Company Info */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Departamento {formErrors.department && <span className="text-error">*</span>}</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Departamento {formErrors.department && <span className="text-error">*</span>}</label>
             <select className="select select-bordered w-full" value={form.department} onChange={(e) => updateField('department', e.target.value)}>
               {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
             {formErrors.department && <p className="mt-1 text-xs text-error">{formErrors.department}</p>}
           </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Rol {formErrors.role && <span className="text-error">*</span>}</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Rol {formErrors.role && <span className="text-error">*</span>}</label>
             <select className="select select-bordered w-full" value={form.role} onChange={(e) => updateField('role', e.target.value)}>
               {Object.values(Role).map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
             {formErrors.role && <p className="mt-1 text-xs text-error">{formErrors.role}</p>}
           </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Fecha de contratación {formErrors.hire_date && <span className="text-error">*</span>}</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Fecha de contratación {formErrors.hire_date && <span className="text-error">*</span>}</label>
             <input type="date" className="input input-bordered w-full" value={form.hire_date} onChange={(e) => updateField('hire_date', e.target.value)} />
             {formErrors.hire_date && <p className="mt-1 text-xs text-error">{formErrors.hire_date}</p>}
           </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Contacto de emergencia</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Contacto de emergencia</label>
             <input className="input input-bordered w-full" value={form.emergency_contact || ''} onChange={(e) => updateField('emergency_contact', e.target.value)} />
           </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">URL imagen de perfil</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">URL imagen de perfil</label>
             <input className="input input-bordered w-full" value={form.profile_image || ''} onChange={(e) => updateField('profile_image', e.target.value)} />
           </div>
         </div>

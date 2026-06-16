@@ -113,10 +113,8 @@ export default function VacationRequestList({
       <div className="p-4 border-b border-base-300">
         <div className="space-y-4">
           {/* Status Filter */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Estado</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Estado</label>
             <div className="flex gap-2 flex-wrap">
               {['Pendiente', 'Aprobado', 'Rechazado', 'Cancelado'].map(status => (
                 <button
@@ -135,10 +133,8 @@ export default function VacationRequestList({
           </div>
 
           {/* Employee Filter */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Buscar empleado</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Buscar empleado</label>
             <input
               type="text"
               placeholder="Nombre del empleado..."
@@ -161,10 +157,8 @@ export default function VacationRequestList({
             <div className="pt-2 border-t border-base-300 space-y-3">
               <p className="text-sm font-medium text-base-content">Rango de Fechas</p>
               <div className="grid grid-cols-2 gap-2">
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text-alt">Desde</span>
-                  </label>
+                <div className="flex flex-col gap-1">
+                  <p className="text-xs text-base-content/60 mt-1">Desde</p>
                   <input
                     type="date"
                     value={dateFromFilter}
@@ -172,10 +166,8 @@ export default function VacationRequestList({
                     className="input input-bordered input-sm w-full"
                   />
                 </div>
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text-alt">Hasta</span>
-                  </label>
+                <div className="flex flex-col gap-1">
+                  <p className="text-xs text-base-content/60 mt-1">Hasta</p>
                   <input
                     type="date"
                     value={dateToFilter}

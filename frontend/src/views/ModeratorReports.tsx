@@ -109,10 +109,8 @@ export default function ModeratorReports() {
         {/* Date filter */}
         <Card>
           <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-4">
-            <div className="form-control">
-              <label className="label py-1" htmlFor="mod-date-from">
-                <span className="label-text text-xs">Desde</span>
-              </label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-base-content/70" htmlFor="mod-date-from">Desde</label>
               <input
                 id="mod-date-from"
                 type="date"
@@ -122,10 +120,8 @@ export default function ModeratorReports() {
                 onChange={(e) => setDateFrom(e.target.value)}
               />
             </div>
-            <div className="form-control">
-              <label className="label py-1" htmlFor="mod-date-to">
-                <span className="label-text text-xs">Hasta</span>
-              </label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-base-content/70" htmlFor="mod-date-to">Hasta</label>
               <input
                 id="mod-date-to"
                 type="date"

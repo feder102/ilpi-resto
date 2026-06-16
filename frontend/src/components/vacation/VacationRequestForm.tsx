@@ -145,10 +145,8 @@ export default function VacationRequestForm({
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid md:grid-cols-2 gap-6">
             {/* Start Date */}
-            <div className="form-control">
-              <label htmlFor="startDate" className="label">
-                <span className="label-text">Fecha de Inicio</span>
-              </label>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="startDate" className="text-sm font-medium text-base-content">Fecha de Inicio</label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-3 w-5 h-5 text-base-content/40 pointer-events-none" />
                 <input
@@ -170,10 +168,8 @@ export default function VacationRequestForm({
             </div>
 
             {/* End Date */}
-            <div className="form-control">
-              <label htmlFor="endDate" className="label">
-                <span className="label-text">Fecha de Fin</span>
-              </label>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="endDate" className="text-sm font-medium text-base-content">Fecha de Fin</label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-3 w-5 h-5 text-base-content/40 pointer-events-none" />
                 <input

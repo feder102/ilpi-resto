@@ -302,10 +302,8 @@ export default function VacationView() {
 
         <div className="space-y-4">
           {isAdminOrMod && (
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Empleado *</span>
-              </label>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-base-content">Empleado *</label>
               <select className="select select-bordered w-full" value={selectedEmployee} onChange={(e) => setSelectedEmployee(e.target.value)}>
                 <option value="">Seleccionar empleado...</option>
                 {employees.map((emp) => (
@@ -315,16 +313,12 @@ export default function VacationView() {
             </div>
           )}
 
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Fecha inicio *</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Fecha inicio *</label>
             <input className="input input-bordered w-full" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
           </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Fecha fin *</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Fecha fin *</label>
             <input className="input input-bordered w-full" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
           </div>
 

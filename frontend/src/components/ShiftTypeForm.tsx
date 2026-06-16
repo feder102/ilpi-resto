@@ -130,13 +130,13 @@ export function ShiftTypeForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && <Alert variant="error">{error}</Alert>}
 
-      <div className="form-control">
-        <label htmlFor="shiftName" className="label"><span className="label-text">Nombre del Turno *</span></label>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="shiftName" className="text-sm font-medium text-base-content">Nombre del Turno *</label>
         <input id="shiftName" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Mañana, Noche, Cortado" className="input input-bordered" disabled={loading} />
       </div>
 
-      <div className="form-control">
-        <label htmlFor="shiftType" className="label"><span className="label-text">Tipo de Turno *</span></label>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="shiftType" className="text-sm font-medium text-base-content">Tipo de Turno *</label>
         <select id="shiftType" value={type} onChange={(e) => setType(e.target.value as 'MAÑANA' | 'NOCHE' | 'CORTADO' | 'CORRIDO')} className="select select-bordered" disabled={loading}>
           {Object.entries(shiftTypeLabels).map(([value, label]) => (
             <option key={value} value={value}>{label}</option>
@@ -146,7 +146,7 @@ export function ShiftTypeForm({
 
       <div>
         <div className="flex justify-between items-center mb-2">
-          <span className="label-text font-medium">Horarios *</span>
+          <span className="text-sm font-medium text-base-content">Horarios *</span>
           <button type="button" onClick={handleAddWindow} disabled={loading || timeWindows.length >= 3} className="btn btn-ghost btn-xs gap-1">
             <Plus className="w-4 h-4" /> Agregar horario
           </button>
@@ -154,12 +154,12 @@ export function ShiftTypeForm({
         <div className="space-y-3">
           {timeWindows.map((window, index) => (
             <div key={index} className="flex gap-2 items-end">
-              <div className="form-control flex-1">
-                <label htmlFor={`window-start-${index}`} className="label"><span className="label-text-alt">Inicio</span></label>
+              <div className="flex flex-col gap-1 flex-1">
+                <label htmlFor={`window-start-${index}`} className="text-sm font-medium text-base-content">Inicio</label>
                 <input id={`window-start-${index}`} type="time" value={window.start} onChange={(e) => handleWindowChange(index, 'start', e.target.value)} className="input input-bordered input-sm" disabled={loading} />
               </div>
-              <div className="form-control flex-1">
-                <label htmlFor={`window-end-${index}`} className="label"><span className="label-text-alt">Fin</span></label>
+              <div className="flex flex-col gap-1 flex-1">
+                <label htmlFor={`window-end-${index}`} className="text-sm font-medium text-base-content">Fin</label>
                 <input id={`window-end-${index}`} type="time" value={window.end} onChange={(e) => handleWindowChange(index, 'end', e.target.value)} className="input input-bordered input-sm" disabled={loading} />
               </div>
               <button type="button" onClick={() => handleRemoveWindow(index)} disabled={loading || timeWindows.length <= 1} className="btn btn-ghost btn-sm text-error" aria-label={`Eliminar horario ${index + 1}`}>
@@ -171,20 +171,20 @@ export function ShiftTypeForm({
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="form-control">
-          <label htmlFor="expectedHours" className="label"><span className="label-text">Horas Esperadas *</span></label>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="expectedHours" className="text-sm font-medium text-base-content">Horas Esperadas *</label>
           <input id="expectedHours" type="number" step="0.25" value={expectedHours} onChange={(e) => setExpectedHours(parseFloat(e.target.value))} className="input input-bordered" disabled={loading} />
         </div>
-        <div className="form-control">
-          <label className="label"><span className="label-text">Total Calculado</span></label>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-base-content">Total Calculado</label>
           <div className="input input-bordered bg-base-200 flex items-center font-semibold">{totalHours.toFixed(2)} hrs</div>
         </div>
       </div>
 
       <Checkbox id="dynamicClose" label="Cierre dinámico (hasta que se cierre el local)" checked={usesDynamicClose} onChange={(e) => setUsesDynamicClose(e.target.checked)} disabled={loading} />
 
-      <div className="form-control">
-        <label htmlFor="description" className="label"><span className="label-text">Descripción</span></label>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="description" className="text-sm font-medium text-base-content">Descripción</label>
         <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descripción opcional del turno" rows={3} className="textarea textarea-bordered" disabled={loading} />
       </div>
 

@@ -64,10 +64,8 @@ export default function ReportsView() {
       {/* Date range filter */}
       <Card className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-4">
-          <div className="form-control">
-            <label className="label py-1" htmlFor="date-from">
-              <span className="label-text text-xs">Desde</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-base-content/70" htmlFor="date-from">Desde</label>
             <input
               id="date-from"
               type="date"
@@ -77,10 +75,8 @@ export default function ReportsView() {
               onChange={(e) => setDateFrom(e.target.value)}
             />
           </div>
-          <div className="form-control">
-            <label className="label py-1" htmlFor="date-to">
-              <span className="label-text text-xs">Hasta</span>
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-base-content/70" htmlFor="date-to">Hasta</label>
             <input
               id="date-to"
               type="date"
