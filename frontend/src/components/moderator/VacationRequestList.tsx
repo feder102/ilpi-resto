@@ -162,6 +162,7 @@ export default function VacationRequestList({
                   <input
                     type="date"
                     value={dateFromFilter}
+                    max={dateToFilter || undefined}
                     onChange={e => setDateFromFilter(e.target.value)}
                     className="input input-bordered input-sm w-full"
                   />
@@ -171,6 +172,7 @@ export default function VacationRequestList({
                   <input
                     type="date"
                     value={dateToFilter}
+                    min={dateFromFilter || undefined}
                     onChange={e => setDateToFilter(e.target.value)}
                     className="input input-bordered input-sm w-full"
                   />

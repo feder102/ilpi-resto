@@ -77,8 +77,8 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
   return (
     <div className="space-y-4">
       {/* Filters Summary */}
-      <Card className="bg-white">
-        <div className="p-4 text-sm text-gray-600">
+      <Card>
+        <div className="p-4 text-sm text-base-content/70">
           <span className="font-medium">Filtros:</span> {finalFilters.start_date} a{" "}
           {finalFilters.end_date}
           {finalFilters.employee_id && ` | Empleado: ${finalFilters.employee_id}`}
@@ -89,54 +89,54 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
 
       {/* Table */}
       {loading ? (
-        <Card className="bg-white">
-          <div className="p-4 text-center text-gray-500">Cargando...</div>
+        <Card>
+          <div className="p-4 text-center text-base-content/60">Cargando...</div>
         </Card>
       ) : error ? (
         <Alert variant="error" message={error} />
       ) : entries && entries.items.length > 0 ? (
         <>
-          <Card className="bg-white">
+          <Card>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-base-200 border-b border-base-300">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-900">
+                    <th className="px-4 py-3 text-left font-semibold text-base-content">
                       Fecha
                     </th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-900">
+                    <th className="px-4 py-3 text-left font-semibold text-base-content">
                       Empleado
                     </th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-900">
+                    <th className="px-4 py-3 text-left font-semibold text-base-content">
                       DNI
                     </th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-900">
+                    <th className="px-4 py-3 text-left font-semibold text-base-content">
                       Hora Inicio
                     </th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-900">
+                    <th className="px-4 py-3 text-left font-semibold text-base-content">
                       Hora Fin
                     </th>
-                    <th className="px-4 py-3 text-right font-semibold text-gray-900">
+                    <th className="px-4 py-3 text-right font-semibold text-base-content">
                       Horas
                     </th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-900">
+                    <th className="px-4 py-3 text-left font-semibold text-base-content">
                       Origen
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-base-300">
                   {entries.items.map((entry: TimeEntry) => (
-                    <tr key={entry.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-gray-900">{entry.shift_date}</td>
-                      <td className="px-4 py-3 text-gray-900 font-medium">
+                    <tr key={entry.id} className="hover:bg-base-200">
+                      <td className="px-4 py-3 text-base-content">{entry.shift_date}</td>
+                      <td className="px-4 py-3 text-base-content font-medium">
                         {entry.employee_name}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className="px-4 py-3 text-base-content/70">
                         {entry.employee_dni}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">{entry.start_time ?? "—"}</td>
-                      <td className="px-4 py-3 text-gray-600">{entry.end_time ?? "—"}</td>
-                      <td className="px-4 py-3 text-right font-medium text-gray-900">
+                      <td className="px-4 py-3 text-base-content/70">{entry.start_time ?? "—"}</td>
+                      <td className="px-4 py-3 text-base-content/70">{entry.end_time ?? "—"}</td>
+                      <td className="px-4 py-3 text-right font-medium text-base-content">
                         {typeof entry.hours_worked === 'string'
                           ? parseFloat(entry.hours_worked).toFixed(2)
                           : entry.hours_worked.toFixed(2)}
@@ -146,8 +146,8 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
                         <span
                           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                             entry.source === "extra"
-                              ? "bg-amber-100 text-amber-800"
-                              : "bg-blue-100 text-blue-800"
+                              ? "bg-warning/20 text-warning"
+                              : "bg-info/20 text-info"
                           }`}
                           title={entry.note ?? undefined}
                         >
@@ -162,9 +162,9 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
           </Card>
 
           {/* Pagination */}
-          <Card className="bg-white">
+          <Card>
             <div className="p-4 flex items-center justify-between">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-base-content/70">
                 Mostrando {(currentPage - 1) * pageSize + 1} a{" "}
                 {Math.min(currentPage * pageSize, entries.total)} de {entries.total}{" "}
                 registros
@@ -173,7 +173,7 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="p-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn btn-sm btn-ghost disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Página anterior"
                 >
                   <ChevronLeft className="w-5 h-5" />
@@ -183,10 +183,10 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 rounded text-sm ${
+                      className={`btn btn-sm ${
                         page === currentPage
-                          ? "bg-blue-600 text-white"
-                          : "border border-gray-300 hover:bg-gray-50"
+                          ? "btn-primary"
+                          : "btn-ghost"
                       }`}
                     >
                       {page}
@@ -196,7 +196,7 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="p-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn btn-sm btn-ghost disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Página siguiente"
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -206,8 +206,8 @@ export const TimeEntriesTable: React.FC<TimeEntriesTableProps> = ({
           </Card>
         </>
       ) : (
-        <Card className="bg-white">
-          <div className="p-4 text-center text-gray-500">
+        <Card>
+          <div className="p-4 text-center text-base-content/60">
             No hay registros de tiempo para los filtros seleccionados
           </div>
         </Card>

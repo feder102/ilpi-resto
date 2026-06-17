@@ -12,6 +12,9 @@ import type {
   TimeEntryFilterRequest,
   TimeEntry,
   ExtraHoursCreate,
+  AbsenceCreate,
+  Absence,
+  AbsenceListResponse,
 } from "../types/timeTracking";
 
 /**
@@ -113,6 +116,75 @@ export async function getTimeEntries(
     throw new Error(
       `Error al obtener registros de tiempo: ${error instanceof Error ? error.message : String(error)}`
     );
+  }
+}
+
+/**
+ * Register an absence for an employee on a day they had an assigned shift (Admin/Moderador only)
+ */
+export async function createAbsence(body: AbsenceCreate): Promise<Absence> {
+  try {
+    const response = await apiClient.post<Absence>(
+      `/employee/time-tracking/absences`,
+      body
+    );
+    return response.data;
+  } catch (error: unknown) {
+    if (error && typeof error === "object" && "response" in error) {
+      const axiosError = error as {
+        response?: { data?: { error?: { message?: string } } };
+      };
+      throw new Error(
+        axiosError.response?.data?.error?.message || "Error al cargar la ausencia"
+      );
+    }
+    throw new Error("Error de conexión");
+  }
+}
+
+/**
+ * List absences with optional filters
+ */
+export async function getAbsences(params?: {
+  employee_id?: string;
+  year?: number;
+  month?: number;
+}): Promise<AbsenceListResponse> {
+  try {
+    const response = await apiClient.get<AbsenceListResponse>(
+      `/employee/time-tracking/absences`,
+      { params }
+    );
+    return response.data;
+  } catch (error: unknown) {
+    if (error && typeof error === "object" && "response" in error) {
+      const axiosError = error as {
+        response?: { data?: { error?: { message?: string } } };
+      };
+      throw new Error(
+        axiosError.response?.data?.error?.message || "Error al cargar ausencias"
+      );
+    }
+    throw new Error("Error de conexión");
+  }
+}
+
+/**
+ * Delete an absence record (Admin/Moderador only)
+ */
+export async function deleteAbsence(absenceId: string): Promise<void> {
+  try {
+    await apiClient.delete(`/employee/time-tracking/absences/${absenceId}`);
+  } catch (error: unknown) {
+    if (error && typeof error === "object" && "response" in error) {
+      const axiosError = error as {
+        response?: { data?: { error?: { message?: string } } };
+      };
+      throw new Error(
+        axiosError.response?.data?.error?.message || "Error al eliminar la ausencia"
+      );
+    }
+    throw new Error("Error de conexión");
   }
 }
 

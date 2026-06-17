@@ -105,6 +105,16 @@ class TimeTrackingService:
             if not shifts:
                 raise NoShiftsFoundError(target_date=target_date)
 
+            # Preload absences for this date to skip absent employees
+            from app.models.absence import Absence  # noqa: PLC0415
+            absences = db.exec(
+                select(Absence).where(
+                    Absence.tenant_id == tenant_id,
+                    Absence.date == target_date,
+                )
+            ).all()
+            absent_employee_ids = {a.employee_id for a in absences}
+
             # Preload all shift types for this tenant (avoids N+1)
             shift_type_ids = {s.shift_type_id for s in shifts if s.shift_type_id}
             shift_types_map: dict[uuid.UUID, ShiftType] = {}
@@ -131,6 +141,9 @@ class TimeTrackingService:
             entries_created = 0
 
             for shift in shifts:
+                if shift.employee_id in absent_employee_ids:
+                    continue
+
                 if not shift.shift_type_id:
                     continue
 
@@ -411,6 +424,15 @@ class TimeTrackingService:
                 breakdown_by_shift[key] = Decimal(0)
             breakdown_by_shift[key] += entry.hours_worked
 
+        from app.services.absence_service import AbsenceService  # noqa: PLC0415
+        total_absences, justified_absences, unjustified_absences = AbsenceService.count_absences_for_period(
+            db=db,
+            tenant_id=tenant_id,
+            employee_id=employee_id,
+            start_date=date_type(year, month, 1),
+            end_date=end_date,
+        )
+
         return EmployeeStatisticsResponse(
             employee_id=employee_id,
             period=f"{year}-{month:02d}",
@@ -419,6 +441,9 @@ class TimeTrackingService:
             days_worked=days_worked,
             avg_hours_per_day=avg_hours,
             breakdown_by_shift_type=breakdown_by_shift,
+            total_absences=total_absences,
+            justified_absences=justified_absences,
+            unjustified_absences=unjustified_absences,
         )
 
     @staticmethod
@@ -481,6 +506,15 @@ class TimeTrackingService:
             Decimal(0),
         )
 
+        from app.services.absence_service import AbsenceService  # noqa: PLC0415
+        total_absences, justified_absences, unjustified_absences = AbsenceService.count_absences_for_period(
+            db=db,
+            tenant_id=tenant_id,
+            employee_id=employee_id,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
         # Build daily records (extra-hours entries have no entry/exit time)
         daily_records: list[dict[str, Any]] = []
         for entry in entries:
@@ -515,6 +549,9 @@ class TimeTrackingService:
             "extra_hours": float(extra_hours),
             "weekly_breakdown": weekly_breakdown,
             "daily_records": daily_records,
+            "total_absences": total_absences,
+            "justified_absences": justified_absences,
+            "unjustified_absences": unjustified_absences,
         }
 
     @staticmethod
