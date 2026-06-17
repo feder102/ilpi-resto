@@ -5,9 +5,9 @@ Revises: 20260605_extra_hours
 Create Date: 2026-06-16
 """
 
-from alembic import op
 import sqlalchemy as sa
-import sqlmodel
+
+from alembic import op
 
 revision: str = "20260616_add_absence"
 down_revision: str | None = "20260605_extra_hours"
@@ -18,14 +18,14 @@ depends_on: str | None = None
 def upgrade() -> None:
     op.create_table(
         "absence",
-        sa.Column("id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("tenant_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("employee_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column("tenant_id", sa.Uuid(), nullable=False),
+        sa.Column("employee_id", sa.Uuid(), nullable=False),
         sa.Column("date", sa.Date(), nullable=False),
-        sa.Column("shift_record_id", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+        sa.Column("shift_record_id", sa.Uuid(), nullable=True),
         sa.Column("justified", sa.Boolean(), nullable=False, server_default="false"),
         sa.Column("reason", sa.String(length=255), nullable=True),
-        sa.Column("created_by", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+        sa.Column("created_by", sa.Uuid(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"]),
