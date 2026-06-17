@@ -8,6 +8,7 @@ Schemas for:
 
 import uuid
 from datetime import date, datetime, time
+from datetime import date as date_type
 from decimal import Decimal
 from enum import Enum
 
@@ -101,6 +102,9 @@ class EmployeeStatisticsResponse(BaseModel):
     days_worked: int
     avg_hours_per_day: Decimal
     breakdown_by_shift_type: dict[str, Decimal]
+    total_absences: int = 0
+    justified_absences: int = 0
+    unjustified_absences: int = 0
 
 
 class DepartmentStatisticsResponse(BaseModel):
@@ -153,3 +157,35 @@ class EmployeeStatisticsPublicResponse(BaseModel):
     extra_hours: str | float = 0  # Extra (overtime) hours portion
     weekly_breakdown: list[WeeklyBreakdownResponse]  # Breakdown by week
     daily_records: list[DailyRecordResponse]  # Daily records with times
+    total_absences: int = 0
+    justified_absences: int = 0
+    unjustified_absences: int = 0
+
+
+class AbsenceCreate(BaseModel):
+    """Request to register an absence for an employee on a shift day."""
+    employee_id: uuid.UUID
+    date: date_type
+    justified: bool = False
+    reason: str | None = Field(default=None, max_length=255)
+
+
+class AbsenceResponse(BaseModel):
+    """Response for an absence record."""
+    id: uuid.UUID
+    employee_id: uuid.UUID
+    employee_name: str
+    employee_dni: str
+    date: date_type
+    justified: bool
+    reason: str | None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AbsenceListResponse(BaseModel):
+    """Paginated list of absences."""
+    total: int
+    items: list[AbsenceResponse]

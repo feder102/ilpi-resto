@@ -315,11 +315,11 @@ export default function VacationView() {
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-base-content">Fecha inicio *</label>
-            <input className="input input-bordered w-full" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <input className="input input-bordered w-full" type="date" value={startDate} max={endDate || undefined} onChange={(e) => setStartDate(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-base-content">Fecha fin *</label>
-            <input className="input input-bordered w-full" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            <input className="input input-bordered w-full" type="date" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)} />
           </div>
 
           {computedDays > 0 && (
