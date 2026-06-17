@@ -250,6 +250,7 @@ export const AdminStatistics: React.FC = () => {
                       <input
                         type="date"
                         value={entriesStartDate}
+                        max={entriesEndDate}
                         onChange={(e) => setEntriesStartDate(e.target.value)}
                         className="input input-bordered w-full text-sm"
                       />
@@ -261,6 +262,7 @@ export const AdminStatistics: React.FC = () => {
                       <input
                         type="date"
                         value={entriesEndDate}
+                        min={entriesStartDate}
                         onChange={(e) => setEntriesEndDate(e.target.value)}
                         className="input input-bordered w-full text-sm"
                       />
