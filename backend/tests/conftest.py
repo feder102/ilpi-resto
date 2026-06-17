@@ -153,3 +153,46 @@ def emp_user(session: Session, test_tenant):
 @pytest.fixture
 def emp_headers(emp_user, test_tenant):
     return get_auth_headers(emp_user.id, test_tenant.id, "Empleado")
+
+
+@pytest.fixture
+def test_shift_type(session: Session, test_tenant):
+    from datetime import time
+
+    from app.models.shift_type import ShiftType
+
+    shift_type = ShiftType(
+        tenant_id=test_tenant.id,
+        name="Turno Test",
+        expected_hours=8.0,
+        is_active=True,
+        time_windows=[
+            {
+                "start_time": "09:00",
+                "end_time": "17:00",
+                "break_duration_minutes": 60,
+            }
+        ],
+    )
+    session.add(shift_type)
+    session.commit()
+    session.refresh(shift_type)
+    return shift_type
+
+
+@pytest.fixture
+def test_shift(session: Session, test_tenant, test_employee, test_shift_type):
+    from datetime import date
+
+    from app.models.shift_record import ShiftRecord
+
+    shift = ShiftRecord(
+        tenant_id=test_tenant.id,
+        employee_id=test_employee.id,
+        date=date.today(),
+        shift_type_id=test_shift_type.id,
+    )
+    session.add(shift)
+    session.commit()
+    session.refresh(shift)
+    return shift
