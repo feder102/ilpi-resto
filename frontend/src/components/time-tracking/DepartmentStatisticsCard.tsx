@@ -79,24 +79,24 @@ export const DepartmentStatisticsCard: React.FC<DepartmentStatisticsCardProps> =
   return (
     <div className="space-y-4">
       {/* Month Navigator */}
-      <Card className="bg-white">
+      <Card>
         <div className="flex items-center justify-between p-4">
-          <h3 className="font-semibold text-gray-900">
+          <h3 className="font-semibold text-base-content">
             {department ? `${department} ` : ""}Estadísticas del Departamento
           </h3>
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrevMonth}
-              className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
+              className="btn btn-sm btn-ghost"
             >
               ← Anterior
             </button>
-            <span className="text-sm font-medium text-gray-600 min-w-[100px] text-center">
+            <span className="text-sm font-medium text-base-content/70 min-w-[100px] text-center">
               {year}-{String(month).padStart(2, "0")}
             </span>
             <button
               onClick={handleNextMonth}
-              className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
+              className="btn btn-sm btn-ghost"
             >
               Siguiente →
             </button>
@@ -106,58 +106,65 @@ export const DepartmentStatisticsCard: React.FC<DepartmentStatisticsCardProps> =
 
       {/* Stats Display */}
       {loading ? (
-        <Card className="bg-white">
-          <div className="p-4 text-center text-gray-500">Cargando...</div>
+        <Card>
+          <div className="p-4 text-center text-base-content/60">Cargando...</div>
         </Card>
       ) : error ? (
         <Alert variant="error" message={error} />
       ) : stats ? (
         <>
           {/* Stats Summary */}
-          <Card className="bg-white">
+          <Card>
             <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600">
+                <div className="text-3xl font-bold text-primary">
                   {typeof stats.total_hours === 'string'
                     ? parseFloat(stats.total_hours).toFixed(2)
                     : stats.total_hours.toFixed(2)}
                 </div>
-                <div className="text-sm text-gray-600 flex items-center justify-center gap-1 mt-1">
+                <div className="text-sm text-base-content/70 flex items-center justify-center gap-1 mt-1">
                   <Clock className="w-4 h-4" />
                   Horas Totales
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-green-600">
+                <div className="text-3xl font-bold text-success">
                   {stats.unique_employees}
                 </div>
-                <div className="text-sm text-gray-600 flex items-center justify-center gap-1 mt-1">
+                <div className="text-sm text-base-content/70 flex items-center justify-center gap-1 mt-1">
                   <Users className="w-4 h-4" />
                   Empleados
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-purple-600">
+                <div className="text-3xl font-bold text-secondary">
                   {typeof stats.avg_hours_per_employee === 'string'
                     ? parseFloat(stats.avg_hours_per_employee).toFixed(2)
                     : stats.avg_hours_per_employee.toFixed(2)}
                 </div>
-                <div className="text-sm text-gray-600">Promedio/Empleado</div>
+                <div className="text-sm text-base-content/70">Promedio/Empleado</div>
               </div>
             </div>
           </Card>
 
           {/* Chart */}
           {chartData.length > 0 && (
-            <Card className="bg-white">
+            <Card>
               <div className="p-4">
-                <h4 className="font-semibold text-gray-900 mb-4">Desglose de Horas</h4>
+                <h4 className="font-semibold text-base-content mb-4">Desglose de Horas</h4>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
+                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-base-content/10" />
+                    <XAxis dataKey="name" tick={{ fill: "currentColor" }} className="text-base-content/70" />
+                    <YAxis tick={{ fill: "currentColor" }} className="text-base-content/70" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--b1))",
+                        border: "1px solid hsl(var(--bc) / 0.2)",
+                        borderRadius: "0.5rem",
+                        color: "hsl(var(--bc))",
+                      }}
+                    />
                     <Bar dataKey="Horas Totales" fill="#3b82f6" />
                     <Bar dataKey="Promedio por Empleado" fill="#10b981" />
                   </BarChart>
@@ -167,8 +174,8 @@ export const DepartmentStatisticsCard: React.FC<DepartmentStatisticsCardProps> =
           )}
         </>
       ) : (
-        <Card className="bg-white">
-          <div className="p-4 text-center text-gray-500">
+        <Card>
+          <div className="p-4 text-center text-base-content/60">
             No hay datos disponibles
           </div>
         </Card>

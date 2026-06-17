@@ -142,7 +142,7 @@ export const AdminStatistics: React.FC = () => {
               <h1 className="text-4xl font-bold text-base-content">Análisis de Seguimiento de Tiempo</h1>
             </div>
             <div className="flex gap-2">
-              <Button variant="secondary" onClick={() => setAbsenceModalOpen(true)}>
+              <Button variant="primary" className="btn-outline" onClick={() => setAbsenceModalOpen(true)}>
                 <UserX className="w-4 h-4 mr-1" />
                 Cargar ausencia
               </Button>
