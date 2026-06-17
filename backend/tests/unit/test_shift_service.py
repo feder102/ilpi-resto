@@ -340,3 +340,28 @@ class TestCreateShiftsBulk:
         )
         with pytest.raises(ValidationError, match="pasado"):
             shift_service.create_shifts_bulk(tenant.id, session, body, uuid.uuid4())
+
+    def test_bulk_skips_unknown_employee(self, session, tenant, shift_type):
+        unknown_id = uuid.uuid4()
+        body = BulkShiftCreate(
+            employee_ids=[unknown_id],
+            shift_type_id=shift_type.id,
+            start_date=date(2099, 6, 2),
+            end_date=date(2099, 6, 4),
+            include_weekends=True,
+        )
+        result = shift_service.create_shifts_bulk(tenant.id, session, body, uuid.uuid4())
+        assert result["created_count"] == 0
+        assert result["skipped_count"] == 1
+        assert result["skipped"][0]["reason"] == "Empleado no encontrado o inactivo"
+
+    def test_bulk_invalid_shift_type_raises(self, session, tenant, employee):
+        body = BulkShiftCreate(
+            employee_ids=[employee.id],
+            shift_type_id=uuid.uuid4(),
+            start_date=date(2099, 6, 2),
+            end_date=date(2099, 6, 4),
+            include_weekends=True,
+        )
+        with pytest.raises(ValidationError, match="Tipo de turno"):
+            shift_service.create_shifts_bulk(tenant.id, session, body, uuid.uuid4())

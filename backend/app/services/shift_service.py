@@ -284,7 +284,7 @@ def create_shift(
         )
     ).first()
     if not shift_type:
-        raise ValidationError("Shift type not found or inactive")
+        raise ValidationError("Tipo de turno no encontrado o inactivo")
 
     # Create shift record
     now = datetime.now(UTC)
@@ -386,7 +386,7 @@ def create_shifts_bulk(
         )
     ).first()
     if not shift_type:
-        raise ValidationError("Shift type not found or inactive")
+        raise ValidationError("Tipo de turno no encontrado o inactivo")
 
     # Resolve target employees (active only), preserving requested order
     employees: dict[uuid.UUID, Employee] = {}
