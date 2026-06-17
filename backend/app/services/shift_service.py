@@ -7,9 +7,10 @@ Updated for Feature 004: Shift Roster Calendar
 - Added delete_shift for removing shifts
 """
 
+import logging
 import uuid
 from calendar import monthrange
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from sqlmodel import Session, func, select
@@ -19,7 +20,9 @@ from app.models.employee import Employee
 from app.models.shift_record import ShiftRecord
 from app.models.shift_type import ShiftType
 from app.models.vacation_request import VacationRequest
-from app.schemas.shift import ShiftRecordResponse
+from app.schemas.shift import BulkShiftCreate, ShiftRecordResponse
+
+logger = logging.getLogger(__name__)
 
 
 def _to_response(rec: ShiftRecord, session: Session) -> ShiftRecordResponse:
@@ -314,6 +317,200 @@ def create_shift(
     return {
         "shift": response_data,
         "warning": warning,
+    }
+
+
+def _vacation_overlap(
+    employee_id: uuid.UUID,
+    shift_date: date,
+    tenant_id: uuid.UUID,
+    session: Session,
+) -> VacationRequest | None:
+    """Return the approved vacation overlapping shift_date, or None (non-raising)."""
+    return session.exec(
+        select(VacationRequest).where(
+            VacationRequest.tenant_id == tenant_id,
+            VacationRequest.employee_id == employee_id,
+            VacationRequest.status == "Aprobado",
+            VacationRequest.start_date <= shift_date,
+            VacationRequest.end_date >= shift_date,
+        )
+    ).first()
+
+
+def create_shifts_bulk(
+    tenant_id: uuid.UUID,
+    session: Session,
+    body: BulkShiftCreate,
+    created_by: uuid.UUID,
+) -> dict[str, Any]:
+    """
+    Bulk-assign a shift type to several employees over a date range.
+
+    For each (employee, day) combination the same conflict rules as create_shift
+    apply: days with an existing shift, an approved vacation, or in the past are
+    skipped and reported. All successful inserts are committed in a single
+    transaction.
+
+    Args:
+        tenant_id: Tenant UUID
+        session: Database session
+        body: Bulk request (employees, shift type, date range, weekend flag)
+        created_by: User ID creating the shifts
+
+    Returns:
+        {
+            "created": [ShiftResponse],
+            "skipped": [{"employee_id", "employee_name", "date", "reason"}],
+            "created_count": int,
+            "skipped_count": int,
+        }
+
+    Raises:
+        ValidationError: If the date range is invalid or the shift type is missing
+    """
+    # Validate date range
+    if body.start_date > body.end_date:
+        raise ValidationError("La fecha de inicio no puede ser posterior a la fecha de fin")
+
+    today = date.today()
+    if body.end_date < today:
+        raise ValidationError("No se pueden asignar turnos en el pasado")
+
+    # Verify shift type exists and is active (single query for the whole batch)
+    shift_type = session.exec(
+        select(ShiftType).where(
+            ShiftType.id == body.shift_type_id,
+            ShiftType.tenant_id == tenant_id,
+            ShiftType.is_active == True,  # noqa: E712
+        )
+    ).first()
+    if not shift_type:
+        raise ValidationError("Shift type not found or inactive")
+
+    # Resolve target employees (active only), preserving requested order
+    employees: dict[uuid.UUID, Employee] = {}
+    for emp_id in body.employee_ids:
+        if emp_id in employees:
+            continue
+        emp = session.exec(
+            select(Employee).where(
+                Employee.id == emp_id,
+                Employee.tenant_id == tenant_id,
+                Employee.is_active == True,  # noqa: E712
+            )
+        ).first()
+        if emp:
+            employees[emp_id] = emp
+
+    created: list[dict[str, Any]] = []
+    skipped: list[dict[str, Any]] = []
+    now = datetime.now(UTC)
+
+    for emp_id in body.employee_ids:
+        employee = employees.get(emp_id)
+        if not employee:
+            skipped.append({
+                "employee_id": str(emp_id),
+                "employee_name": None,
+                "date": body.start_date.isoformat(),
+                "reason": "Empleado no encontrado o inactivo",
+            })
+            continue
+
+        emp_name = f"{employee.first_name} {employee.last_name}"
+        current = body.start_date
+        while current <= body.end_date:
+            day = current
+            current = current + timedelta(days=1)
+
+            # Skip weekends when only working days requested
+            if not body.include_weekends and day.weekday() >= 5:
+                continue
+
+            # Skip past days inside the range (reported)
+            if day < today:
+                skipped.append({
+                    "employee_id": str(emp_id),
+                    "employee_name": emp_name,
+                    "date": day.isoformat(),
+                    "reason": "Fecha en el pasado",
+                })
+                continue
+
+            # Skip if employee already has a shift that day
+            existing = session.exec(
+                select(ShiftRecord).where(
+                    ShiftRecord.tenant_id == tenant_id,
+                    ShiftRecord.employee_id == emp_id,
+                    ShiftRecord.date == day,
+                )
+            ).first()
+            if existing:
+                skipped.append({
+                    "employee_id": str(emp_id),
+                    "employee_name": emp_name,
+                    "date": day.isoformat(),
+                    "reason": "Turno ya existente",
+                })
+                continue
+
+            # Skip if employee has approved vacation that day
+            vacation = _vacation_overlap(emp_id, day, tenant_id, session)
+            if vacation:
+                skipped.append({
+                    "employee_id": str(emp_id),
+                    "employee_name": emp_name,
+                    "date": day.isoformat(),
+                    "reason": "Vacaciones aprobadas",
+                })
+                continue
+
+            shift = ShiftRecord(
+                tenant_id=tenant_id,
+                employee_id=emp_id,
+                date=day,
+                shift_type_id=body.shift_type_id,
+                created_by=created_by,
+                created_at=now,
+                updated_at=now,
+            )
+            session.add(shift)
+            session.flush()  # assign id without ending the transaction
+            created.append({
+                "id": str(shift.id),
+                "employee_id": str(shift.employee_id),
+                "employee_name": emp_name,
+                "date": shift.date.isoformat(),
+                "shift_type_id": str(shift.shift_type_id),
+                "shift_type_name": shift_type.name,
+                "created_at": shift.created_at.isoformat(),
+                "updated_at": shift.updated_at.isoformat(),
+            })
+
+    session.commit()
+
+    logger.info(
+        "Bulk shifts created",
+        extra={
+            "event_type": "SHIFT_BULK_CREATE",
+            "tenant_id": str(tenant_id),
+            "created_by": str(created_by),
+            "shift_type_id": str(body.shift_type_id),
+            "employee_count": len(body.employee_ids),
+            "created_count": len(created),
+            "skipped_count": len(skipped),
+            "start_date": body.start_date.isoformat(),
+            "end_date": body.end_date.isoformat(),
+            "include_weekends": body.include_weekends,
+        },
+    )
+
+    return {
+        "created": created,
+        "skipped": skipped,
+        "created_count": len(created),
+        "skipped_count": len(skipped),
     }
 
 

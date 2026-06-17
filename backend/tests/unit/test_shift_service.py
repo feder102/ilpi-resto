@@ -4,14 +4,15 @@ import uuid
 from datetime import date, timedelta
 
 import pytest
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, SQLModel, create_engine, select
 
-from app.common.exceptions import ShiftConflictError
+from app.common.exceptions import ShiftConflictError, ValidationError
 from app.models.employee import Employee
 from app.models.shift_record import ShiftRecord
 from app.models.shift_type import ShiftType
 from app.models.tenant import Tenant
 from app.models.vacation_request import VacationRequest
+from app.schemas.shift import BulkShiftCreate
 from app.services import shift_service
 
 TEST_DB = "sqlite:///./test_shift_service.db"
@@ -195,3 +196,147 @@ class TestCreateShift:
             created_by=uuid.uuid4(),
         )
         assert result["shift"]["date"] == shift_date.isoformat()
+
+
+@pytest.fixture
+def employee2(session, tenant):
+    emp = Employee(
+        tenant_id=tenant.id,
+        first_name="Ana",
+        last_name="López",
+        email="ana@test.es",
+        dni="44444444D",
+        role="Empleado",
+        department="Cocina",
+        status="Activo",
+        hire_date=date(2024, 2, 1),
+    )
+    session.add(emp)
+    session.commit()
+    session.refresh(emp)
+    return emp
+
+
+class TestCreateShiftsBulk:
+    def _count_shifts(self, session, tenant, employee_id):
+        return len(
+            session.exec(
+                select(ShiftRecord).where(
+                    ShiftRecord.tenant_id == tenant.id,
+                    ShiftRecord.employee_id == employee_id,
+                )
+            ).all()
+        )
+
+    def test_bulk_include_weekends(self, session, tenant, employee, employee2, shift_type):
+        # Monday 2099-01-05 .. Sunday 2099-01-11 (7 days), both employees
+        start = date(2099, 1, 5)
+        end = date(2099, 1, 11)
+        body = BulkShiftCreate(
+            employee_ids=[employee.id, employee2.id],
+            shift_type_id=shift_type.id,
+            start_date=start,
+            end_date=end,
+            include_weekends=True,
+        )
+        result = shift_service.create_shifts_bulk(tenant.id, session, body, uuid.uuid4())
+        # 7 days * 2 employees = 14 created
+        assert result["created_count"] == 14
+        assert result["skipped_count"] == 0
+        assert self._count_shifts(session, tenant, employee.id) == 7
+
+    def test_bulk_only_working_days(self, session, tenant, employee, shift_type):
+        # Same week, but only Mon-Fri => 5 days
+        start = date(2099, 1, 5)
+        end = date(2099, 1, 11)
+        body = BulkShiftCreate(
+            employee_ids=[employee.id],
+            shift_type_id=shift_type.id,
+            start_date=start,
+            end_date=end,
+            include_weekends=False,
+        )
+        result = shift_service.create_shifts_bulk(tenant.id, session, body, uuid.uuid4())
+        assert result["created_count"] == 5
+        # Saturday (10) and Sunday (11) should not exist
+        dates = {
+            r.date
+            for r in session.exec(
+                select(ShiftRecord).where(ShiftRecord.employee_id == employee.id)
+            ).all()
+        }
+        assert date(2099, 1, 10) not in dates
+        assert date(2099, 1, 11) not in dates
+
+    def test_bulk_skips_existing_shift(self, session, tenant, employee, shift_type):
+        start = date(2099, 2, 2)
+        end = date(2099, 2, 4)
+        # Pre-create a shift on the middle day
+        session.add(
+            ShiftRecord(
+                tenant_id=tenant.id,
+                employee_id=employee.id,
+                date=date(2099, 2, 3),
+                shift_type_id=shift_type.id,
+            )
+        )
+        session.commit()
+        body = BulkShiftCreate(
+            employee_ids=[employee.id],
+            shift_type_id=shift_type.id,
+            start_date=start,
+            end_date=end,
+            include_weekends=True,
+        )
+        result = shift_service.create_shifts_bulk(tenant.id, session, body, uuid.uuid4())
+        assert result["created_count"] == 2
+        assert result["skipped_count"] == 1
+        assert result["skipped"][0]["reason"] == "Turno ya existente"
+
+    def test_bulk_skips_vacation(self, session, tenant, employee, shift_type):
+        start = date(2099, 3, 2)
+        end = date(2099, 3, 4)
+        session.add(
+            VacationRequest(
+                tenant_id=tenant.id,
+                employee_id=employee.id,
+                start_date=date(2099, 3, 3),
+                end_date=date(2099, 3, 3),
+                requested_days=1,
+                status="Aprobado",
+            )
+        )
+        session.commit()
+        body = BulkShiftCreate(
+            employee_ids=[employee.id],
+            shift_type_id=shift_type.id,
+            start_date=start,
+            end_date=end,
+            include_weekends=True,
+        )
+        result = shift_service.create_shifts_bulk(tenant.id, session, body, uuid.uuid4())
+        assert result["created_count"] == 2
+        assert result["skipped_count"] == 1
+        assert result["skipped"][0]["reason"] == "Vacaciones aprobadas"
+
+    def test_bulk_invalid_range_raises(self, session, tenant, employee, shift_type):
+        body = BulkShiftCreate(
+            employee_ids=[employee.id],
+            shift_type_id=shift_type.id,
+            start_date=date(2099, 5, 10),
+            end_date=date(2099, 5, 1),
+            include_weekends=True,
+        )
+        with pytest.raises(ValidationError, match="fecha de inicio"):
+            shift_service.create_shifts_bulk(tenant.id, session, body, uuid.uuid4())
+
+    def test_bulk_past_range_raises(self, session, tenant, employee, shift_type):
+        body = BulkShiftCreate(
+            employee_ids=[employee.id],
+            shift_type_id=shift_type.id,
+            start_date=date(2000, 1, 1),
+            end_date=date(2000, 1, 5),
+            include_weekends=True,
+        )
+        with pytest.raises(ValidationError, match="pasado"):
+            shift_service.create_shifts_bulk(tenant.id, session, body, uuid.uuid4())
