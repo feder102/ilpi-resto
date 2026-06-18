@@ -13,7 +13,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, Query
 
 from app.dependencies import DbSession, TenantId, require_role, require_role_and_active
-from app.schemas.shift import ShiftCreate, ShiftUpdate
+from app.schemas.shift import BulkShiftCreate, ShiftCreate, ShiftUpdate
 from app.services import shift_service
 
 router = APIRouter(tags=["shifts"])
@@ -87,6 +87,24 @@ def create_roster_shift(
     """
     return shift_service.create_shift(
         tenant_id, session, body.employee_id, body.date, body.shift_type_id, uuid.UUID(current_user.get("sub", ""))
+    )
+
+
+@router.post("/rosters/shifts/bulk", status_code=201)
+def create_roster_shifts_bulk(
+    body: BulkShiftCreate,
+    session: DbSession,
+    tenant_id: TenantId,
+    current_user: dict = Depends(require_role("Admin", "Moderador")),
+):
+    """
+    Bulk-assign a shift type to several employees over a date range.
+
+    Only Moderador/Admin can create shifts. Days with conflicts (existing shift,
+    approved vacation, or in the past) are skipped and reported in the response.
+    """
+    return shift_service.create_shifts_bulk(
+        tenant_id, session, body, uuid.UUID(current_user.get("sub", ""))
     )
 
 

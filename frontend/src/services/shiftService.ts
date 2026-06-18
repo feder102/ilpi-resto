@@ -3,6 +3,7 @@
 import apiClient from './apiClient';
 import type { ShiftRecord } from '../types/models';
 import type { PaginatedResponse } from '../types/api';
+import type { BulkShiftCreatePayload, BulkShiftResult } from '../types/shift';
 
 export interface ShiftListParams {
   employee_id?: string;
@@ -60,6 +61,19 @@ export async function updateRosterShift(
 
 export async function deleteRosterShift(shiftId: string): Promise<void> {
   await apiClient.delete(`/rosters/shifts/${shiftId}`);
+}
+
+/**
+ * Bulk-assign a shift type to several employees over a date range.
+ *
+ * Days with conflicts (existing shift, approved vacation, or in the past) are
+ * skipped by the backend and reported in the result.
+ */
+export async function bulkCreateRosterShifts(
+  body: BulkShiftCreatePayload,
+): Promise<BulkShiftResult> {
+  const { data } = await apiClient.post('/rosters/shifts/bulk', body);
+  return data;
 }
 
 // ============================================================================
@@ -162,6 +176,7 @@ export const shiftService = {
   createRosterShift,
   updateRosterShift,
   deleteRosterShift,
+  bulkCreateRosterShifts,
   // Feature 005: Employee Workspace Portal
   getEmployeeMonthShifts,
   getEmployeeTodayShift,

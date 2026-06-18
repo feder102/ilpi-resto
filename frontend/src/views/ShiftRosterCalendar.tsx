@@ -10,6 +10,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import CalendarGrid from '../components/CalendarGrid';
 import ShiftAssignmentDialog from '../components/ShiftAssignmentDialog';
+import BulkShiftLoadDialog from '../components/BulkShiftLoadDialog';
 import { useShiftCalendar } from '../hooks/useShiftCalendar';
 import { Spinner } from '../components/ui';
 import { format, addMonths, subMonths } from 'date-fns';
@@ -25,6 +26,7 @@ export const ShiftRosterCalendar: React.FC<ShiftRosterCalendarProps> = ({ employ
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedShift, setSelectedShift] = useState<ShiftRecord | null>(null);
 
@@ -89,6 +91,12 @@ export const ShiftRosterCalendar: React.FC<ShiftRosterCalendarProps> = ({ employ
     await refresh();
   };
 
+  // Bulk dialog submit handler
+  const handleBulkDialogSubmit = async () => {
+    setIsBulkDialogOpen(false);
+    await refresh();
+  };
+
   // Format month header
   const monthLabel = format(currentDate, 'MMMM yyyy', { locale: es });
   const isCurrentMonth =
@@ -119,13 +127,23 @@ export const ShiftRosterCalendar: React.FC<ShiftRosterCalendarProps> = ({ employ
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-base-content">Turnos - Calendario</h1>
-        <p className="mt-2 text-base-content/60">
-          {user?.role === 'Empleado'
-            ? 'Vista de tus turnos asignados'
-            : 'Planificación de turnos del equipo'}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-base-content">Turnos - Calendario</h1>
+          <p className="mt-2 text-base-content/60">
+            {user?.role === 'Empleado'
+              ? 'Vista de tus turnos asignados'
+              : 'Planificación de turnos del equipo'}
+          </p>
+        </div>
+        {user?.role !== 'Empleado' && (
+          <button
+            onClick={() => setIsBulkDialogOpen(true)}
+            className="btn btn-primary"
+          >
+            Carga masiva
+          </button>
+        )}
       </div>
 
       {/* Month Navigation */}
@@ -179,6 +197,15 @@ export const ShiftRosterCalendar: React.FC<ShiftRosterCalendarProps> = ({ employ
         onClose={handleDialogClose}
         onSubmit={handleDialogSubmit}
       />
+
+      {/* Bulk Shift Load Dialog */}
+      {user?.role !== 'Empleado' && (
+        <BulkShiftLoadDialog
+          isOpen={isBulkDialogOpen}
+          onClose={() => setIsBulkDialogOpen(false)}
+          onSubmit={handleBulkDialogSubmit}
+        />
+      )}
 
       {/* Stats Footer */}
       <div className="rounded-lg bg-base-200 p-4">
