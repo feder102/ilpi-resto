@@ -68,7 +68,10 @@ class BulkShiftCreate(BaseModel):
     """Request to bulk-assign a shift type to several employees over a date range."""
 
     employee_ids: list[uuid.UUID] = Field(
-        ..., min_length=1, description="Empleados a los que asignar el turno"
+        ...,
+        min_length=1,
+        max_length=100,
+        description="Empleados a los que asignar el turno (máx. 100)",
     )
     shift_type_id: uuid.UUID = Field(..., description="UUID del tipo de turno")
     start_date: date_type = Field(..., description="Primer día del rango (YYYY-MM-DD)")

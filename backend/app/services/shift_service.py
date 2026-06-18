@@ -24,6 +24,10 @@ from app.schemas.shift import BulkShiftCreate, ShiftRecordResponse
 
 logger = logging.getLogger(__name__)
 
+# Maximum date span (inclusive) allowed for a single bulk shift operation.
+# Bounds the per-request cost (days * employees) to avoid resource exhaustion.
+MAX_BULK_RANGE_DAYS = 92
+
 
 def _to_response(rec: ShiftRecord, session: Session) -> ShiftRecordResponse:
     emp = session.get(Employee, rec.employee_id)
@@ -376,6 +380,13 @@ def create_shifts_bulk(
     today = date.today()
     if body.end_date < today:
         raise ValidationError("No se pueden asignar turnos en el pasado")
+
+    # Bound the range to keep the operation cost (days * employees) manageable
+    range_days = (body.end_date - body.start_date).days + 1
+    if range_days > MAX_BULK_RANGE_DAYS:
+        raise ValidationError(
+            f"El rango no puede superar los {MAX_BULK_RANGE_DAYS} días"
+        )
 
     # Verify shift type exists and is active (single query for the whole batch)
     shift_type = session.exec(

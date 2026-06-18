@@ -365,3 +365,32 @@ class TestCreateShiftsBulk:
         )
         with pytest.raises(ValidationError, match="Tipo de turno"):
             shift_service.create_shifts_bulk(tenant.id, session, body, uuid.uuid4())
+
+    def test_bulk_range_too_large_raises(self, session, tenant, employee, shift_type):
+        # 93-day span exceeds MAX_BULK_RANGE_DAYS (92) → rejected, nothing created
+        start = date(2099, 1, 1)
+        end = start + timedelta(days=shift_service.MAX_BULK_RANGE_DAYS)
+        body = BulkShiftCreate(
+            employee_ids=[employee.id],
+            shift_type_id=shift_type.id,
+            start_date=start,
+            end_date=end,
+            include_weekends=True,
+        )
+        with pytest.raises(ValidationError, match="rango no puede superar"):
+            shift_service.create_shifts_bulk(tenant.id, session, body, uuid.uuid4())
+        assert self._count_shifts(session, tenant, employee.id) == 0
+
+    def test_bulk_range_at_limit_succeeds(self, session, tenant, employee, shift_type):
+        # Exactly MAX_BULK_RANGE_DAYS days (inclusive) is allowed
+        start = date(2099, 1, 1)
+        end = start + timedelta(days=shift_service.MAX_BULK_RANGE_DAYS - 1)
+        body = BulkShiftCreate(
+            employee_ids=[employee.id],
+            shift_type_id=shift_type.id,
+            start_date=start,
+            end_date=end,
+            include_weekends=True,
+        )
+        result = shift_service.create_shifts_bulk(tenant.id, session, body, uuid.uuid4())
+        assert result["created_count"] == shift_service.MAX_BULK_RANGE_DAYS

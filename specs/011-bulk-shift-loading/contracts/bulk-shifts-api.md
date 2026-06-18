@@ -24,7 +24,7 @@ Asigna un tipo de turno a uno o más empleados sobre un rango de fechas.
 
 | Campo | Tipo | Requerido | Descripción |
 |-------|------|-----------|-------------|
-| `employee_ids` | `UUID[]` | sí (≥1) | Empleados a los que asignar el turno |
+| `employee_ids` | `UUID[]` | sí (1–100) | Empleados a los que asignar el turno |
 | `shift_type_id` | `UUID` | sí | Tipo de turno (debe estar activo) |
 | `start_date` | `date` | sí | Primer día del rango (inclusive) |
 | `end_date` | `date` | sí | Último día del rango (inclusive) |
@@ -77,8 +77,9 @@ Los fines de semana, cuando `include_weekends = false`, simplemente no se proces
 |--------|-----------|
 | **400 / 422** | `start_date > end_date` |
 | **400 / 422** | Rango íntegramente en el pasado (`end_date < hoy`) |
+| **400 / 422** | Rango mayor a 92 días (límite de costo por operación) |
 | **400 / 422** | Tipo de turno inexistente o inactivo |
-| **422** | `employee_ids` vacío (validación Pydantic) |
+| **422** | `employee_ids` vacío o con más de 100 elementos (validación Pydantic) |
 | **401** | No autenticado |
 | **403** | Rol `Empleado` |
 
