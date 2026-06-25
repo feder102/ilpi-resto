@@ -41,17 +41,6 @@ function isWeekend(dateStr: string): boolean {
   return dayOfWeek === 0 || dayOfWeek === 6;
 }
 
-/**
- * Check if date is in the past
- */
-function isPastDate(dateStr: string): boolean {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const selectedDate = new Date(dateStr);
-  selectedDate.setHours(0, 0, 0, 0);
-  return selectedDate < today;
-}
-
 export default function ShiftAssignmentForm({
   employees,
   shiftTypes,
@@ -75,8 +64,6 @@ export default function ShiftAssignmentForm({
 
     if (!date) {
       newErrors.date = 'Selecciona una fecha';
-    } else if (isPastDate(date)) {
-      newErrors.date = 'No se pueden asignar turnos en fechas pasadas';
     } else if (isWeekend(date)) {
       newErrors.date = 'No se pueden asignar turnos en fines de semana';
     }
@@ -112,17 +99,6 @@ export default function ShiftAssignmentForm({
       // Form NOT reset on error - user can correct and retry
       // Error handling is done by parent component
     }
-  };
-
-  /**
-   * Get minimum date (today)
-   */
-  const getTodayString = (): string => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
   };
 
   const handleDateChange = (value: string) => {
@@ -189,7 +165,6 @@ export default function ShiftAssignmentForm({
           type="date"
           value={date}
           onChange={e => handleDateChange(e.target.value)}
-          min={getTodayString()}
           disabled={isSubmitting}
           className={`input input-bordered w-full ${
             errors.date ? 'input-error' : ''
@@ -259,7 +234,7 @@ export default function ShiftAssignmentForm({
         <p className="text-xs font-semibold text-base-content mb-2">NOTA</p>
         <ul className="text-xs text-base-content/60 space-y-1">
           <li>Las fechas de fin de semana no están permitidas</li>
-          <li>No se pueden asignar turnos en fechas pasadas</li>
+          <li>Se pueden cargar turnos en fechas pasadas (carga excepcional)</li>
           <li>El sistema valida conflictos de vacaciones automáticamente</li>
           <li>No se pueden asignar dos turnos a la misma persona el mismo día</li>
         </ul>

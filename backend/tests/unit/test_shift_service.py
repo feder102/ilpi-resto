@@ -330,16 +330,19 @@ class TestCreateShiftsBulk:
         with pytest.raises(ValidationError, match="fecha de inicio"):
             shift_service.create_shifts_bulk(tenant.id, session, body, uuid.uuid4())
 
-    def test_bulk_past_range_raises(self, session, tenant, employee, shift_type):
+    def test_bulk_past_range_is_allowed(self, session, tenant, employee, shift_type):
+        # Exceptional manual load: Admin/Moderador can register past shifts
+        # (e.g., backfilling a forgotten day). No skip, no error.
         body = BulkShiftCreate(
             employee_ids=[employee.id],
             shift_type_id=shift_type.id,
-            start_date=date(2000, 1, 1),
-            end_date=date(2000, 1, 5),
+            start_date=date(2000, 1, 3),  # Monday
+            end_date=date(2000, 1, 5),    # Wednesday
             include_weekends=True,
         )
-        with pytest.raises(ValidationError, match="pasado"):
-            shift_service.create_shifts_bulk(tenant.id, session, body, uuid.uuid4())
+        result = shift_service.create_shifts_bulk(tenant.id, session, body, uuid.uuid4())
+        assert result["created_count"] == 3
+        assert result["skipped_count"] == 0
 
     def test_bulk_skips_unknown_employee(self, session, tenant, shift_type):
         unknown_id = uuid.uuid4()

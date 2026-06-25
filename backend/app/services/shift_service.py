@@ -243,13 +243,8 @@ def create_shift(
         }
 
     Raises:
-        ValidationError: If date is in past, employee not found, or conflict detected
+        ValidationError: If employee not found, or conflict detected
     """
-    # Validate date not in past
-    today = date.today()
-    if shift_date < today:
-        raise ValidationError("No se pueden asignar turnos en el pasado")
-
     # Verify employee exists and is active
     employee = session.exec(
         select(Employee).where(
@@ -352,9 +347,9 @@ def create_shifts_bulk(
     Bulk-assign a shift type to several employees over a date range.
 
     For each (employee, day) combination the same conflict rules as create_shift
-    apply: days with an existing shift, an approved vacation, or in the past are
-    skipped and reported. All successful inserts are committed in a single
-    transaction.
+    apply: days with an existing shift or an approved vacation are skipped and
+    reported. Past dates are allowed (exceptional manual load). All successful
+    inserts are committed in a single transaction.
 
     Args:
         tenant_id: Tenant UUID
@@ -376,10 +371,6 @@ def create_shifts_bulk(
     # Validate date range
     if body.start_date > body.end_date:
         raise ValidationError("La fecha de inicio no puede ser posterior a la fecha de fin")
-
-    today = date.today()
-    if body.end_date < today:
-        raise ValidationError("No se pueden asignar turnos en el pasado")
 
     # Bound the range to keep the operation cost (days * employees) manageable
     range_days = (body.end_date - body.start_date).days + 1
@@ -437,16 +428,6 @@ def create_shifts_bulk(
 
             # Skip weekends when only working days requested
             if not body.include_weekends and day.weekday() >= 5:
-                continue
-
-            # Skip past days inside the range (reported)
-            if day < today:
-                skipped.append({
-                    "employee_id": str(emp_id),
-                    "employee_name": emp_name,
-                    "date": day.isoformat(),
-                    "reason": "Fecha en el pasado",
-                })
                 continue
 
             # Skip if employee already has a shift that day
