@@ -103,9 +103,9 @@ describe('ShiftAssignmentForm', () => {
   });
 
   /**
-   * Test: Validation - past date blocking
+   * Test: Past dates are allowed (exceptional manual load for Admin/Moderador)
    */
-  it('debería bloquear asignación en fechas pasadas', async () => {
+  it('debería permitir asignación en fechas pasadas (carga excepcional)', async () => {
     const mockSubmit = vi.fn();
     render(
       <ShiftAssignmentForm
@@ -118,10 +118,8 @@ describe('ShiftAssignmentForm', () => {
 
     const dateInput = screen.getByLabelText('Fecha del Turno') as HTMLInputElement;
 
-    // Verify min attribute prevents past dates
-    const today = new Date();
-    const minDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    expect(dateInput.min).toBe(minDate);
+    // No min attribute → past dates accepted
+    expect(dateInput.min).toBe('');
   });
 
   /**

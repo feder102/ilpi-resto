@@ -25,14 +25,6 @@ interface EmployeeOption {
   name: string;
 }
 
-function todayStr(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
 export const BulkShiftLoadDialog: React.FC<BulkShiftLoadDialogProps> = ({
   isOpen,
   onClose,
@@ -48,8 +40,6 @@ export const BulkShiftLoadDialog: React.FC<BulkShiftLoadDialogProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BulkShiftResult | null>(null);
-
-  const minDate = todayStr();
 
   // Reset state and load options on open
   useEffect(() => {
@@ -273,7 +263,6 @@ export const BulkShiftLoadDialog: React.FC<BulkShiftLoadDialogProps> = ({
                 id="bulk_start_date"
                 type="date"
                 value={startDate}
-                min={minDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 disabled={loading}
                 className="input input-bordered w-full"
@@ -287,7 +276,7 @@ export const BulkShiftLoadDialog: React.FC<BulkShiftLoadDialogProps> = ({
                 id="bulk_end_date"
                 type="date"
                 value={endDate}
-                min={startDate || minDate}
+                min={startDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 disabled={loading}
                 className="input input-bordered w-full"
