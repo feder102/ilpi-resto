@@ -93,7 +93,8 @@ Todo cambio de configuración (default global o override por empleado) queda reg
 1. **Given** un Admin cambia el default global de 30 a 25, **When** se guarda, **Then** se crea una entrada de auditoría con `entity_type="tenant_vacation_config"`, `action="update_default_vacation_days"`, `old_value="30"`, `new_value="25"`, `changed_by=<user_id>`, `created_at=<timestamp>`.
 2. **Given** un Moderador asigna `custom_vacation_days=35` a un empleado sin override previo, **When** se guarda, **Then** se crea una entrada con `entity_type="employee_vacation_config"`, `entity_id=<employee_id>`, `action="update_employee_vacation_days"`, `old_value=null`, `new_value="35"`.
 3. **Given** un Admin abre el historial de auditoría desde `/settings`, **When** la vista carga, **Then** muestra al menos las últimas 50 entradas ordenadas por `created_at` descendente con quién, cuándo, qué cambió y de qué valor a qué valor.
-4. **Given** un Empleado, **When** intenta acceder al endpoint o vista del historial de auditoría, **Then** el sistema lo rechaza (403).
+4. **Given** un Moderador abre el historial de auditoría desde `/settings`, **When** la vista carga, **Then** muestra las entradas de tipo configuración de vacaciones (`tenant_vacation_config` y `employee_vacation_config`) ordenadas por fecha descendente.
+5. **Given** un Empleado, **When** intenta acceder al endpoint o vista del historial de auditoría, **Then** el sistema lo rechaza (403).
 
 ---
 
@@ -142,8 +143,8 @@ Todo cambio de configuración (default global o override por empleado) queda reg
 - **FR-016**: El sistema MUST registrar en una tabla de auditoría toda actualización del default global (entidad: tenant, acción: update_default_vacation_days).
 - **FR-017**: El sistema MUST registrar en la misma tabla toda actualización del override por empleado (entidad: empleado, acción: update_employee_vacation_days).
 - **FR-018**: Cada entrada de auditoría MUST contener al menos: tenant_id, entity_type, entity_id, action, old_value, new_value, changed_by (id del usuario que hizo el cambio), created_at.
-- **FR-019**: El historial de cambios de la configuración global MUST estar visible para Admin/Moderador desde la vista `/settings`, ordenado por fecha descendente.
-- **FR-020**: Solo Admin MUST poder consultar el historial completo de auditoría a través del endpoint dedicado.
+- **FR-019**: El historial de cambios de la configuración de vacaciones (global y por empleado) MUST estar visible para Admin y Moderador desde la vista `/settings`, ordenado por fecha descendente.
+- **FR-020**: El endpoint dedicado de auditoría MUST ser accesible para Admin y Moderador; Admin puede ver todas las entradas sin restricción de tipo; Moderador solo puede ver entradas de tipo `tenant_vacation_config` y `employee_vacation_config` (configuración de vacaciones).
 
 #### Seguridad y permisos
 

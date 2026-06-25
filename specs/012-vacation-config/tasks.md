@@ -32,8 +32,9 @@
 - [ ] T004 Exportar `AuditLog` en `backend/app/models/__init__.py` (importación y lista `__all__`)
 - [ ] T005 Generar migración Alembic con `alembic revision --autogenerate -m "add_vacation_config_and_audit_log"` en `backend/alembic/versions/`; revisar el archivo generado para confirmar: (1) `op.add_column('tenant', default_vacation_days NOT NULL DEFAULT 30)`, (2) `op.add_column('employee', custom_vacation_days NULLABLE)`, (3) `op.create_table('audit_log', ...)` con los 3 índices; ejecutar `alembic upgrade head`
 - [ ] T006 Crear `backend/app/services/audit_service.py` con función `log(session: Session, tenant_id: UUID, entity_type: str, entity_id: str, action: str, old_value: str | None, new_value: str | None, changed_by: UUID) -> None` que instancia `AuditLog`, hace `session.add()` y `session.flush()` (el commit lo gestiona el caller)
+- [ ] T006b Verificar `backend/app/seed.py`: asegurarse de que al crear el tenant ILPI se establece explícitamente `default_vacation_days=30` (no depender del default del Field); si la creación del tenant usa `Tenant(name=..., slug=..., ...)` sin el campo nuevo, añadir `default_vacation_days=30` al constructor para que la semilla sea reproducible tras la migración
 
-**Checkpoint**: `alembic upgrade head` sin errores, `mypy app --strict` sin errores sobre los nuevos modelos.
+**Checkpoint**: `alembic upgrade head` sin errores, `mypy app --strict` sin errores sobre los nuevos modelos, `seed.py` ejecutable sin errores con el tenant creado con `default_vacation_days=30`.
 
 ---
 
@@ -70,7 +71,7 @@
 ### Backend
 
 - [ ] T015 [US2] Modificar `backend/app/schemas/employee.py`: añadir `custom_vacation_days: int | None = None` a `EmployeeUpdate` (con validador Pydantic v2 `@field_validator` o `Annotated` para que cuando no sea None sea ≥1 y ≤365) y añadir `custom_vacation_days: int | None` a `EmployeeResponse`
-- [ ] T016 [US2] Modificar `backend/app/services/employee_service.py` en la función `update()`: antes de aplicar los cambios, si `payload.custom_vacation_days` está presente en la actualización y difiere del valor actual, capturar `old_value = str(employee.custom_vacation_days)`, aplicar el cambio, y llamar `audit_service.log(session, tenant_id=employee.tenant_id, entity_type="employee_vacation_config", entity_id=str(employee.id), action="update_employee_vacation_days", old_value=old_value, new_value=str(new_value), changed_by=changed_by_user_id)` antes del commit; asegurarse de pasar el `changed_by` (user_id del actor) como nuevo parámetro de la función o desde el current_user en el router
+- [ ] T016 [US2] Modificar `backend/app/services/employee_service.py` en la función `update()`: añadir `changed_by: uuid.UUID` como parámetro explícito a la firma (`def update(employee_id: UUID, payload: EmployeeUpdate, changed_by: uuid.UUID, session: Session, ...) -> Employee`); en el router que llama a `update()`, pasar `changed_by=UUID(current_user["sub"])`; dentro del servicio, si `payload.custom_vacation_days` está presente en la actualización y difiere del valor actual del empleado, capturar `old_value = str(employee.custom_vacation_days)`, aplicar el cambio, y llamar `audit_service.log(session, tenant_id=employee.tenant_id, entity_type="employee_vacation_config", entity_id=str(employee.id), action="update_employee_vacation_days", old_value=old_value, new_value=str(payload.custom_vacation_days), changed_by=changed_by)` antes del commit
 - [ ] T017 [US2] Modificar `backend/app/services/vacation_service.py` en `_get_or_create_balance()`: cuando se crea un balance nuevo, cargar el `Employee` por `employee_id` y el `Tenant` por `tenant_id` de la sesión; calcular `total_days = employee.custom_vacation_days if employee.custom_vacation_days is not None else tenant.default_vacation_days`; usar ese valor en `VacationBalance(total_days=total_days, ...)`
 
 ### Frontend
@@ -122,14 +123,14 @@
 
 ## Phase 6: User Story 5 — Auditoría Visible (Priority: P2)
 
-**Goal**: Admin puede consultar el historial de todos los cambios de configuración de vacaciones desde `/settings`. El historial muestra quién, cuándo, qué cambió y de qué valor a cuál.
+**Goal**: Admin y Moderador pueden consultar el historial de cambios de configuración de vacaciones desde `/settings`. El historial muestra quién, cuándo, qué cambió y de qué valor a cuál. Admin ve todas las entradas; Moderador ve solo las entradas de tipo configuración de vacaciones.
 
-**Independent Test**: Login Admin → `GET /settings/audit-log` → lista con las entradas de todos los cambios anteriores (US1, US2), cada una con `changed_by_email`, `old_value`, `new_value`, `created_at`; Moderador → `GET /settings/audit-log` → 403; historial visible en UI de `/settings` sin salir de la vista.
+**Independent Test**: Login Admin → `GET /settings/audit-log` → lista con las entradas de todos los cambios anteriores (US1, US2), cada una con `changed_by_email`, `old_value`, `new_value`, `created_at`; Login Moderador → `GET /settings/audit-log` → 200 con entradas filtradas a configuración de vacaciones; Empleado → 403; historial visible en UI de `/settings` para ambos roles sin salir de la vista.
 
 ### Backend
 
 - [ ] T026 [US5] Crear `backend/app/schemas/audit_log.py` con clases Pydantic v2: `AuditLogRead(BaseModel)` con campos `id: uuid.UUID`, `entity_type: str`, `entity_id: str`, `action: str`, `old_value: str | None`, `new_value: str | None`, `changed_by: uuid.UUID`, `changed_by_email: str | None`, `created_at: datetime`; y `PaginatedAuditLog(BaseModel)` con `items: list[AuditLogRead]`, `total: int`, `page: int`, `size: int`, `pages: int`
-- [ ] T027 [US5] Añadir endpoint `GET /settings/audit-log` en `backend/app/routers/settings.py`: solo rol Admin; query params `entity_type: str | None`, `entity_id: str | None`, `page: int = 1`, `size: int = 20` (máx 100); consultar `AuditLog` filtrando por `tenant_id` (siempre), y opcionalmente `entity_type` y `entity_id`; hacer join con `User` para obtener `changed_by_email`; ordenar por `created_at DESC`; paginar; devolver `PaginatedAuditLog`
+- [ ] T027 [US5] Añadir endpoint `GET /settings/audit-log` en `backend/app/routers/settings.py`: roles Admin y Moderador; query params `entity_type: str | None`, `entity_id: str | None`, `page: int = 1`, `size: int = 20` (máx 100); para Moderador aplicar filtro implícito `entity_type IN ("tenant_vacation_config", "employee_vacation_config")` (incluso si `entity_type` no viene en el query); para Admin sin filtro implícito (puede ver todos los tipos); consultar `AuditLog` filtrando por `tenant_id` (siempre), y opcionalmente `entity_type` y `entity_id`; hacer join con `User` para obtener `changed_by_email`; ordenar por `created_at DESC`; paginar; devolver `PaginatedAuditLog`
 
 ### Frontend
 
@@ -137,7 +138,7 @@
 - [ ] T029 [P] [US5] Añadir a `frontend/src/types/models.ts` (o el fichero de tipos correspondiente): `export interface AuditLogEntry { id: string; entity_type: string; entity_id: string; action: string; old_value: string | null; new_value: string | null; changed_by: string; changed_by_email: string | null; created_at: string }` y `export interface PaginatedAuditLog { items: AuditLogEntry[]; total: number; page: number; size: number; pages: number }`
 - [ ] T030 [US5] Modificar `frontend/src/components/VacationConfigSection.tsx`: añadir sección colapsable (usando `<details>`/`<summary>` o un estado `showHistory`) que al abrirse llama `getAuditLog({ entity_type: "tenant_vacation_config" })` y muestra una tabla con columnas "Fecha", "Cambiado por", "Valor anterior", "Valor nuevo"; usar clases Tailwind/DaisyUI v5 para la tabla; mostrar "Sin cambios registrados" si la lista está vacía
 
-**Checkpoint**: Admin: `GET /settings/audit-log` → 200 con entradas previas; Moderador/Empleado → 403; UI muestra el historial colapsable con las entradas correctas.
+**Checkpoint**: Admin: `GET /settings/audit-log` → 200 con todas las entradas previas; Moderador: `GET /settings/audit-log` → 200 con entradas filtradas a `entity_type` de configuración de vacaciones; Empleado → 403; UI muestra el historial colapsable con las entradas correctas tanto para Admin como para Moderador.
 
 ---
 
@@ -149,7 +150,7 @@
 - [ ] T032 [P] Crear `backend/tests/test_audit_service.py` con tests para `audit_service.log()`: entrada creada con todos los campos correctos ✓; `old_value=None` persiste correctamente ✓
 - [ ] T033 [P] Ampliar/crear `backend/tests/test_vacation_service.py` con tests para las nuevas validaciones: `create_request` con `is_employee_request=True` y `start_date < hoy+2m` → `AdvanceNoticeRequiredError` ✓; mismo con `start_date = hoy+2m exacto` → pasa ✓; con `is_employee_request=False` → pasa sin importar fecha ✓; `end_date` cruzando 31-dic → `ValidationError` ✓; `_get_or_create_balance` con empleado con override 35 → `total_days=35` ✓; con override None y default global 28 → `total_days=28` ✓
 - [ ] T034 [P] Ampliar `backend/tests/test_employee_service.py` (o crear): `update()` con cambio en `custom_vacation_days` → genera AuditLog ✓; cambio a None → AuditLog con `new_value="None"` ✓; sin cambio en el campo → no genera AuditLog ✓
-- [ ] T035 Ejecutar quality gates backend: `mypy app --strict` (0 errores), `ruff check .` (0 errores), `pytest tests/ -v --cov=app --cov-report=term-missing` (todos en verde, ≥80% coverage en servicios nuevos/modificados)
+- [ ] T035 Verificar logging estructurado de accesos denegados (FR-023): en `backend/app/routers/settings.py` y `backend/app/routers/employees.py`, confirmar que cuando `require_role` lanza `ForbiddenError` (HTTP 403), el `handle_exceptions` decorator o el handler global registra un log JSON con campos `{"level": "warning", "event": "access_denied", "user_id": ..., "endpoint": ..., "required_roles": ...}`; si no existe ese logging, añadirlo en el handler de `ForbiddenError` en `backend/app/common/exceptions.py`; ejecutar quality gates: `mypy app --strict` (0 errores), `ruff check .` (0 errores), `pytest tests/ -v --cov=app --cov-report=term-missing` (todos en verde, ≥80% coverage en servicios nuevos/modificados)
 - [ ] T036 Ejecutar quality gates frontend: `npm run lint` (0 errores), `npm run build` (build limpio sin errores TypeScript)
 
 **Checkpoint Final**: Todos los quality gates pasan. Los 5 user stories son funcionales e independientemente testeables.
