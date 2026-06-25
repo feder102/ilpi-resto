@@ -24,6 +24,8 @@ from app.schemas.time_tracking import (
     EmployeeStatisticsPublicResponse,
     EmployeeStatisticsResponse,
     ExtraHoursCreate,
+    MonthlyProcessRequest,
+    MonthlyProcessResponse,
     TimeEntryListResponse,
     TimeEntryResponse,
 )
@@ -260,7 +262,7 @@ def trigger_batch_process(
 ) -> BatchProcessResponse:
     """Manually trigger automatic time entry generation for a specific date."""
     try:
-        entries_created = TimeTrackingService.generate_time_entries_for_date(
+        entries_created, _entries_skipped = TimeTrackingService.generate_time_entries_for_date(
             db=db,
             tenant_id=uuid.UUID(current_user.get("tenant_id", "")),
             target_date=request.process_date,
@@ -279,6 +281,40 @@ def trigger_batch_process(
             message=f"No se encontraron turnos para {request.process_date}",
             estimated_entries=0,
         )
+
+
+@router.post(
+    "/process-month",
+    response_model=MonthlyProcessResponse,
+    status_code=200,
+    summary="Procesar todos los días trabajados de un mes",
+)
+@handle_exceptions
+def process_workdays_for_month(
+    request: MonthlyProcessRequest,
+    current_user: dict = Depends(require_admin_or_moderator),
+    db: Session = Depends(get_db),
+) -> MonthlyProcessResponse:
+    """Procesa todos los días trabajados del mes seleccionado para todos los empleados.
+
+    Itera desde el día 1 hasta min(último día del mes, hoy) generando los
+    TimeEntry faltantes a partir de los ShiftRecord. Idempotente: los turnos
+    que ya tienen TimeEntry se omiten silenciosamente.
+
+    Acceso: Admin o Moderador.
+
+    Returns:
+    - 200: OK con resumen agregado
+    - 403: Forbidden (rol Empleado)
+    - 422: year/month fuera de rango
+    """
+    result = TimeTrackingService.process_workdays_for_month(
+        db=db,
+        tenant_id=uuid.UUID(current_user.get("tenant_id", "")),
+        year=request.year,
+        month=request.month,
+    )
+    return MonthlyProcessResponse(**result)
 
 
 # ========== Absence Endpoints ==========

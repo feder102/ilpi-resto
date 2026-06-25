@@ -73,7 +73,7 @@ class TimeTrackingService:
         db: Session,
         tenant_id: uuid.UUID,
         target_date: date_type,
-    ) -> int:
+    ) -> tuple[int, int]:
         """Generate TimeEntry records for all shifts on a specific date.
 
         Queries all ShiftRecord entries for the tenant on the target date,
@@ -86,7 +86,7 @@ class TimeTrackingService:
             target_date: Date to process (usually yesterday)
 
         Returns:
-            int: Count of TimeEntry records created
+            tuple[int, int]: (entries_created, entries_skipped_already_existing)
 
         Raises:
             BatchProcessingError: If batch processing fails
@@ -139,6 +139,7 @@ class TimeTrackingService:
             }
 
             entries_created = 0
+            entries_skipped = 0
 
             for shift in shifts:
                 if shift.employee_id in absent_employee_ids:
@@ -149,6 +150,7 @@ class TimeTrackingService:
 
                 # Check for existing entry (idempotency) using preloaded set
                 if (shift.employee_id, shift.shift_type_id) in existing_keys:
+                    entries_skipped += 1
                     continue
 
                 shift_type = shift_types_map.get(shift.shift_type_id)
@@ -195,13 +197,137 @@ class TimeTrackingService:
                 entries_created += 1
 
             db.commit()
-            return entries_created
+            return entries_created, entries_skipped
 
         except NoShiftsFoundError:
             raise  # Re-raise without wrapping
         except Exception as e:
             db.rollback()
             raise BatchProcessingError(f"Batch processing failed: {str(e)}") from e
+
+    @staticmethod
+    def process_workdays_for_month(
+        db: Session,
+        tenant_id: uuid.UUID,
+        year: int,
+        month: int,
+    ) -> dict[str, Any]:
+        """Process worked days for an entire month (Admin/Moderador batch action).
+
+        Iterates from day 1 to min(last_day_of_month, today) inclusive, calling
+        ``generate_time_entries_for_date`` for each date. Aggregates counts of
+        newly created TimeEntry, already-existing entries (skipped), days with
+        no shifts assigned, and per-day errors (non-blocking).
+
+        Idempotent: the underlying UniqueConstraint on TimeEntry guarantees that
+        reprocessing a month does not create duplicates.
+
+        Args:
+            db: Database session
+            tenant_id: Tenant UUID
+            year: Year (2020-2100)
+            month: Month (1-12)
+
+        Returns:
+            Dict with keys: year, month, days_processed, entries_created,
+            entries_skipped, days_without_shifts, errors.
+        """
+        import calendar  # noqa: PLC0415
+
+        first_day = date_type(year, month, 1)
+        last_day_of_month = date_type(year, month, calendar.monthrange(year, month)[1])
+        today = date_type.today()
+        last_day = min(last_day_of_month, today)
+
+        days_processed = 0
+        entries_created_total = 0
+        entries_skipped_total = 0
+        days_without_shifts = 0
+        errors: list[str] = []
+
+        logger.info(
+            "Monthly workday processing started",
+            extra={
+                "action": "monthly_process_start",
+                "tenant_id": str(tenant_id),
+                "year": year,
+                "month": month,
+                "from_date": first_day.isoformat(),
+                "to_date": last_day.isoformat() if last_day >= first_day else None,
+            },
+        )
+
+        if last_day < first_day:
+            # Future month: nothing to do
+            logger.info(
+                "Monthly workday processing skipped: future month",
+                extra={
+                    "action": "monthly_process_skipped_future",
+                    "tenant_id": str(tenant_id),
+                    "year": year,
+                    "month": month,
+                },
+            )
+            return {
+                "year": year,
+                "month": month,
+                "days_processed": 0,
+                "entries_created": 0,
+                "entries_skipped": 0,
+                "days_without_shifts": 0,
+                "errors": [],
+            }
+
+        current = first_day
+        while current <= last_day:
+            days_processed += 1
+            try:
+                created, skipped = TimeTrackingService.generate_time_entries_for_date(
+                    db=db,
+                    tenant_id=tenant_id,
+                    target_date=current,
+                )
+                entries_created_total += created
+                entries_skipped_total += skipped
+            except NoShiftsFoundError:
+                days_without_shifts += 1
+            except BatchProcessingError as e:
+                errors.append(f"{current.isoformat()}: {str(e)}")
+                logger.warning(
+                    "Monthly workday processing: day failed",
+                    extra={
+                        "action": "monthly_process_day_error",
+                        "tenant_id": str(tenant_id),
+                        "date": current.isoformat(),
+                        "error": str(e),
+                    },
+                )
+            current += timedelta(days=1)
+
+        logger.info(
+            "Monthly workday processing completed",
+            extra={
+                "action": "monthly_process_complete",
+                "tenant_id": str(tenant_id),
+                "year": year,
+                "month": month,
+                "days_processed": days_processed,
+                "entries_created": entries_created_total,
+                "entries_skipped": entries_skipped_total,
+                "days_without_shifts": days_without_shifts,
+                "errors_count": len(errors),
+            },
+        )
+
+        return {
+            "year": year,
+            "month": month,
+            "days_processed": days_processed,
+            "entries_created": entries_created_total,
+            "entries_skipped": entries_skipped_total,
+            "days_without_shifts": days_without_shifts,
+            "errors": errors,
+        }
 
     @staticmethod
     def create_extra_hours(
@@ -750,7 +876,7 @@ def run_daily_batch_job(db: Session, tenant_id: uuid.UUID, process_date: date_ty
         )
 
         # Execute batch processing
-        entries_created = TimeTrackingService.generate_time_entries_for_date(
+        entries_created, _entries_skipped = TimeTrackingService.generate_time_entries_for_date(
             db=db,
             tenant_id=tenant_id,
             target_date=process_date,
