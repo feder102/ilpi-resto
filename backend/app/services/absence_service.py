@@ -160,7 +160,7 @@ class AbsenceService:
         # Regenerate the SHIFT TimeEntry for that day
         try:
             from app.services.time_tracking_service import TimeTrackingService  # noqa: PLC0415
-            TimeTrackingService.generate_time_entries_for_date(
+            _created, _skipped = TimeTrackingService.generate_time_entries_for_date(
                 db=db,
                 tenant_id=tenant_id,
                 target_date=absence_date,
