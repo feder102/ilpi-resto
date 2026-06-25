@@ -1,0 +1,100 @@
+openapi: 3.0.3
+info:
+  title: Monthly Workday Processing — Contract
+  version: "1.0.0"
+  description: |
+    Endpoint para procesar todos los días trabajados de un mes para todos los
+    empleados del tenant del usuario autenticado. Idempotente: reprocesar no
+    crea duplicados (garantizado por UniqueConstraint en time_entries).
+
+paths:
+  /admin/time-tracking/process-month:
+    post:
+      summary: Procesa los TimeEntry faltantes del mes seleccionado
+      description: |
+        Itera desde el día 1 hasta min(último_día_del_mes, hoy) y genera los
+        TimeEntry faltantes a partir de los ShiftRecord asignados. Los turnos
+        que ya tienen TimeEntry se omiten silenciosamente.
+      tags: [time-tracking]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MonthlyProcessRequest"
+      responses:
+        "200":
+          description: Procesamiento completado (con o sin errores parciales)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonthlyProcessResponse"
+        "401":
+          description: No autenticado
+        "403":
+          description: Rol insuficiente (requiere Admin o Moderador)
+        "422":
+          description: Año o mes fuera de rango válido
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    MonthlyProcessRequest:
+      type: object
+      required: [year, month]
+      properties:
+        year:
+          type: integer
+          minimum: 2020
+          maximum: 2100
+          example: 2026
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+          example: 6
+    MonthlyProcessResponse:
+      type: object
+      required:
+        - year
+        - month
+        - days_processed
+        - entries_created
+        - entries_skipped
+        - days_without_shifts
+        - errors
+      properties:
+        year:
+          type: integer
+          example: 2026
+        month:
+          type: integer
+          example: 6
+        days_processed:
+          type: integer
+          description: Nº de fechas iteradas (1..min(fin_mes, hoy))
+          example: 25
+        entries_created:
+          type: integer
+          description: TimeEntry nuevos insertados
+          example: 78
+        entries_skipped:
+          type: integer
+          description: Turnos que ya tenían TimeEntry y fueron omitidos
+          example: 142
+        days_without_shifts:
+          type: integer
+          description: Fechas sin ningún ShiftRecord
+          example: 3
+        errors:
+          type: array
+          items:
+            type: string
+          description: Mensajes de días con fallo no-bloqueante
+          example: []
