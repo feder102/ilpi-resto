@@ -50,20 +50,25 @@ def _get_or_create_balance(
             VacationBalance.year == year,
         )
     ).first()
+    employee = session.get(Employee, employee_id)
+    tenant = session.get(Tenant, tenant_id)
+    effective_total: int = 30
+    if employee is not None and employee.custom_vacation_days is not None:
+        effective_total = employee.custom_vacation_days
+    elif tenant is not None:
+        effective_total = tenant.default_vacation_days
+
     if not balance:
-        employee = session.get(Employee, employee_id)
-        tenant = session.get(Tenant, tenant_id)
-        total_days: int = 30
-        if employee is not None and employee.custom_vacation_days is not None:
-            total_days = employee.custom_vacation_days
-        elif tenant is not None:
-            total_days = tenant.default_vacation_days
         balance = VacationBalance(
             tenant_id=tenant_id,
             employee_id=employee_id,
             year=year,
-            total_days=total_days,
+            total_days=effective_total,
         )
+        session.add(balance)
+        session.flush()
+    elif balance.total_days != effective_total:
+        balance.total_days = effective_total
         session.add(balance)
         session.flush()
     return balance
