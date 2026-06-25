@@ -113,11 +113,11 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           return (
             <div
               key={dateKey}
-              onClick={() => !isPast && canAssign && onDateSelect(date)}
+              onClick={() => canAssign && onDateSelect(date)}
               className={`aspect-square rounded-lg border-2 p-2 transition-all ${
                 today ? 'border-primary bg-primary/10' : 'border-base-300 bg-base-100'
               } ${
-                !isPast && canAssign ? 'cursor-pointer hover:border-primary/60 hover:shadow-md' : ''
+                canAssign ? 'cursor-pointer hover:border-primary/60 hover:shadow-md' : ''
               } ${isPast ? 'bg-base-200' : ''} overflow-hidden flex flex-col`}
             >
               {/* Date number */}
