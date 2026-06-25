@@ -15,7 +15,8 @@ import { DepartmentStatisticsCard } from "../components/time-tracking/Department
 import { TimeEntriesTable } from "../components/time-tracking/TimeEntriesTable";
 import { ExtraHoursModal } from "../components/time-tracking/ExtraHoursModal";
 import { AbsenceModal } from "../components/time-tracking/AbsenceModal";
-import { triggerBatchProcess } from "../services/statisticsService";
+import { processMonthlyWorkdays, triggerBatchProcess } from "../services/statisticsService";
+import type { MonthlyProcessResult } from "../types/timeTracking";
 import { useAuth } from "../hooks/useAuth";
 
 interface AdminUser {
@@ -65,6 +66,12 @@ export const AdminStatistics: React.FC = () => {
   const [batchMessage, setBatchMessage] = useState<string | null>(null);
   const [batchError, setBatchError] = useState<string | null>(null);
   const [batchDate, setBatchDate] = useState(new Date().toISOString().split("T")[0]);
+  const todayDate = new Date();
+  const [monthlyYear, setMonthlyYear] = useState(todayDate.getFullYear());
+  const [monthlyMonth, setMonthlyMonth] = useState(todayDate.getMonth() + 1);
+  const [monthlyProcessing, setMonthlyProcessing] = useState(false);
+  const [monthlyResult, setMonthlyResult] = useState<MonthlyProcessResult | null>(null);
+  const [monthlyError, setMonthlyError] = useState<string | null>(null);
   const [extraModalOpen, setExtraModalOpen] = useState(false);
   const [absenceModalOpen, setAbsenceModalOpen] = useState(false);
   const [entriesRefreshKey, setEntriesRefreshKey] = useState(0);
@@ -114,6 +121,34 @@ export const AdminStatistics: React.FC = () => {
       setBatchProcessing(false);
     }
   };
+
+  const handleMonthlyProcess = async () => {
+    setMonthlyProcessing(true);
+    setMonthlyResult(null);
+    setMonthlyError(null);
+    try {
+      const result = await processMonthlyWorkdays(monthlyYear, monthlyMonth);
+      setMonthlyResult(result);
+      setEntriesRefreshKey((k) => k + 1);
+    } catch (error) {
+      setMonthlyError(
+        error instanceof Error
+          ? error.message
+          : "Error al procesar los días trabajados del mes"
+      );
+    } finally {
+      setMonthlyProcessing(false);
+    }
+  };
+
+  const MONTH_NAMES = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+  ];
+  const yearOptions = (() => {
+    const current = new Date().getFullYear();
+    return [current - 2, current - 1, current, current + 1];
+  })();
 
   if (!isAuthorized) {
     return (
@@ -313,9 +348,9 @@ export const AdminStatistics: React.FC = () => {
             <div className="space-y-6">
               {!isAdmin && (
                 <Alert
-                  variant="warning"
-                  title="Solo Administrador"
-                  message="El procesamiento por lotes está restringido a usuarios Administrador. Tu rol: Moderador"
+                  variant="info"
+                  title="Procesamiento diario"
+                  message="El procesamiento por fecha individual está restringido a usuarios Administrador. El procesamiento mensual (más abajo) está disponible para ti."
                 />
               )}
 
@@ -383,6 +418,116 @@ export const AdminStatistics: React.FC = () => {
                   </Card>
                 </>
               )}
+
+              {/* Procesamiento mensual: disponible para Admin y Moderador */}
+              <Card className="bg-info/10 border-2 border-info/30">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-info/20 rounded-lg">
+                    <RefreshCw className="w-6 h-6 text-info" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-base-content">
+                      Procesar mes completo
+                    </h2>
+                    <p className="text-sm text-base-content/70 mt-1">
+                      Genera las entradas de tiempo de todos los días trabajados del mes seleccionado para todos los empleados. Los días ya procesados se omiten automáticamente (no se duplican).
+                    </p>
+                  </div>
+                </div>
+              </Card>
+
+              <Card>
+                <div className="p-6 space-y-6">
+                  <Alert
+                    variant="info"
+                    message="Itera desde el día 1 hasta el día de hoy (incluido). Los turnos sin entrada de tiempo se procesan; los que ya existen se cuentan como omitidos."
+                  />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
+                    <div className="flex flex-col gap-1">
+                      <label
+                        htmlFor="monthly-year"
+                        className="text-sm font-semibold text-base-content"
+                      >
+                        Año
+                      </label>
+                      <select
+                        id="monthly-year"
+                        value={monthlyYear}
+                        onChange={(e) => setMonthlyYear(parseInt(e.target.value, 10))}
+                        className="select select-bordered w-full text-sm"
+                      >
+                        {yearOptions.map((y) => (
+                          <option key={y} value={y}>
+                            {y}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label
+                        htmlFor="monthly-month"
+                        className="text-sm font-semibold text-base-content"
+                      >
+                        Mes
+                      </label>
+                      <select
+                        id="monthly-month"
+                        value={monthlyMonth}
+                        onChange={(e) => setMonthlyMonth(parseInt(e.target.value, 10))}
+                        className="select select-bordered w-full text-sm"
+                      >
+                        {MONTH_NAMES.map((name, idx) => (
+                          <option key={name} value={idx + 1}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={handleMonthlyProcess}
+                      disabled={monthlyProcessing}
+                      className="btn-primary gap-2"
+                    >
+                      <RefreshCw
+                        className={`w-4 h-4 ${monthlyProcessing ? "animate-spin" : ""}`}
+                      />
+                      {monthlyProcessing ? "Procesando..." : "Procesar mes"}
+                    </Button>
+                  </div>
+
+                  {monthlyResult && (
+                    <Alert
+                      variant="success"
+                      message={
+                        `✓ ${MONTH_NAMES[monthlyResult.month - 1]} ${monthlyResult.year} procesado: ` +
+                        `${monthlyResult.days_processed} días iterados, ` +
+                        `${monthlyResult.entries_created} entradas nuevas, ` +
+                        `${monthlyResult.entries_skipped} ya existían (omitidas), ` +
+                        `${monthlyResult.days_without_shifts} días sin turnos asignados` +
+                        (monthlyResult.errors.length > 0
+                          ? `, ${monthlyResult.errors.length} días con error`
+                          : ".")
+                      }
+                    />
+                  )}
+
+                  {monthlyResult && monthlyResult.errors.length > 0 && (
+                    <Alert
+                      variant="warning"
+                      title="Días con error (procesamiento continuó)"
+                      message={monthlyResult.errors.join(" | ")}
+                    />
+                  )}
+
+                  {monthlyError && (
+                    <Alert variant="error" message={monthlyError} />
+                  )}
+                </div>
+              </Card>
             </div>
           )}
         </div>
