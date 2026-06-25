@@ -66,6 +66,31 @@ export interface Employee {
   emergency_contact: string | null;
   is_active: boolean;
   team_id: string | null;
+  custom_vacation_days?: number | null;
+}
+
+export interface VacationSettings {
+  default_vacation_days: number;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  entity_type: string;
+  entity_id: string;
+  action: string;
+  old_value: string | null;
+  new_value: string | null;
+  changed_by: string;
+  changed_by_email: string | null;
+  created_at: string;
+}
+
+export interface PaginatedAuditLog {
+  items: AuditLogEntry[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
 }
 
 export interface ShiftRecord {

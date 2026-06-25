@@ -71,9 +71,12 @@ def update_employee(
     body: EmployeeUpdate,
     session: DbSession,
     tenant_id: TenantId,
+    current_user: CurrentUser,
     _: dict = AdminOrMod,
 ):
-    return employee_service.update(employee_id, body, tenant_id, session)
+    return employee_service.update(
+        employee_id, body, tenant_id, session, changed_by=uuid.UUID(current_user["sub"])
+    )
 
 
 @router.delete("/employees/{employee_id}")

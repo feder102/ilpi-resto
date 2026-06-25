@@ -18,6 +18,7 @@ interface VacationRequestFormProps {
   submitting: boolean;
   onSubmit: (startDate: string, endDate: string) => Promise<void>;
   onError?: (error: string) => void;
+  serverDateError?: string | null;
 }
 
 export default function VacationRequestForm({
@@ -25,6 +26,7 @@ export default function VacationRequestForm({
   submitting,
   onSubmit,
   onError,
+  serverDateError,
 }: VacationRequestFormProps) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -165,6 +167,9 @@ export default function VacationRequestForm({
               {startDate && isWeekend(startDate) && (
                 <p className="text-xs text-error mt-1">Esta fecha cae en fin de semana</p>
               )}
+              {serverDateError && (
+                <p className="text-error text-xs mt-1">{serverDateError}</p>
+              )}
             </div>
 
             {/* End Date */}
@@ -202,6 +207,9 @@ export default function VacationRequestForm({
           {/* Days Summary */}
           {requestedDays > 0 && (
             <div className="bg-info/10 border border-info/30 rounded-lg p-4">
+              <p className="text-xs text-base-content/60 mb-3">
+                Días naturales del {new Date(startDate + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })} al {new Date(endDate + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}, ambos inclusive.
+              </p>
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-xs text-base-content/60 uppercase font-medium">Días Solicitados</p>

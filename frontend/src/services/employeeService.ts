@@ -22,6 +22,7 @@ export interface EmployeeCreateData {
 
 export type EmployeeUpdateData = Partial<EmployeeCreateData> & {
   status?: string;
+  custom_vacation_days?: number | null;
 };
 
 export interface EmployeeListParams {
