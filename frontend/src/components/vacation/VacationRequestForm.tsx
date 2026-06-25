@@ -207,6 +207,9 @@ export default function VacationRequestForm({
           {/* Days Summary */}
           {requestedDays > 0 && (
             <div className="bg-info/10 border border-info/30 rounded-lg p-4">
+              <p className="text-xs text-base-content/60 mb-3">
+                Días naturales del {new Date(startDate + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })} al {new Date(endDate + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}, ambos inclusive.
+              </p>
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-xs text-base-content/60 uppercase font-medium">Días Solicitados</p>
