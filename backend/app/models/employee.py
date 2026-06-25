@@ -36,6 +36,7 @@ class Employee(SQLModel, table=True):
     profile_image: str | None = Field(default=None, max_length=500)
     emergency_contact: str | None = Field(default=None, max_length=255)
     is_active: bool = Field(default=True)
+    custom_vacation_days: int | None = Field(default=None)
     team_id: uuid.UUID | None = Field(default=None, foreign_key="team.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

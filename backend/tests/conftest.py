@@ -157,7 +157,6 @@ def emp_headers(emp_user, test_tenant):
 
 @pytest.fixture
 def test_shift_type(session: Session, test_tenant):
-    from datetime import time
 
     from app.models.shift_type import ShiftType
 

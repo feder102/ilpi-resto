@@ -10,6 +10,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from app.common.exceptions import (
+    AdvanceNoticeRequiredError,
     BalanceExceededError,
     ConflictError,
     DomainError,
@@ -31,7 +32,8 @@ EXCEPTION_STATUS_MAP: dict[type[DomainError], int] = {
     NotFoundError: 404,
     UnauthorizedError: 401,
     ForbiddenError: 403,
-    ValidationError: 422,
+    ValidationError: 400,
+    AdvanceNoticeRequiredError: 400,
     DuplicateError: 409,
     ConflictError: 409,
     BalanceExceededError: 409,
@@ -189,6 +191,7 @@ def _include_routers(app: FastAPI) -> None:
         employees,
         moderator,
         password_reset_router,
+        settings,
         shift_types,
         shifts,
         teams,
@@ -210,6 +213,7 @@ def _include_routers(app: FastAPI) -> None:
     app.include_router(time_tracking.router, prefix=prefix)
     # T020: Register password reset router for password recovery endpoints
     app.include_router(password_reset_router.router, prefix=prefix)
+    app.include_router(settings.router, prefix=prefix)
 
 
 app = create_app()

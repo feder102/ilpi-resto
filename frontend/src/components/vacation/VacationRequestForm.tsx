@@ -18,6 +18,7 @@ interface VacationRequestFormProps {
   submitting: boolean;
   onSubmit: (startDate: string, endDate: string) => Promise<void>;
   onError?: (error: string) => void;
+  serverDateError?: string | null;
 }
 
 export default function VacationRequestForm({
@@ -25,6 +26,7 @@ export default function VacationRequestForm({
   submitting,
   onSubmit,
   onError,
+  serverDateError,
 }: VacationRequestFormProps) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -164,6 +166,9 @@ export default function VacationRequestForm({
               </div>
               {startDate && isWeekend(startDate) && (
                 <p className="text-xs text-error mt-1">Esta fecha cae en fin de semana</p>
+              )}
+              {serverDateError && (
+                <p className="text-error text-xs mt-1">{serverDateError}</p>
               )}
             </div>
 

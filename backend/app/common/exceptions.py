@@ -150,6 +150,14 @@ class VacationConflictError(DomainError):
         super().__init__(message, "VACATION_CONFLICT")
 
 
+class AdvanceNoticeRequiredError(DomainError):
+    def __init__(
+        self,
+        message: str = "Las vacaciones deben solicitarse con al menos 2 meses de anticipación",
+    ) -> None:
+        super().__init__(message, "ADVANCE_NOTICE_REQUIRED")
+
+
 class ShiftExistsError(DomainError):
     """Raised when employee already has a shift assigned on that date."""
 

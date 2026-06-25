@@ -1,8 +1,13 @@
 // T038: Settings view — Admin only - refactored to use UI components
 import { Shield, Database, Users } from 'lucide-react';
 import { Card } from '../components/ui';
+import { useAuth } from '../hooks/useAuth';
+import VacationConfigSection from '../components/VacationConfigSection';
 
 export default function SettingsView() {
+  const { hasRole } = useAuth();
+  const canManageVacationConfig = hasRole('Admin', 'Moderador');
+
   return (
     <div>
       <h1 className="text-3xl font-bold mb-8 text-base-content">Configuración</h1>
@@ -65,6 +70,12 @@ export default function SettingsView() {
           </div>
         </Card>
       </div>
+
+      {canManageVacationConfig && (
+        <div className="mt-8">
+          <VacationConfigSection />
+        </div>
+      )}
     </div>
   );
 }

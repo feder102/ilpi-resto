@@ -16,7 +16,7 @@ def seed() -> None:
             return
 
         # Create default tenant
-        tenant = Tenant(name="ILPI", slug="ilpi", timezone="Europe/Madrid", locale="es")
+        tenant = Tenant(name="ILPI", slug="ilpi", timezone="Europe/Madrid", locale="es", default_vacation_days=30)
         session.add(tenant)
         session.flush()
 

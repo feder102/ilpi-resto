@@ -10,6 +10,10 @@ from app.models.employee import Employee
 from app.models.user import User
 from app.models.vacation_request import VacationRequest
 from app.schemas.employee import EmployeeCreate, EmployeeResponse, EmployeeUpdate
+from app.services import audit_service
+
+AUDIT_ENTITY_EMPLOYEE_VACATION = "employee_vacation_config"
+AUDIT_ACTION_UPDATE_EMPLOYEE = "update_employee_vacation_days"
 
 
 def _to_response(emp: Employee) -> EmployeeResponse:
@@ -32,6 +36,7 @@ def _to_response(emp: Employee) -> EmployeeResponse:
         emergency_contact=emp.emergency_contact,
         is_active=emp.is_active,
         team_id=emp.team_id,
+        custom_vacation_days=emp.custom_vacation_days,
     )
 
 
@@ -158,6 +163,7 @@ def update(
     data: EmployeeUpdate,
     tenant_id: uuid.UUID,
     session: Session,
+    changed_by: uuid.UUID | None = None,
 ) -> EmployeeResponse:
     employee = session.exec(
         select(Employee).where(
@@ -192,6 +198,21 @@ def update(
         ).first()
         if existing:
             raise DuplicateError("Ya existe un empleado con este email", "DUPLICATE_EMAIL")
+
+    # Audit custom_vacation_days changes
+    if "custom_vacation_days" in update_data and changed_by is not None:
+        new_cvd = update_data["custom_vacation_days"]
+        if new_cvd != employee.custom_vacation_days:
+            audit_service.log(
+                session=session,
+                tenant_id=employee.tenant_id,
+                entity_type=AUDIT_ENTITY_EMPLOYEE_VACATION,
+                entity_id=str(employee.id),
+                action=AUDIT_ACTION_UPDATE_EMPLOYEE,
+                old_value=str(employee.custom_vacation_days),
+                new_value=str(new_cvd),
+                changed_by=changed_by,
+            )
 
     for key, value in update_data.items():
         setattr(employee, key, value)

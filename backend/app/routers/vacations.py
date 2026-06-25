@@ -52,9 +52,11 @@ def create_vacation(
     session: DbSession,
     tenant_id: TenantId,
     current_user: CurrentUser,
+    _: dict = AdminOrMod,
 ):
     return vacation_service.create_request(
-        body.employee_id, body.start_date, body.end_date, tenant_id, session
+        body.employee_id, body.start_date, body.end_date, tenant_id, session,
+        is_employee_request=False,
     )
 
 
@@ -232,6 +234,7 @@ def create_employee_vacation_request(
         end_date=body.end_date,
         tenant_id=tenant_id,
         session=session,
+        is_employee_request=True,
     )
 
 

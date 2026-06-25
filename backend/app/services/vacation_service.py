@@ -3,9 +3,11 @@
 import uuid
 from datetime import UTC, date, datetime
 
+from dateutil.relativedelta import relativedelta
 from sqlmodel import Session, and_, func, select
 
 from app.common.exceptions import (
+    AdvanceNoticeRequiredError,
     BalanceExceededError,
     ConflictError,
     ForbiddenError,
@@ -13,6 +15,7 @@ from app.common.exceptions import (
     ValidationError,
 )
 from app.models.employee import Employee
+from app.models.tenant import Tenant
 from app.models.vacation_balance import VacationBalance
 from app.models.vacation_request import VacationRequest
 from app.schemas.vacation import VacationBalanceResponse, VacationRequestResponse
@@ -48,10 +51,18 @@ def _get_or_create_balance(
         )
     ).first()
     if not balance:
+        employee = session.get(Employee, employee_id)
+        tenant = session.get(Tenant, tenant_id)
+        total_days: int = 30
+        if employee is not None and employee.custom_vacation_days is not None:
+            total_days = employee.custom_vacation_days
+        elif tenant is not None:
+            total_days = tenant.default_vacation_days
         balance = VacationBalance(
             tenant_id=tenant_id,
             employee_id=employee_id,
             year=year,
+            total_days=total_days,
         )
         session.add(balance)
         session.flush()
@@ -64,12 +75,26 @@ def create_request(
     end_date: date,
     tenant_id: uuid.UUID,
     session: Session,
+    is_employee_request: bool = False,
 ) -> VacationRequestResponse:
     if start_date > end_date:
         raise ValidationError("La fecha de inicio debe ser anterior a la de fin")
 
-    requested_days = (end_date - start_date).days + 1
+    # Restricción de 2 meses de anticipación (solo empleados)
+    if is_employee_request:
+        min_start = date.today() + relativedelta(months=2)
+        if start_date < min_start:
+            raise AdvanceNoticeRequiredError()
+
+    # Validación de año natural (todos los roles)
     year = start_date.year
+    if end_date > date(year, 12, 31):
+        raise ValidationError(
+            "Las vacaciones deben disfrutarse dentro del año natural (antes del 31 de diciembre)",
+            code="CALENDAR_YEAR_VIOLATION",
+        )
+
+    requested_days = (end_date - start_date).days + 1
 
     balance = _get_or_create_balance(employee_id, year, tenant_id, session)
     remaining = balance.total_days - balance.used_days

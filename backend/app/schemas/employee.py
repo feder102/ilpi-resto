@@ -3,7 +3,7 @@
 import uuid
 from datetime import date
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 
 
 class EmployeeCreate(BaseModel):
@@ -39,6 +39,14 @@ class EmployeeUpdate(BaseModel):
     hire_date: date | None = None
     profile_image: str | None = None
     emergency_contact: str | None = None
+    custom_vacation_days: int | None = None
+
+    @field_validator("custom_vacation_days")
+    @classmethod
+    def validate_custom_vacation_days(cls, v: int | None) -> int | None:
+        if v is not None and not (1 <= v <= 365):
+            raise ValueError("El número de días personalizados debe estar entre 1 y 365")
+        return v
 
 
 class EmployeeResponse(BaseModel):
@@ -60,3 +68,4 @@ class EmployeeResponse(BaseModel):
     emergency_contact: str | None
     is_active: bool
     team_id: uuid.UUID | None
+    custom_vacation_days: int | None = None

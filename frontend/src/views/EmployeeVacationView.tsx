@@ -15,7 +15,7 @@
  * - Cross-employee access attempts (RLS filters at service layer)
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertCircle, CheckCircle, X } from 'lucide-react';
 import VacationBalanceCard from '../components/vacation/VacationBalanceCard';
 import VacationRequestForm from '../components/vacation/VacationRequestForm';
@@ -40,6 +40,8 @@ export default function EmployeeVacationView() {
     clearError,
     clearSuccess,
   } = useVacation();
+
+  const [dateError, setDateError] = useState<string | null>(null);
 
   // Auto-dismiss error messages after 10 seconds
   useEffect(() => {
@@ -66,7 +68,18 @@ export default function EmployeeVacationView() {
   };
 
   const handleSubmitRequest = async (startDate: string, endDate: string) => {
-    await submitRequest(startDate, endDate);
+    setDateError(null);
+    try {
+      await submitRequest(startDate, endDate);
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { error?: { code?: string; message?: string } } } };
+      const code = axiosErr.response?.data?.error?.code;
+      if (code === 'ADVANCE_NOTICE_REQUIRED') {
+        setDateError('Las vacaciones deben solicitarse con al menos 2 meses de anticipación');
+      } else if (code === 'CALENDAR_YEAR_VIOLATION') {
+        setDateError('Las vacaciones deben disfrutarse dentro del año natural (antes del 31 de diciembre)');
+      }
+    }
   };
 
   const handleCancelRequest = async (requestId: string, version: number) => {
@@ -134,6 +147,7 @@ export default function EmployeeVacationView() {
               submitting={submitting}
               onSubmit={handleSubmitRequest}
               onError={clearError}
+              serverDateError={dateError}
             />
           </div>
 

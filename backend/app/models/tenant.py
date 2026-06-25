@@ -15,5 +15,6 @@ class Tenant(SQLModel, table=True):
     timezone: str = Field(default="Europe/Madrid")
     locale: str = Field(default="es")
     is_active: bool = Field(default=True)
+    default_vacation_days: int = Field(default=30)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

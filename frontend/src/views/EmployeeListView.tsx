@@ -69,6 +69,7 @@ export default function EmployeeListView() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<EmployeeCreateData>(INITIAL_FORM);
+  const [customVacationDays, setCustomVacationDays] = useState<string>('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -145,6 +146,7 @@ export default function EmployeeListView() {
       profile_image: emp.profile_image || '',
       emergency_contact: emp.emergency_contact || '',
     });
+    setCustomVacationDays(emp.custom_vacation_days != null ? String(emp.custom_vacation_days) : '');
     setFormErrors({});
     setModalOpen(true);
   };
@@ -158,6 +160,12 @@ export default function EmployeeListView() {
     if (!form.department) errs.department = 'Requerido';
     if (!form.role) errs.role = 'Requerido';
     if (!form.hire_date) errs.hire_date = 'Requerido';
+    if (customVacationDays !== '') {
+      const val = parseInt(customVacationDays, 10);
+      if (isNaN(val) || val < 1 || val > 365) {
+        errs.custom_vacation_days = 'Debe ser un número entre 1 y 365';
+      }
+    }
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -179,7 +187,13 @@ export default function EmployeeListView() {
       };
 
       if (editingId) {
-        await updateEmployee(editingId, payload as EmployeeUpdateData);
+        const updatePayload: EmployeeUpdateData = {
+          ...(payload as EmployeeUpdateData),
+          custom_vacation_days: customVacationDays !== ''
+            ? parseInt(customVacationDays, 10)
+            : null,
+        };
+        await updateEmployee(editingId, updatePayload);
       } else {
         await createEmployee(payload);
       }
@@ -463,6 +477,27 @@ export default function EmployeeListView() {
             <label className="text-sm font-medium text-base-content">Contacto de emergencia</label>
             <input className="input input-bordered w-full" value={form.emergency_contact || ''} onChange={(e) => updateField('emergency_contact', e.target.value)} />
           </div>
+          {editingId && (
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-base-content">Días de vacaciones personalizados</label>
+              <input
+                type="number"
+                min={1}
+                max={365}
+                className="input input-bordered w-full"
+                value={customVacationDays}
+                placeholder="Usar valor por defecto de la organización"
+                onChange={(e) => {
+                  setCustomVacationDays(e.target.value);
+                  setFormErrors((prev) => ({ ...prev, custom_vacation_days: '' }));
+                }}
+              />
+              <p className="text-xs text-base-content/60 mt-1">Dejar vacío para usar el valor por defecto de la organización</p>
+              {formErrors.custom_vacation_days && (
+                <p className="text-error text-xs mt-1">{formErrors.custom_vacation_days}</p>
+              )}
+            </div>
+          )}
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-base-content">URL imagen de perfil</label>
             <input className="input input-bordered w-full" value={form.profile_image || ''} onChange={(e) => updateField('profile_image', e.target.value)} />
