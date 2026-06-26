@@ -422,7 +422,7 @@ class TestErrorMessages:
             },
         )
 
-        assert response.status_code == 422
+        assert response.status_code == 400
         data = response.json()
         # Error should mention hours or expected/calculated mismatch
         error_detail = str(data)
@@ -447,7 +447,7 @@ class TestErrorMessages:
             },
         )
 
-        assert response.status_code == 422
+        assert response.status_code == 400
         data = response.json()
         error_detail = str(data).lower()
         assert "order" in error_detail or "chrono" in error_detail or "earlier" in error_detail
