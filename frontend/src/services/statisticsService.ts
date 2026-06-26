@@ -15,6 +15,7 @@ import type {
   AbsenceCreate,
   Absence,
   AbsenceListResponse,
+  MonthlyProcessResult,
 } from "../types/timeTracking";
 
 /**
@@ -209,5 +210,33 @@ export async function triggerBatchProcess(
     throw new Error(
       `Error al iniciar procesamiento por lotes: ${error instanceof Error ? error.message : String(error)}`
     );
+  }
+}
+
+/**
+ * Procesa todos los días trabajados del mes seleccionado para todos los empleados.
+ * Idempotente: turnos ya procesados se omiten sin duplicar. Admin/Moderador only.
+ */
+export async function processMonthlyWorkdays(
+  year: number,
+  month: number
+): Promise<MonthlyProcessResult> {
+  try {
+    const response = await apiClient.post<MonthlyProcessResult>(
+      `/employee/time-tracking/process-month`,
+      { year, month }
+    );
+    return response.data;
+  } catch (error: unknown) {
+    if (error && typeof error === "object" && "response" in error) {
+      const axiosError = error as {
+        response?: { data?: { error?: { message?: string } } };
+      };
+      throw new Error(
+        axiosError.response?.data?.error?.message ||
+          "Error al procesar los días trabajados del mes"
+      );
+    }
+    throw new Error("Error de conexión");
   }
 }

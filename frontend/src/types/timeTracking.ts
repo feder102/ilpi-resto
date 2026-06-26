@@ -112,3 +112,18 @@ export interface BatchProcessResponse {
   message: string;
   estimated_entries: number;
 }
+
+export interface MonthlyProcessRequest {
+  year: number;
+  month: number;
+}
+
+export interface MonthlyProcessResult {
+  year: number;
+  month: number;
+  days_processed: number;
+  entries_created: number;
+  entries_skipped: number;
+  days_without_shifts: number;
+  errors: string[];
+}

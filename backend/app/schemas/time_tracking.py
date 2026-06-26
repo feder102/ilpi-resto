@@ -125,6 +125,23 @@ class BatchProcessResponse(BaseModel):
     completed_at: datetime | None = None
 
 
+class MonthlyProcessRequest(BaseModel):
+    """Request to process all worked days for a given month."""
+    year: int = Field(..., ge=2020, le=2100, description="Year (YYYY)")
+    month: int = Field(..., ge=1, le=12, description="Month (1-12)")
+
+
+class MonthlyProcessResponse(BaseModel):
+    """Aggregated result of monthly workday processing."""
+    year: int
+    month: int
+    days_processed: int = Field(..., description="Fechas iteradas (1..min(fin_mes, hoy))")
+    entries_created: int = Field(..., description="TimeEntry nuevos creados")
+    entries_skipped: int = Field(..., description="Turnos ya con TimeEntry, omitidos")
+    days_without_shifts: int = Field(..., description="Fechas sin ShiftRecord")
+    errors: list[str] = Field(default_factory=list, description="Errores por día (no bloqueantes)")
+
+
 # ========== Feature 005: Employee Portal Statistics ==========
 
 class DailyRecordResponse(BaseModel):
