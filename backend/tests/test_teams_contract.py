@@ -64,7 +64,7 @@ class TestPostTeams:
             },
         )
 
-        assert response.status_code == 422
+        assert response.status_code == 400
         assert "VALIDATION_ERROR" in response.json()["error"]["code"]
 
     def test_create_team_duplicate_name_same_dept(
@@ -277,5 +277,5 @@ class TestPutTeams:
             json={"shift_type_id": str(uuid.uuid4())},
         )
 
-        assert response.status_code == 422
+        assert response.status_code == 400
         assert "VALIDATION_ERROR" in response.json()["error"]["code"]
