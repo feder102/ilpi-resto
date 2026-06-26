@@ -163,6 +163,7 @@ def test_shift_type(session: Session, test_tenant):
     shift_type = ShiftType(
         tenant_id=test_tenant.id,
         name="Turno Test",
+        type="MAÑANA",
         expected_hours=8.0,
         is_active=True,
         time_windows=[
