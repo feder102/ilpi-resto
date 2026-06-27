@@ -92,11 +92,12 @@ def create(
     data: ShiftTypeCreate, tenant_id: uuid.UUID, session: Session
 ) -> ShiftTypeResponse:
     """Create new shift type with validation."""
-    # Check for duplicate name per tenant
+    # Check for duplicate name per tenant (exclude soft-deleted types)
     existing = session.exec(
         select(ShiftType).where(
             ShiftType.tenant_id == tenant_id,
             ShiftType.name == data.name,
+            ShiftType.is_active == True,  # noqa: E712
         )
     ).first()
 
@@ -255,12 +256,13 @@ def update(
     if not shift_type:
         raise NotFoundError("Shift type not found")
 
-    # Check for duplicate name if changing name
+    # Check for duplicate name if changing name (exclude soft-deleted types)
     if data.name and data.name != shift_type.name:
         existing = session.exec(
             select(ShiftType).where(
                 ShiftType.tenant_id == tenant_id,
                 ShiftType.name == data.name,
+                ShiftType.is_active == True,  # noqa: E712
             )
         ).first()
 

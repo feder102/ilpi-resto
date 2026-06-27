@@ -14,9 +14,9 @@ export const shiftTypesApi = {
   /**
    * List shift types with pagination
    */
-  async list(page: number = 1, size: number = 20): Promise<PaginatedShiftTypes> {
+  async list(page: number = 1, size: number = 20, activeOnly: boolean = true): Promise<PaginatedShiftTypes> {
     const response = await apiClient.get<PaginatedShiftTypes>('/shift-types', {
-      params: { page, size },
+      params: { page, size, active_only: activeOnly },
     });
     return response.data;
   },
