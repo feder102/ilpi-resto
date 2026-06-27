@@ -9,12 +9,16 @@ import Button from './ui/Button';
 import Checkbox from './ui/Checkbox';
 import Modal from './ui/Modal';
 import Alert from './ui/Alert';
+import { shiftTypesApi } from '../services/shiftTypesApi';
 import type {
   ShiftType,
   ShiftTypeCreate,
   ShiftTypeUpdate,
   TimeWindow,
 } from '../types/shift-types';
+
+type ShiftCategory = 'MAÑANA' | 'NOCHE' | 'CORTADO' | 'CORRIDO';
+const ALL_SHIFT_CATEGORIES: ShiftCategory[] = ['MAÑANA', 'NOCHE', 'CORTADO', 'CORRIDO'];
 
 interface ShiftTypeFormProps {
   shiftType?: ShiftType;
@@ -28,7 +32,7 @@ export function ShiftTypeForm({
   onCancel,
 }: ShiftTypeFormProps) {
   const [name, setName] = useState('');
-  const [type, setType] = useState<'MAÑANA' | 'NOCHE' | 'CORTADO' | 'CORRIDO'>('MAÑANA');
+  const [type, setType] = useState<ShiftCategory>('MAÑANA');
   const [timeWindows, setTimeWindows] = useState<TimeWindow[]>([{ start: '10:00', end: '18:00' }]);
   const [expectedHours, setExpectedHours] = useState(8.0);
   const [usesDynamicClose, setUsesDynamicClose] = useState(false);
@@ -36,17 +40,31 @@ export function ShiftTypeForm({
   const [totalHours, setTotalHours] = useState(8.0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availableCategories, setAvailableCategories] = useState<ShiftCategory[]>(ALL_SHIFT_CATEGORIES);
 
   useEffect(() => {
     if (shiftType) {
       setName(shiftType.name);
-      setType(shiftType.type);
+      setType(shiftType.type as ShiftCategory);
       setTimeWindows(shiftType.time_windows);
       setExpectedHours(shiftType.expected_hours);
       setUsesDynamicClose(shiftType.uses_dynamic_close);
       setDescription(shiftType.description || '');
       setTotalHours(shiftType.total_hours);
+
+      // When editing: show only categories that have active configurations,
+      // always including the current type so it stays selectable.
+      shiftTypesApi.list(1, 100).then(data => {
+        const used = [...new Set(data.items.map(st => st.type as ShiftCategory))];
+        if (!used.includes(shiftType.type as ShiftCategory)) {
+          used.push(shiftType.type as ShiftCategory);
+        }
+        setAvailableCategories(used.length > 0 ? used : ALL_SHIFT_CATEGORIES);
+      }).catch(() => {
+        setAvailableCategories(ALL_SHIFT_CATEGORIES);
+      });
     }
+    // When creating (no shiftType), keep all 4 categories available.
   }, [shiftType]);
 
   useEffect(() => {
@@ -137,9 +155,9 @@ export function ShiftTypeForm({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="shiftType" className="text-sm font-medium text-base-content">Tipo de Turno *</label>
-        <select id="shiftType" value={type} onChange={(e) => setType(e.target.value as 'MAÑANA' | 'NOCHE' | 'CORTADO' | 'CORRIDO')} className="select select-bordered" disabled={loading}>
-          {Object.entries(shiftTypeLabels).map(([value, label]) => (
-            <option key={value} value={value}>{label}</option>
+        <select id="shiftType" value={type} onChange={(e) => setType(e.target.value as ShiftCategory)} className="select select-bordered" disabled={loading}>
+          {availableCategories.map((value) => (
+            <option key={value} value={value}>{shiftTypeLabels[value]}</option>
           ))}
         </select>
       </div>
