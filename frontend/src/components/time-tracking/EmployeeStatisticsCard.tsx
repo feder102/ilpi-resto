@@ -182,7 +182,7 @@ export const EmployeeStatisticsCard: React.FC<EmployeeStatisticsCardProps> = ({
                         {emp.first_name} {emp.last_name}
                       </div>
                       <div className="text-xs text-base-content/60">
-                        DNI: {emp.dni} • {emp.department}
+                        DNI: {emp.dni} • {emp.department.name}
                       </div>
                     </div>
                   </button>

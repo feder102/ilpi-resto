@@ -1,13 +1,14 @@
-"""T042: Employee model."""
+"""T011: Employee model — department string replaced with FK (Feature 014)."""
 
 import uuid
 from datetime import UTC, date, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
+    from app.models.department import Department
     from app.models.time_entry import TimeEntry
 
 
@@ -30,7 +31,7 @@ class Employee(SQLModel, table=True):
     marital_status: str | None = Field(default=None)
     gender: str | None = Field(default=None)
     role: str  # Admin, Moderador, Empleado
-    department: str  # Cocina, Atención al Público, Barra, Dirección
+    department_id: uuid.UUID = Field(foreign_key="department.id", index=True)
     status: str = Field(default="Activo")
     hire_date: date = Field()
     profile_image: str | None = Field(default=None, max_length=500)
@@ -42,4 +43,5 @@ class Employee(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Relationships
+    department: Optional["Department"] = Relationship(back_populates="employees")
     time_entries: list["TimeEntry"] = Relationship(back_populates="employee")

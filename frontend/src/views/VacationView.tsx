@@ -202,7 +202,7 @@ export default function VacationView() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-base-content">{req.employee_name || 'Empleado'}</h3>
-                    <p className="text-xs text-base-content/60">{req.employee_department}</p>
+                    <p className="text-xs text-base-content/60">{req.employee_department.name}</p>
                   </div>
                   <Badge variant={getVacationStatusVariant(req.status)}>{req.status}</Badge>
                 </div>

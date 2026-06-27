@@ -1,14 +1,16 @@
-"""T046: Employee service with CRUD operations."""
+"""T015: Employee service — department string → FK (Feature 014)."""
 
 import uuid
 from datetime import UTC, datetime
 
 from sqlmodel import Session, func, select
 
-from app.common.exceptions import DuplicateError, ForbiddenError, NotFoundError
+from app.common.exceptions import DuplicateError, ForbiddenError, NotFoundError, ValidationError
+from app.models.department import Department
 from app.models.employee import Employee
 from app.models.user import User
 from app.models.vacation_request import VacationRequest
+from app.schemas.department import DepartmentNestedResponse
 from app.schemas.employee import EmployeeCreate, EmployeeResponse, EmployeeUpdate
 from app.services import audit_service
 
@@ -16,7 +18,22 @@ AUDIT_ENTITY_EMPLOYEE_VACATION = "employee_vacation_config"
 AUDIT_ACTION_UPDATE_EMPLOYEE = "update_employee_vacation_days"
 
 
-def _to_response(emp: Employee) -> EmployeeResponse:
+def _resolve_department(
+    employee: Employee, session: Session
+) -> DepartmentNestedResponse:
+    dept = session.get(Department, employee.department_id)
+    if dept is None:
+        raise NotFoundError("Departamento del empleado no encontrado")
+    return DepartmentNestedResponse(
+        id=dept.id,
+        name=dept.name,
+        color=dept.color,
+        icon=dept.icon,
+        is_system=dept.is_system,
+    )
+
+
+def _to_response(emp: Employee, session: Session) -> EmployeeResponse:
     return EmployeeResponse(
         id=emp.id,
         first_name=emp.first_name,
@@ -29,7 +46,7 @@ def _to_response(emp: Employee) -> EmployeeResponse:
         marital_status=emp.marital_status,
         gender=emp.gender,
         role=emp.role,
-        department=emp.department,
+        department=_resolve_department(emp, session),
         status=emp.status,
         hire_date=emp.hire_date,
         profile_image=emp.profile_image,
@@ -40,9 +57,28 @@ def _to_response(emp: Employee) -> EmployeeResponse:
     )
 
 
+def _validate_department(
+    department_id: uuid.UUID, tenant_id: uuid.UUID, session: Session
+) -> Department:
+    dept = session.exec(
+        select(Department).where(
+            Department.id == department_id,
+            Department.tenant_id == tenant_id,
+        )
+    ).first()
+    if not dept:
+        raise NotFoundError("Departamento no encontrado o no pertenece al tenant")
+    if not dept.is_active:
+        raise ValidationError("No se puede asignar un departamento inactivo")
+    return dept
+
+
 def create(
     data: EmployeeCreate, tenant_id: uuid.UUID, session: Session
 ) -> EmployeeResponse:
+    # Validate department
+    _validate_department(data.department_id, tenant_id, session)
+
     # Check DNI uniqueness
     existing = session.exec(
         select(Employee).where(
@@ -64,7 +100,6 @@ def create(
         raise DuplicateError("Ya existe un empleado con este email", "DUPLICATE_EMAIL")
 
     # Check email uniqueness in User table (for auth)
-    from app.models.user import User
     existing_user = session.exec(
         select(User).where(
             User.tenant_id == tenant_id,
@@ -80,8 +115,8 @@ def create(
     session.flush()  # Get the ID without committing
 
     # Create corresponding User for authentication
-    # Use a temporary password that will be set via email/password-setup flow
     from passlib.context import CryptContext
+
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     temp_password = "TempPassword123!"  # Will be changed by user
 
@@ -89,22 +124,22 @@ def create(
         tenant_id=tenant_id,
         email=data.email,
         hashed_password=pwd_context.hash(temp_password),
-        role="Empleado",  # Default role for new employees
+        role="Empleado",
         is_active=False,  # Will be activated after password setup
-        employee_id=employee.id,  # Link to employee
+        employee_id=employee.id,
     )
     session.add(user)
     session.commit()
     session.refresh(employee)
 
-    return _to_response(employee)
+    return _to_response(employee, session)
 
 
 def list_employees(
     tenant_id: uuid.UUID,
     session: Session,
     search: str | None = None,
-    department: str | None = None,
+    department_id: uuid.UUID | None = None,
     include_inactive: bool = False,
     page: int = 1,
     size: int = 20,
@@ -122,8 +157,8 @@ def list_employees(
             | (Employee.dni.ilike(pattern))  # type: ignore[union-attr]
         )
 
-    if department:
-        query = query.where(Employee.department == department)
+    if department_id is not None:
+        query = query.where(Employee.department_id == department_id)
 
     # Count total
     count_query = select(func.count()).select_from(query.subquery())
@@ -136,7 +171,7 @@ def list_employees(
     pages = (total + size - 1) // size if total > 0 else 1
 
     return {
-        "items": [_to_response(e) for e in employees],
+        "items": [_to_response(e, session) for e in employees],
         "total": total,
         "page": page,
         "size": size,
@@ -155,7 +190,7 @@ def get_by_id(
     ).first()
     if not employee:
         raise NotFoundError("Empleado no encontrado")
-    return _to_response(employee)
+    return _to_response(employee, session)
 
 
 def update(
@@ -175,6 +210,10 @@ def update(
         raise NotFoundError("Empleado no encontrado")
 
     update_data = data.model_dump(exclude_unset=True)
+
+    # Validate department if changing
+    if "department_id" in update_data and update_data["department_id"] is not None:
+        _validate_department(update_data["department_id"], tenant_id, session)
 
     # Check uniqueness if changing DNI or email
     if "dni" in update_data and update_data["dni"] != employee.dni:
@@ -221,7 +260,7 @@ def update(
     session.add(employee)
     session.commit()
     session.refresh(employee)
-    return _to_response(employee)
+    return _to_response(employee, session)
 
 
 def soft_delete(
@@ -230,14 +269,7 @@ def soft_delete(
     user_role: str,
     session: Session,
 ) -> dict:
-    """Soft delete employee (mark as inactive) and disable associated user account.
-
-    Only Admin can delete employees.
-    Automatically:
-    - Marks employee as inactive (is_active=False)
-    - Disables associated user account (is_active=False)
-    - Rejects all pending vacation requests
-    """
+    """Soft delete employee (mark as inactive) and disable associated user account."""
     if user_role != "Admin":
         raise ForbiddenError("Solo los administradores pueden eliminar empleados")
 
@@ -286,7 +318,7 @@ def soft_delete(
 
     return {
         "message": "Empleado desactivado y usuario deshabilitado",
-        "rejected_requests": rejected_count
+        "rejected_requests": rejected_count,
     }
 
 
@@ -296,13 +328,7 @@ def activate_employee(
     user_role: str,
     session: Session,
 ) -> EmployeeResponse:
-    """Reactivate inactive employee and enable associated user account.
-
-    Only Admin can reactivate employees.
-    Restores:
-    - Employee to active status (is_active=True)
-    - Associated user account to active (is_active=True)
-    """
+    """Reactivate inactive employee and enable associated user account."""
     if user_role != "Admin":
         raise ForbiddenError("Solo los administradores pueden reactivar empleados")
 
@@ -335,4 +361,4 @@ def activate_employee(
     session.commit()
     session.refresh(employee)
 
-    return _to_response(employee)
+    return _to_response(employee, session)

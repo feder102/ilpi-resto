@@ -1,11 +1,11 @@
-// T034: Employee list view with card grid, search/filter, create/edit modal - refactored to use UI components
+// T036: Employee list view — department field migrated to department_id (Feature 014)
 import { useState, useEffect, useCallback } from 'react';
 import { UserPlus, Edit2, Trash2, User, RotateCcw } from 'lucide-react';
 import { Button, Card, Modal, Alert, Badge } from '../components/ui';
 import SearchFilter from '../components/SearchFilter';
 import { useAuth } from '../hooks/useAuth';
-import { DEPARTMENTS } from '../config/constants';
-import { Role, Department, MaritalStatus, Gender } from '../types/models';
+import { useDepartments } from '../hooks/useDepartments';
+import { Role, MaritalStatus, Gender } from '../types/models';
 import type { Employee } from '../types/models';
 import type { PaginatedResponse } from '../types/api';
 import {
@@ -18,19 +18,13 @@ import {
   type EmployeeUpdateData,
 } from '../services/employeeService';
 
-// Status to Badge variant mapping
 function getStatusVariant(status: string): 'success' | 'warning' | 'error' | 'info' | 'neutral' {
   switch (status) {
-    case 'Activo':
-      return 'success';
-    case 'Vacaciones':
-      return 'info';
-    case 'Ausente':
-      return 'warning';
-    case 'Inactivo':
-      return 'neutral';
-    default:
-      return 'neutral';
+    case 'Activo': return 'success';
+    case 'Vacaciones': return 'info';
+    case 'Ausente': return 'warning';
+    case 'Inactivo': return 'neutral';
+    default: return 'neutral';
   }
 }
 
@@ -45,7 +39,7 @@ const INITIAL_FORM: EmployeeCreateData = {
   marital_status: '',
   gender: '',
   role: Role.EMPLEADO,
-  department: Department.COCINA,
+  department_id: '',
   hire_date: new Date().toISOString().split('T')[0],
   profile_image: '',
   emergency_contact: '',
@@ -55,17 +49,17 @@ export default function EmployeeListView() {
   const { hasRole } = useAuth();
   const isAdmin = hasRole(Role.ADMIN);
   const isAdminOrMod = hasRole(Role.ADMIN, Role.MODERADOR);
+  const { departments } = useDepartments();
 
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [search, setSearch] = useState('');
-  const [department, setDepartment] = useState('');
+  const [departmentId, setDepartmentId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<EmployeeCreateData>(INITIAL_FORM);
@@ -73,11 +67,9 @@ export default function EmployeeListView() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  // Delete confirm
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteName, setDeleteName] = useState('');
 
-  // Reactivate confirm
   const [reactivateId, setReactivateId] = useState<string | null>(null);
   const [reactivateName, setReactivateName] = useState('');
   const [reactivating, setReactivating] = useState(false);
@@ -88,7 +80,7 @@ export default function EmployeeListView() {
     try {
       const data: PaginatedResponse<Employee> = await getEmployees({
         search: search || undefined,
-        department: department || undefined,
+        department_id: departmentId || undefined,
         page,
         size: 20,
       });
@@ -100,13 +92,12 @@ export default function EmployeeListView() {
     } finally {
       setLoading(false);
     }
-  }, [search, department, page]);
+  }, [search, departmentId, page]);
 
   useEffect(() => {
     fetchEmployees();
   }, [fetchEmployees]);
 
-  // Debounce search
   const [searchDebounce, setSearchDebounce] = useState('');
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -116,14 +107,15 @@ export default function EmployeeListView() {
     return () => clearTimeout(timer);
   }, [searchDebounce]);
 
-  const handleDepartmentChange = (val: string) => {
-    setDepartment(val);
+  const handleDepartmentIdChange = (id: string) => {
+    setDepartmentId(id);
     setPage(1);
   };
 
   const openCreate = () => {
     setEditingId(null);
-    setForm(INITIAL_FORM);
+    setForm({ ...INITIAL_FORM, department_id: departments[0]?.id ?? '' });
+    setCustomVacationDays('');
     setFormErrors({});
     setModalOpen(true);
   };
@@ -141,7 +133,7 @@ export default function EmployeeListView() {
       marital_status: emp.marital_status || '',
       gender: emp.gender || '',
       role: emp.role,
-      department: emp.department,
+      department_id: emp.department.id,
       hire_date: emp.hire_date,
       profile_image: emp.profile_image || '',
       emergency_contact: emp.emergency_contact || '',
@@ -157,7 +149,7 @@ export default function EmployeeListView() {
     if (!form.last_name.trim()) errs.last_name = 'Requerido';
     if (!form.email.trim()) errs.email = 'Requerido';
     if (!form.dni.trim()) errs.dni = 'Requerido';
-    if (!form.department) errs.department = 'Requerido';
+    if (!form.department_id) errs.department_id = 'Requerido';
     if (!form.role) errs.role = 'Requerido';
     if (!form.hire_date) errs.hire_date = 'Requerido';
     if (customVacationDays !== '') {
@@ -268,8 +260,9 @@ export default function EmployeeListView() {
       <SearchFilter
         search={searchDebounce}
         onSearchChange={setSearchDebounce}
-        department={department}
-        onDepartmentChange={handleDepartmentChange}
+        departmentId={departmentId}
+        onDepartmentIdChange={handleDepartmentIdChange}
+        departments={departments}
         placeholder="Buscar por nombre o DNI..."
       />
 
@@ -298,7 +291,7 @@ export default function EmployeeListView() {
                     <h3 className="font-semibold text-base-content">
                       {emp.first_name} {emp.last_name}
                     </h3>
-                    <p className="text-xs text-base-content/60">{emp.department}</p>
+                    <p className="text-xs text-base-content/60">{emp.department.name}</p>
                   </div>
                   <Badge variant={getStatusVariant(emp.status)}>{emp.status}</Badge>
                 </div>
@@ -349,7 +342,6 @@ export default function EmployeeListView() {
             ))}
           </div>
 
-          {/* Pagination */}
           {pages > 1 && (
             <div className="flex justify-center items-center gap-4 mt-8">
               <Button
@@ -384,17 +376,10 @@ export default function EmployeeListView() {
         size="lg"
         footer={
           <div className="flex gap-3 justify-end">
-            <Button
-              variant="secondary"
-              onClick={() => setModalOpen(false)}
-            >
+            <Button variant="secondary" onClick={() => setModalOpen(false)}>
               Cancelar
             </Button>
-            <Button
-              variant="primary"
-              loading={submitting}
-              onClick={handleSubmit}
-            >
+            <Button variant="primary" loading={submitting} onClick={handleSubmit}>
               {submitting ? 'Guardando...' : editingId ? 'Guardar cambios' : 'Crear empleado'}
             </Button>
           </div>
@@ -405,7 +390,6 @@ export default function EmployeeListView() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Personal Info */}
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-base-content">Nombre {formErrors.first_name && <span className="text-error">*</span>}</label>
             <input className="input input-bordered w-full" value={form.first_name} onChange={(e) => updateField('first_name', e.target.value)} />
@@ -452,14 +436,13 @@ export default function EmployeeListView() {
               {Object.values(MaritalStatus).map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
-
-          {/* Company Info */}
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-base-content">Departamento {formErrors.department && <span className="text-error">*</span>}</label>
-            <select className="select select-bordered w-full" value={form.department} onChange={(e) => updateField('department', e.target.value)}>
-              {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
+            <label className="text-sm font-medium text-base-content">Departamento {formErrors.department_id && <span className="text-error">*</span>}</label>
+            <select className="select select-bordered w-full" value={form.department_id} onChange={(e) => updateField('department_id', e.target.value)}>
+              <option value="">Seleccionar...</option>
+              {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
-            {formErrors.department && <p className="mt-1 text-xs text-error">{formErrors.department}</p>}
+            {formErrors.department_id && <p className="mt-1 text-xs text-error">{formErrors.department_id}</p>}
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-base-content">Rol {formErrors.role && <span className="text-error">*</span>}</label>
@@ -512,16 +495,10 @@ export default function EmployeeListView() {
         title="Eliminar empleado"
         footer={
           <div className="flex gap-3 justify-end">
-            <Button
-              variant="secondary"
-              onClick={() => setDeleteId(null)}
-            >
+            <Button variant="secondary" onClick={() => setDeleteId(null)}>
               Cancelar
             </Button>
-            <Button
-              variant="danger"
-              onClick={handleDelete}
-            >
+            <Button variant="danger" onClick={handleDelete}>
               Eliminar
             </Button>
           </div>
@@ -539,17 +516,10 @@ export default function EmployeeListView() {
         title="Reactivar empleado"
         footer={
           <div className="flex gap-3 justify-end">
-            <Button
-              variant="secondary"
-              onClick={() => setReactivateId(null)}
-            >
+            <Button variant="secondary" onClick={() => setReactivateId(null)}>
               Cancelar
             </Button>
-            <Button
-              variant="primary"
-              loading={reactivating}
-              onClick={handleReactivate}
-            >
+            <Button variant="primary" loading={reactivating} onClick={handleReactivate}>
               {reactivating ? 'Reactivando...' : 'Reactivar'}
             </Button>
           </div>

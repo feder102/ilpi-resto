@@ -19,11 +19,11 @@ def list_teams(
     session: DbSession,
     tenant_id: TenantId,
     _: dict = AdminOrMod,
-    department: str | None = Query(None),
+    department_id: uuid.UUID | None = Query(None),
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
 ):
-    return team_service.list_teams(tenant_id, session, department, page, size)
+    return team_service.list_teams(tenant_id, session, department_id, page, size)
 
 
 @router.post("/teams", status_code=201)

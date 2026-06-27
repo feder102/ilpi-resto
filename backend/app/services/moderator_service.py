@@ -1,12 +1,8 @@
-"""T009: Moderator Service - Department scoping and utilities.
-
-Feature 006: Moderator Portal
+"""T017: Moderator Service — department string → FK (Feature 014).
 
 Provides shared utilities for department-scoped access control:
 - get_moderator_department(): Extract department from JWT
 - enforce_department_scope(): Verify access to employee/request
-
-All moderator endpoints use these utilities to prevent cross-department access.
 """
 
 import uuid
@@ -16,67 +12,38 @@ from sqlmodel import Session, select
 
 from app.common.exceptions import ForbiddenError, NotFoundError, UnauthorizedError
 from app.models import Employee
+from app.models.department import Department
 from app.models.time_entry import TimeEntry
 from app.models.vacation_balance import VacationBalance
 from app.models.vacation_request import VacationRequest
 
 
-def get_moderator_department(current_user: dict, session: Session) -> str:
-    """
-    Extract moderator's department from JWT employee_id.
-
-    Used by all moderator endpoints to scope queries to their department.
-
-    Args:
-        current_user: JWT payload with employee_id
-        session: Database session
-
-    Returns:
-        Department name (e.g., 'Cocina', 'Barra')
-
-    Raises:
-        ValueError: If employee_id not in JWT or employee record not found
-    """
+def get_moderator_department(current_user: dict, session: Session) -> Department:
+    """Extract moderator's Department object from JWT employee_id."""
     employee_id = current_user.get("employee_id")
     if not employee_id:
         raise UnauthorizedError("JWT missing employee_id - moderator identity cannot be determined")
 
-    # Coerce to UUID for DB backends that require typed UUIDs (e.g. SQLite)
     if isinstance(employee_id, str):
         employee_id = uuid.UUID(employee_id)
 
-    # Fetch employee record to get department
-    statement = select(Employee).where(Employee.id == employee_id)
-    employee = session.exec(statement).first()
-
+    employee = session.exec(select(Employee).where(Employee.id == employee_id)).first()
     if not employee:
         raise NotFoundError(f"Employee record not found for ID: {employee_id}")
 
-    return employee.department
+    dept = session.get(Department, employee.department_id)
+    if not dept:
+        raise NotFoundError("Departamento del moderador no encontrado")
+
+    return dept
 
 
 def enforce_department_scope(
     target_employee_id: str,
     moderator_employee_id: str,
-    session: Session
+    session: Session,
 ) -> bool:
-    """
-    Verify that target employee belongs to moderator's department.
-
-    Used by shift assignment and vacation approval endpoints.
-
-    Args:
-        target_employee_id: Employee being modified
-        moderator_employee_id: Moderator performing action
-        session: Database session
-
-    Returns:
-        True if in same department
-
-    Raises:
-        PermissionError: If employee not in moderator's department
-    """
-    # Get both employees
+    """Verify that target employee belongs to moderator's department."""
     target_stmt = select(Employee).where(Employee.id == target_employee_id)
     target = session.exec(target_stmt).first()
 
@@ -86,30 +53,26 @@ def enforce_department_scope(
     if not target or not moderator:
         raise NotFoundError("Employee record(s) not found")
 
-    # Verify same department
-    if target.department != moderator.department:
+    if target.department_id != moderator.department_id:
+        target_dept = session.get(Department, target.department_id)
+        mod_dept = session.get(Department, moderator.department_id)
+        target_name = target_dept.name if target_dept else "Desconocido"
+        mod_name = mod_dept.name if mod_dept else "Desconocido"
         raise ForbiddenError(
-            f"Cannot access employee in {target.department}. "
-            f"You are authorized for {moderator.department} only."
+            f"Cannot access employee in {target_name}. "
+            f"You are authorized for {mod_name} only."
         )
 
     return True
 
 
 def get_department_name(employee_id: str, session: Session) -> str | None:
-    """
-    Convenience method to get department name for any employee.
-
-    Args:
-        employee_id: Employee ID
-        session: Database session
-
-    Returns:
-        Department name or None if not found
-    """
-    statement = select(Employee).where(Employee.id == employee_id)
-    employee = session.exec(statement).first()
-    return employee.department if employee else None
+    """Return department name for any employee."""
+    employee = session.exec(select(Employee).where(Employee.id == employee_id)).first()
+    if not employee:
+        return None
+    dept = session.get(Department, employee.department_id)
+    return dept.name if dept else None
 
 
 def get_attendance_report(
@@ -118,12 +81,8 @@ def get_attendance_report(
     date_from: str,
     date_to: str,
 ) -> dict:
-    """Build the attendance report for the moderator's department (T074).
-
-    Aggregates TimeEntry records (automatic time tracking) for all employees in
-    the moderator's department within the date range.
-    """
-    department = get_moderator_department(current_user, session)
+    """Build the attendance report for the moderator's department."""
+    dept = get_moderator_department(current_user, session)
     tenant_id = current_user.get("tenant_id")
     if isinstance(tenant_id, str):
         tenant_id = uuid.UUID(tenant_id)
@@ -134,7 +93,7 @@ def get_attendance_report(
     employees = session.exec(
         select(Employee).where(
             Employee.tenant_id == tenant_id,
-            Employee.department == department,
+            Employee.department_id == dept.id,
         )
     ).all()
     emp_by_id = {e.id: e for e in employees}
@@ -170,7 +129,7 @@ def get_attendance_report(
     return {
         "date_from": date_from,
         "date_to": date_to,
-        "department": department,
+        "department": dept.name,
         "records": records,
     }
 
@@ -181,12 +140,8 @@ def get_vacation_summary(
     year: int,
     status: str | None = None,
 ) -> dict:
-    """Build the vacation summary for the moderator's department (T072).
-
-    Aggregates vacation request days by status per employee for the given year,
-    plus the current remaining balance.
-    """
-    department = get_moderator_department(current_user, session)
+    """Build the vacation summary for the moderator's department."""
+    dept = get_moderator_department(current_user, session)
     tenant_id = current_user.get("tenant_id")
     if isinstance(tenant_id, str):
         tenant_id = uuid.UUID(tenant_id)
@@ -194,7 +149,7 @@ def get_vacation_summary(
     employees = session.exec(
         select(Employee).where(
             Employee.tenant_id == tenant_id,
-            Employee.department == department,
+            Employee.department_id == dept.id,
         )
     ).all()
 
@@ -227,7 +182,6 @@ def get_vacation_summary(
         ).first()
         remaining = (balance.total_days - balance.used_days) if balance else 30
 
-        # status filter only affects which rows are listed (totals stay department-wide)
         if status is None or (
             (status == "Aprobado" and approved > 0)
             or (status == "Rechazado" and rejected > 0)
@@ -248,7 +202,7 @@ def get_vacation_summary(
 
     return {
         "year": year,
-        "department": department,
+        "department": dept.name,
         "summary": summary,
         "department_total": totals,
     }
