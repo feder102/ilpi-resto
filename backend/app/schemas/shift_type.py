@@ -31,7 +31,6 @@ class ShiftTypeCreate(BaseModel):
     """Create shift type request."""
 
     name: str
-    type: str  # MAÑANA, NOCHE, CORTADO, CORRIDO
     time_windows: list[TimeWindow]
     uses_dynamic_close: bool = False
     expected_hours: float
@@ -58,7 +57,6 @@ class ShiftTypeUpdate(BaseModel):
     """Update shift type request."""
 
     name: str | None = None
-    type: str | None = None
     time_windows: list[TimeWindow] | None = None
     uses_dynamic_close: bool | None = None
     expected_hours: float | None = None
@@ -71,7 +69,6 @@ class ShiftTypeResponse(BaseModel):
     id: uuid.UUID
     tenant_id: uuid.UUID
     name: str
-    type: str
     time_windows: list[dict[str, str]]
     uses_dynamic_close: bool
     expected_hours: float

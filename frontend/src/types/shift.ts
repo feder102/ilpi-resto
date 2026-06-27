@@ -5,7 +5,6 @@
 export interface ShiftType {
   id: string;
   name: string;
-  type: string;
   expected_hours: number;
   is_active: boolean;
 }

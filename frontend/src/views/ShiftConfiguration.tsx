@@ -87,13 +87,6 @@ export function ShiftConfiguration() {
     }
   }
 
-  const shiftTypeLabels: Record<string, string> = {
-    MAÑANA: 'Mañana',
-    NOCHE: 'Noche',
-    CORTADO: 'Cortado',
-    CORRIDO: 'Corrido',
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -156,7 +149,6 @@ export function ShiftConfiguration() {
                 <thead>
                   <tr>
                     <th>Nombre</th>
-                    <th>Tipo</th>
                     <th>Horarios</th>
                     <th>Horas</th>
                     <th>Estado</th>
@@ -168,11 +160,6 @@ export function ShiftConfiguration() {
                     <tr key={shift.id} className="hover">
                       <td className="font-medium text-base-content">
                         {shift.name}
-                      </td>
-                      <td>
-                        <span className="badge badge-info badge-sm">
-                          {shiftTypeLabels[shift.type]}
-                        </span>
                       </td>
                       <td>
                         <div className="space-y-1">
