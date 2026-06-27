@@ -69,24 +69,15 @@ class TimeTrackingService:
             raise HoursCalculationError(start_time, end_time, f"Failed to calculate hours: {str(e)}") from e
 
     @staticmethod
-    def generate_time_entries_for_date(
+    def _generate_time_entries_for_date_no_commit(
         db: Session,
         tenant_id: uuid.UUID,
         target_date: date_type,
     ) -> tuple[int, int]:
-        """Generate TimeEntry records for all shifts on a specific date.
+        """Core logic for generating TimeEntry records without committing.
 
-        Queries all ShiftRecord entries for the tenant on the target date,
-        then creates corresponding TimeEntry records if they don't already exist.
-        Idempotent: Running multiple times produces the same result (no duplicates).
-
-        Args:
-            db: Database session
-            tenant_id: Tenant UUID
-            target_date: Date to process (usually yesterday)
-
-        Returns:
-            tuple[int, int]: (entries_created, entries_skipped_already_existing)
+        Identical to ``generate_time_entries_for_date`` but leaves the transaction
+        open so the caller can batch multiple days into a single commit.
 
         Raises:
             BatchProcessingError: If batch processing fails
@@ -196,11 +187,45 @@ class TimeTrackingService:
                 db.add(entry)
                 entries_created += 1
 
-            db.commit()
             return entries_created, entries_skipped
 
         except NoShiftsFoundError:
             raise  # Re-raise without wrapping
+        except Exception as e:
+            raise BatchProcessingError(f"Batch processing failed: {str(e)}") from e
+
+    @staticmethod
+    def generate_time_entries_for_date(
+        db: Session,
+        tenant_id: uuid.UUID,
+        target_date: date_type,
+    ) -> tuple[int, int]:
+        """Generate TimeEntry records for all shifts on a specific date.
+
+        Queries all ShiftRecord entries for the tenant on the target date,
+        then creates corresponding TimeEntry records if they don't already exist.
+        Idempotent: Running multiple times produces the same result (no duplicates).
+
+        Args:
+            db: Database session
+            tenant_id: Tenant UUID
+            target_date: Date to process (usually yesterday)
+
+        Returns:
+            tuple[int, int]: (entries_created, entries_skipped_already_existing)
+
+        Raises:
+            BatchProcessingError: If batch processing fails
+            NoShiftsFoundError: If no shifts found (non-fatal)
+        """
+        try:
+            result = TimeTrackingService._generate_time_entries_for_date_no_commit(
+                db=db, tenant_id=tenant_id, target_date=target_date
+            )
+            db.commit()
+            return result
+        except (NoShiftsFoundError, BatchProcessingError):
+            raise
         except Exception as e:
             db.rollback()
             raise BatchProcessingError(f"Batch processing failed: {str(e)}") from e
@@ -282,11 +307,14 @@ class TimeTrackingService:
         while current <= last_day:
             days_processed += 1
             try:
-                created, skipped = TimeTrackingService.generate_time_entries_for_date(
-                    db=db,
-                    tenant_id=tenant_id,
-                    target_date=current,
-                )
+                # Use a savepoint so a per-day failure rolls back only that day's
+                # staged entries, leaving previously accumulated work intact.
+                with db.begin_nested():
+                    created, skipped = TimeTrackingService._generate_time_entries_for_date_no_commit(
+                        db=db,
+                        tenant_id=tenant_id,
+                        target_date=current,
+                    )
                 entries_created_total += created
                 entries_skipped_total += skipped
             except NoShiftsFoundError:
@@ -303,6 +331,8 @@ class TimeTrackingService:
                     },
                 )
             current += timedelta(days=1)
+
+        db.commit()
 
         logger.info(
             "Monthly workday processing completed",
