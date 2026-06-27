@@ -78,7 +78,7 @@ export const ShiftAssignmentDialog: React.FC<ShiftAssignmentDialogProps> = ({
   const loadShiftTypes = async () => {
     try {
       const { data } = await apiClient.get('/shift-types', {
-        params: { is_active: true, size: 100 },
+        params: { active_only: true, size: 100 },
       });
       setShiftTypes(data.items || []);
       // Set default to first active shift type if not editing
