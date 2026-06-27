@@ -28,7 +28,6 @@ export function ShiftTypeForm({
   onCancel,
 }: ShiftTypeFormProps) {
   const [name, setName] = useState('');
-  const [type, setType] = useState<'MAÑANA' | 'NOCHE' | 'CORTADO' | 'CORRIDO'>('MAÑANA');
   const [timeWindows, setTimeWindows] = useState<TimeWindow[]>([{ start: '10:00', end: '18:00' }]);
   const [expectedHours, setExpectedHours] = useState(8.0);
   const [usesDynamicClose, setUsesDynamicClose] = useState(false);
@@ -40,7 +39,6 @@ export function ShiftTypeForm({
   useEffect(() => {
     if (shiftType) {
       setName(shiftType.name);
-      setType(shiftType.type);
       setTimeWindows(shiftType.time_windows);
       setExpectedHours(shiftType.expected_hours);
       setUsesDynamicClose(shiftType.uses_dynamic_close);
@@ -104,7 +102,6 @@ export function ShiftTypeForm({
 
       const data: ShiftTypeCreate | ShiftTypeUpdate = {
         name: name.trim(),
-        type,
         time_windows: timeWindows,
         expected_hours: expectedHours,
         uses_dynamic_close: usesDynamicClose,
@@ -119,13 +116,6 @@ export function ShiftTypeForm({
     }
   }
 
-  const shiftTypeLabels = {
-    MAÑANA: 'Mañana',
-    NOCHE: 'Noche',
-    CORTADO: 'Cortado',
-    CORRIDO: 'Corrido',
-  };
-
   const formContent = (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && <Alert variant="error">{error}</Alert>}
@@ -133,15 +123,6 @@ export function ShiftTypeForm({
       <div className="flex flex-col gap-1">
         <label htmlFor="shiftName" className="text-sm font-medium text-base-content">Nombre del Turno *</label>
         <input id="shiftName" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Mañana, Noche, Cortado" className="input input-bordered" disabled={loading} />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label htmlFor="shiftType" className="text-sm font-medium text-base-content">Tipo de Turno *</label>
-        <select id="shiftType" value={type} onChange={(e) => setType(e.target.value as 'MAÑANA' | 'NOCHE' | 'CORTADO' | 'CORRIDO')} className="select select-bordered" disabled={loading}>
-          {Object.entries(shiftTypeLabels).map(([value, label]) => (
-            <option key={value} value={value}>{label}</option>
-          ))}
-        </select>
       </div>
 
       <div>

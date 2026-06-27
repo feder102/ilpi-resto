@@ -16,6 +16,7 @@
 
 import { useState, useEffect } from 'react';
 import { moderatorService } from '../services/moderatorService';
+import { shiftTypesApi } from '../services/shiftTypesApi';
 import { extractErrorMessage } from '../utils/errorHandler';
 import ShiftAssignmentForm from '../components/moderator/ShiftAssignmentForm';
 
@@ -60,7 +61,10 @@ export default function ShiftAssignment() {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
 
-      const roster = await moderatorService.getRoster(year, month);
+      const [roster, shiftTypesData] = await Promise.all([
+        moderatorService.getRoster(year, month),
+        shiftTypesApi.list(1, 100),
+      ]);
 
       // Extract unique employees from roster
       const uniqueEmployees = Array.from(
@@ -74,17 +78,8 @@ export default function ShiftAssignment() {
 
       setEmployees(uniqueEmployees);
 
-      // Extract unique shift types from roster (with real UUIDs from backend)
-      const uniqueShiftTypes = Array.from(
-        new Map(
-          roster.shifts.map(shift => [shift.shift_type_id, shift])
-        ).values()
-      ).map(shift => ({
-        id: shift.shift_type_id,
-        name: shift.shift_type_name,
-      }));
-
-      setShiftTypes(uniqueShiftTypes);
+      // Use active shift types from API (not from roster, which may contain soft-deleted types)
+      setShiftTypes(shiftTypesData.items.map(st => ({ id: st.id, name: st.name })));
     } catch (err) {
       const errorMessage = extractErrorMessage(err);
       setError(`No se pudieron cargar los datos: ${errorMessage}`);

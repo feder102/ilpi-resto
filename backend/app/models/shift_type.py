@@ -21,7 +21,7 @@ class ShiftType(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     tenant_id: uuid.UUID = Field(foreign_key="tenant.id", index=True)
     name: str = Field(max_length=100)
-    type: str = Field(max_length=20)  # MAÑANA, NOCHE, CORTADO, CORRIDO
+    type: str = Field(default="", max_length=20)
     time_windows: list[dict[str, str]] = Field(
         sa_column=Column(JSON),
         description="Array of {start: 'HH:MM', end: 'HH:MM'}",

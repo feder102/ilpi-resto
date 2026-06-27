@@ -92,11 +92,12 @@ def create(
     data: ShiftTypeCreate, tenant_id: uuid.UUID, session: Session
 ) -> ShiftTypeResponse:
     """Create new shift type with validation."""
-    # Check for duplicate name per tenant
+    # Check for duplicate name per tenant (exclude soft-deleted types)
     existing = session.exec(
         select(ShiftType).where(
             ShiftType.tenant_id == tenant_id,
             ShiftType.name == data.name,
+            ShiftType.is_active == True,  # noqa: E712
         )
     ).first()
 
@@ -119,7 +120,6 @@ def create(
     shift_type = ShiftType(
         tenant_id=tenant_id,
         name=data.name,
-        type=data.type,
         time_windows=[w.model_dump() for w in data.time_windows],
         uses_dynamic_close=data.uses_dynamic_close,
         expected_hours=data.expected_hours,
@@ -137,7 +137,6 @@ def create(
             "event_type": "SHIFT_TYPE_CREATE",
             "shift_type_id": str(shift_type.id),
             "shift_type_name": shift_type.name,
-            "shift_type": shift_type.type,
             "tenant_id": str(tenant_id),
         },
     )
@@ -146,7 +145,6 @@ def create(
         id=shift_type.id,
         tenant_id=shift_type.tenant_id,
         name=shift_type.name,
-        type=shift_type.type,
         time_windows=shift_type.time_windows,
         uses_dynamic_close=shift_type.uses_dynamic_close,
         expected_hours=shift_type.expected_hours,
@@ -184,7 +182,6 @@ def list_shift_types(
                 id=st.id,
                 tenant_id=st.tenant_id,
                 name=st.name,
-                type=st.type,
                 time_windows=st.time_windows,
                 uses_dynamic_close=st.uses_dynamic_close,
                 expected_hours=st.expected_hours,
@@ -226,7 +223,6 @@ def get_by_id(
         id=shift_type.id,
         tenant_id=shift_type.tenant_id,
         name=shift_type.name,
-        type=shift_type.type,
         time_windows=shift_type.time_windows,
         uses_dynamic_close=shift_type.uses_dynamic_close,
         expected_hours=shift_type.expected_hours,
@@ -255,12 +251,13 @@ def update(
     if not shift_type:
         raise NotFoundError("Shift type not found")
 
-    # Check for duplicate name if changing name
+    # Check for duplicate name if changing name (exclude soft-deleted types)
     if data.name and data.name != shift_type.name:
         existing = session.exec(
             select(ShiftType).where(
                 ShiftType.tenant_id == tenant_id,
                 ShiftType.name == data.name,
+                ShiftType.is_active == True,  # noqa: E712
             )
         ).first()
 
@@ -273,8 +270,6 @@ def update(
     # Update fields
     if data.name is not None:
         shift_type.name = data.name
-    if data.type is not None:
-        shift_type.type = data.type
     if data.time_windows is not None:
         time_windows_dict = [w.model_dump() for w in data.time_windows]
         _validate_time_windows(time_windows_dict)
@@ -312,7 +307,6 @@ def update(
         id=shift_type.id,
         tenant_id=shift_type.tenant_id,
         name=shift_type.name,
-        type=shift_type.type,
         time_windows=shift_type.time_windows,
         uses_dynamic_close=shift_type.uses_dynamic_close,
         expected_hours=shift_type.expected_hours,

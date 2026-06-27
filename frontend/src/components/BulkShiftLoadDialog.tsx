@@ -73,7 +73,7 @@ export const BulkShiftLoadDialog: React.FC<BulkShiftLoadDialogProps> = ({
   const loadShiftTypes = async () => {
     try {
       const { data } = await apiClient.get('/shift-types', {
-        params: { is_active: true, size: 100 },
+        params: { active_only: true, size: 100 },
       });
       const items: ShiftType[] = data.items || [];
       setShiftTypes(items);

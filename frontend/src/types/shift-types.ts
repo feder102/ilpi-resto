@@ -10,7 +10,6 @@ export interface TimeWindow {
 export interface ShiftType {
   id: string; // UUID
   name: string;
-  type: 'MAÑANA' | 'NOCHE' | 'CORTADO' | 'CORRIDO';
   time_windows: TimeWindow[];
   expected_hours: number;
   total_hours: number;
@@ -23,7 +22,6 @@ export interface ShiftType {
 
 export interface ShiftTypeCreate {
   name: string;
-  type: 'MAÑANA' | 'NOCHE' | 'CORTADO' | 'CORRIDO';
   time_windows: TimeWindow[];
   expected_hours: number;
   uses_dynamic_close: boolean;
@@ -32,7 +30,6 @@ export interface ShiftTypeCreate {
 
 export interface ShiftTypeUpdate {
   name?: string;
-  type?: 'MAÑANA' | 'NOCHE' | 'CORTADO' | 'CORRIDO';
   time_windows?: TimeWindow[];
   expected_hours?: number;
   uses_dynamic_close?: boolean;
@@ -42,7 +39,6 @@ export interface ShiftTypeUpdate {
 export interface ShiftTypeResponse {
   id: string;
   name: string;
-  type: 'MAÑANA' | 'NOCHE' | 'CORTADO' | 'CORRIDO';
   time_windows: TimeWindow[];
   expected_hours: number;
   total_hours: number;
