@@ -138,10 +138,12 @@ def upgrade() -> None:
         ondelete="RESTRICT",
     )
     op.create_index("ix_team_department_id", "team", ["department_id"])
+    # Drop old unique constraint BEFORE dropping the column it references;
+    # PostgreSQL would cascade-drop it with the column, making the explicit drop fail.
+    op.drop_constraint("uq_team_tenant_name_dept", "team", type_="unique")
     op.drop_column("team", "department")
 
-    # Update team unique constraint: (tenant_id, name, department) → (tenant_id, name, department_id)
-    op.drop_constraint("uq_team_tenant_name_dept", "team", type_="unique")
+    # Recreate unique constraint on (tenant_id, name, department_id)
     op.create_unique_constraint(
         "uq_team_tenant_name_dept", "team", ["tenant_id", "name", "department_id"]
     )
