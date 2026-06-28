@@ -38,36 +38,47 @@ npm run dev
 > `data.ts` importa los tipos desde `./types`, igual que el template. Si el template
 > ya trae su propio `types.ts`, basta con copiar `data.ts` (las interfaces coinciden).
 
-## Despliegue oculto en `/docum`
+## Despliegue en `/docum` — acceso solo Admin (implementado)
 
-El sitio debe servirse bajo el subpath `/docum` del dominio
-(`ilpi.tudominio.com/docum`). Pasos típicos:
+El sitio se sirve bajo el subpath `/docum` del dominio
+(`https://<tu-dominio>/docum`) y el acceso está **restringido al rol Admin** mediante
+el JWT de la propia app. El gating ya está implementado en este repositorio:
 
-1. **Base path de Vite** — configurar `base: '/docum/'` en `vite.config.ts` para que
-   los assets se resuelvan bajo ese subpath.
+- **Backend** (`backend/app/routers/docs_access.py`): endpoint
+  `GET /api/v1/docum/authorize` que valida la cookie HttpOnly `refresh_token`
+  (que lleva el rol) y exige `role=Admin` + `is_active`:
+  - `204` → es Admin activo → se sirve la documentación.
+  - `303` → no autenticado → redirige a `/login?next=/docum`.
+  - `403` → autenticado pero no Admin → acceso denegado (sin bucle de login).
+- **Caddy** (`Caddyfile`): bloque `handle_path /docum*` con `forward_auth` hacia ese
+  endpoint; solo si responde 2xx sirve los estáticos.
+- **Compose** (`docker-compose.prod.yml`): monta `./docum-dist` en `/srv/docum` (ro).
+
+### Pasos para publicarlo
+
+1. **Base path de Vite** — en el proyecto del template, configurar `base: '/docum/'`
+   en `vite.config.ts` (los assets se resuelven bajo el subpath; Caddy hace
+   `handle_path` y elimina el prefijo `/docum`).
 2. **Build**: `npm run build` → genera `dist/`.
-3. **Reverse proxy** (este repo ya usa Caddy/Nginx). Publicar `dist/` bajo `/docum`.
-   Ejemplo con Caddy:
-
-   ```caddy
-   handle_path /docum/* {
-       root * /srv/ilpi-docum/dist
-       try_files {path} /index.html
-       file_server
-   }
+3. **Copiar** el `dist/` a `./docum-dist` en la raíz de este repo (en el servidor):
+   ```bash
+   cp -r ilpi-docum/dist/* /ruta/a/ilpi-resto/docum-dist/
+   ```
+4. **Levantar** el stack de producción:
+   ```bash
+   docker compose -f docker-compose.prod.yml up -d --build
    ```
 
-   Ejemplo con Nginx:
+### Cómo ingresar
 
-   ```nginx
-   location /docum/ {
-       alias /srv/ilpi-docum/dist/;
-       try_files $uri $uri/ /docum/index.html;
-   }
-   ```
+1. Iniciar sesión en la app con un usuario **Admin** (`https://<tu-dominio>/login`).
+   Eso fija la cookie `refresh_token` (HttpOnly) en el dominio.
+2. Navegar a **`https://<tu-dominio>/docum`**. Caddy consulta el endpoint de
+   autorización; al ser Admin, sirve la documentación.
 
-4. **Ocultar** (opcional): restringir por IP, basic-auth o no enlazarlo desde la app
-   principal para que quede "oculto".
+> Si no hay sesión (o el usuario no es Admin), `/docum` redirige a `/login` o
+> responde 403. La cookie es del mismo dominio, por eso front, API y docs conviven
+> sin problemas de CORS.
 
 ## Mantenimiento
 
