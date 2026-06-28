@@ -267,7 +267,7 @@ async def get_vacation_details(
 
     # Verify employee belongs to moderator's department
     department = moderator_service.get_moderator_department(current_user, session)
-    if details["employee"]["department"] != department:
+    if details["employee"]["department"] != department.name:
         raise ForbiddenError("No tienes permiso para ver esta solicitud")
 
     return details
@@ -316,7 +316,7 @@ async def approve_vacation(
         session=session,
     )
     department = moderator_service.get_moderator_department(current_user, session)
-    if details["employee"]["department"] != department:
+    if details["employee"]["department"] != department.name:
         raise ForbiddenError("No tienes permiso para aprobar esta solicitud")
 
     # Approve the request
@@ -375,7 +375,7 @@ async def reject_vacation(
         session=session,
     )
     department = moderator_service.get_moderator_department(current_user, session)
-    if details["employee"]["department"] != department:
+    if details["employee"]["department"] != department.name:
         raise ForbiddenError("No tienes permiso para rechazar esta solicitud")
 
     # Reject the request

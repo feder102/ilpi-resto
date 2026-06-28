@@ -137,6 +137,9 @@ def list_departments(
 ) -> DepartmentListResponse:
     query = select(Department).where(Department.tenant_id == tenant_id)
 
+    if include_inactive and not is_admin:
+        include_inactive = False
+
     if not include_inactive:
         query = query.where(Department.is_active == True)  # noqa: E712
 
@@ -272,6 +275,8 @@ def get_delete_preview(
     _assert_not_system(dept)
 
     target = ensure_system_department(tenant_id, session)
+    session.commit()
+    session.refresh(target)
     emp_count, team_count = _get_counts(dept.id, session)
 
     return DepartmentDeletePreview(
@@ -333,6 +338,7 @@ def delete_with_reassign(
         "department.deleted",
         extra={
             "department_id": str(department_id),
+            "name": dept.name,
             "employees_reassigned": emp_count,
             "teams_reassigned": team_count,
             "target_department_id": str(target.id),

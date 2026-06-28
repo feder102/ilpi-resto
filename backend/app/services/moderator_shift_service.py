@@ -24,9 +24,10 @@ from app.models import (
     VacationBalance,
     VacationRequest,
 )
+from app.models.department import Department
 
 
-def get_department_employees(department: str, session: Session) -> list[Employee]:
+def get_department_employees(department: Department, session: Session) -> list[Employee]:
     """
     Get all active employees in moderator's department.
 
@@ -35,7 +36,7 @@ def get_department_employees(department: str, session: Session) -> list[Employee
     - Listing team members for roster
 
     Args:
-        department: Department name (e.g., 'Cocina')
+        department: Department ORM object
         session: Database session
 
     Returns:
@@ -45,7 +46,7 @@ def get_department_employees(department: str, session: Session) -> list[Employee
         select(Employee)
         .where(
             and_(
-                Employee.department == department,
+                Employee.department_id == department.id,
                 Employee.status == "Activo",  # Only active employees
                 Employee.is_active.is_(True),
             )
@@ -266,7 +267,7 @@ def update_shift(
 
     # Verify shift's employee is in moderator's department
     employee = session.get(Employee, shift.employee_id)
-    if not employee or employee.department != moderator.department:
+    if not employee or employee.department_id != moderator.department_id:
         raise ForbiddenError("No tienes acceso a este turno")
 
     # Re-check vacation conflict (may have changed)
@@ -331,7 +332,7 @@ def delete_shift(
 
     # Verify shift's employee is in moderator's department
     employee = session.get(Employee, shift.employee_id)
-    if not employee or employee.department != moderator.department:
+    if not employee or employee.department_id != moderator.department_id:
         raise ForbiddenError("No tienes acceso a este turno")
 
     # Check if shift has been worked
@@ -379,7 +380,7 @@ def get_vacation_status_for_date(
 
 # T017: US1 - Roster retrieval
 def get_department_roster(
-    department: str,
+    department: Department,
     year: int,
     month: int,
     session: Session,
@@ -393,7 +394,7 @@ def get_department_roster(
     Used by: GET /moderator/roster?year=YYYY&month=MM
 
     Args:
-        department: Department name (e.g., 'Cocina')
+        department: Department ORM object
         year: Year
         month: Month (1-12)
         session: Database session
@@ -408,7 +409,7 @@ def get_department_roster(
         .join(ShiftType, ShiftRecord.shift_type_id == ShiftType.id)
         .where(
             and_(
-                Employee.department == department,
+                Employee.department_id == department.id,
                 Employee.is_active.is_(True),
             )
         )
@@ -448,7 +449,7 @@ def assign_shift(
     employee_id: str,
     shift_date: date,
     shift_type_id: str,
-    moderator_department: str,
+    moderator_department: Department,
     session: Session,
 ) -> dict:
     """
@@ -487,9 +488,9 @@ def assign_shift(
     if not employee:
         raise NotFoundError("Empleado", employee_id)
 
-    if employee.department != moderator_department:
+    if employee.department_id != moderator_department.id:
         raise EmployeeNotInDepartmentError(
-            f"El empleado {employee.first_name} no pertenece a {moderator_department}"
+            f"El empleado {employee.first_name} no pertenece a {moderator_department.name}"
         )
 
     # Check for vacation conflict
@@ -534,7 +535,7 @@ def assign_shift(
 
 
 def get_shifts_for_date(
-    department: str,
+    department: Department,
     check_date: date,
     session: Session,
 ) -> list[dict]:
@@ -547,7 +548,7 @@ def get_shifts_for_date(
     Used by: GET /moderator/shifts?date=YYYY-MM-DD
 
     Args:
-        department: Department name
+        department: Department ORM object
         check_date: Date to retrieve shifts for
         session: Database session
 
@@ -560,7 +561,7 @@ def get_shifts_for_date(
         .join(ShiftType, ShiftRecord.shift_type_id == ShiftType.id)
         .where(
             and_(
-                Employee.department == department,
+                Employee.department_id == department.id,
                 Employee.is_active.is_(True),
                 ShiftRecord.date == check_date,
             )

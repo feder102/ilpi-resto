@@ -14,21 +14,34 @@ from app.common.exceptions import (
     NotFoundError,
     ValidationError,
 )
+from app.models.department import Department
 from app.models.employee import Employee
 from app.models.tenant import Tenant
 from app.models.vacation_balance import VacationBalance
 from app.models.vacation_request import VacationRequest
+from app.schemas.department import DepartmentNestedResponse
 from app.schemas.vacation import VacationBalanceResponse, VacationRequestResponse
 
 
 def _to_response(req: VacationRequest, session: Session) -> VacationRequestResponse:
     emp = session.get(Employee, req.employee_id)
+    emp_dept: DepartmentNestedResponse | None = None
+    if emp and emp.department_id:
+        dept = session.get(Department, emp.department_id)
+        if dept:
+            emp_dept = DepartmentNestedResponse(
+                id=dept.id,
+                name=dept.name,
+                color=dept.color,
+                icon=dept.icon,
+                is_system=dept.is_system,
+            )
     return VacationRequestResponse(
         id=req.id,
         employee_id=req.employee_id,
         employee_name=f"{emp.first_name} {emp.last_name}" if emp else None,
         employee_image=emp.profile_image if emp else None,
-        employee_department=emp.department if emp else None,
+        employee_department=emp_dept,
         start_date=req.start_date,
         end_date=req.end_date,
         requested_days=req.requested_days,
@@ -362,7 +375,7 @@ def reject_request(
 # T031: Get pending requests for moderator's department
 def get_department_pending_requests(
     tenant_id: uuid.UUID,
-    department: str,
+    department: Department,
     session: Session,
     status_filter: str | None = None,
     employee_id: uuid.UUID | None = None,
@@ -391,7 +404,7 @@ def get_department_pending_requests(
         .where(
             and_(
                 VacationRequest.tenant_id == tenant_id,
-                Employee.department == department,
+                Employee.department_id == department.id,
             )
         )
     )
@@ -466,7 +479,11 @@ def get_vacation_request_details(
         "employee_id": str(req.employee_id),
         "employee": {
             "name": f"{employee.first_name} {employee.last_name}",
-            "department": employee.department,
+            "department": (
+                session.get(Department, employee.department_id).name
+                if employee.department_id and session.get(Department, employee.department_id)
+                else None
+            ),
             "hire_date": employee.hire_date.isoformat() if employee.hire_date else None,
         },
         "start_date": req.start_date.isoformat(),

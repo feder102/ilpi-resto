@@ -212,7 +212,9 @@ def update(
     update_data = data.model_dump(exclude_unset=True)
 
     # Validate department if changing
-    if "department_id" in update_data and update_data["department_id"] is not None:
+    if "department_id" in update_data:
+        if update_data["department_id"] is None:
+            raise ValidationError("El campo department_id no puede ser null")
         _validate_department(update_data["department_id"], tenant_id, session)
 
     # Check uniqueness if changing DNI or email
