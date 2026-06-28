@@ -1,0 +1,92 @@
+name: Docs Sync Check
+
+# Fires on PRs that touch source code (backend, frontend, or DB migrations).
+# If docs/architecture/ wasn't also updated, posts a reminder comment on the PR.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/app/models/**'
+      - 'backend/app/routers/**'
+      - 'backend/app/services/**'
+      - 'backend/app/schemas/**'
+      - 'backend/alembic/versions/**'
+      - 'frontend/src/**'
+
+jobs:
+  check-docs:
+    name: Verify architecture docs are updated
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect which categories changed
+        id: detect
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          CHANGED=$(git diff --name-only "$BASE" "$HEAD")
+
+          DB_CHANGED=false
+          BACKEND_CHANGED=false
+          FRONTEND_CHANGED=false
+          DOCS_CHANGED=false
+
+          while IFS= read -r f; do
+            case "$f" in
+              backend/alembic/versions/*|backend/app/models/*) DB_CHANGED=true ;;
+              backend/app/routers/*|backend/app/services/*|backend/app/schemas/*) BACKEND_CHANGED=true ;;
+              frontend/src/*) FRONTEND_CHANGED=true ;;
+              docs/architecture/*) DOCS_CHANGED=true ;;
+            esac
+          done <<< "$CHANGED"
+
+          echo "db=$DB_CHANGED"        >> "$GITHUB_OUTPUT"
+          echo "backend=$BACKEND_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "frontend=$FRONTEND_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "docs=$DOCS_CHANGED"    >> "$GITHUB_OUTPUT"
+
+      - name: Build reminder body
+        id: body
+        if: >
+          (steps.detect.outputs.db == 'true' ||
+           steps.detect.outputs.backend == 'true' ||
+           steps.detect.outputs.frontend == 'true') &&
+          steps.detect.outputs.docs == 'false'
+        run: |
+          NEEDS=""
+          [ "${{ steps.detect.outputs.db }}" == "true" ] && \
+            NEEDS="$NEEDS\n- \`docs/architecture/db/README.md\` — nuevas migraciones o cambios en modelos"
+          [ "${{ steps.detect.outputs.backend }}" == "true" ] && \
+            NEEDS="$NEEDS\n- \`docs/architecture/backend/README.md\` — nuevos endpoints, servicios o reglas de negocio"
+          [ "${{ steps.detect.outputs.frontend }}" == "true" ] && \
+            NEEDS="$NEEDS\n- \`docs/architecture/frontend/README.md\` — nuevas vistas, hooks o componentes"
+          NEEDS="$NEEDS\n- \`docs/architecture/site/data.ts\` — reflejar los cambios en el sitio de documentación"
+
+          {
+            echo 'BODY<<__EOF__'
+            printf "## 📚 Recordatorio: documentación de arquitectura\n\n"
+            printf "Esta PR modifica código fuente pero no actualiza \`docs/architecture/\`.\n\n"
+            printf "**Archivos que probablemente necesiten actualización:**\n"
+            printf "$NEEDS\n\n"
+            printf "**Cómo actualizar en segundos:**\n"
+            printf "Abre Claude Code en este repo y ejecuta:\n"
+            printf "\`\`\`\n/update-docs\n\`\`\`\n"
+            printf "Claude leerá los cambios de esta PR y actualizará los markdown y el \`data.ts\` automáticamente.\n\n"
+            printf "> Si los cambios son menores (refactors internos, bugfixes sin cambios de API pública), puedes ignorar este recordatorio."
+            echo '__EOF__'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Post reminder comment
+        if: steps.body.conclusion == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment "${{ github.event.pull_request.number }}" \
+            --repo "${{ github.repository }}" \
+            --body "${{ steps.body.outputs.BODY }}"
