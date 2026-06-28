@@ -2,6 +2,7 @@
 
 from app.models.absence import Absence
 from app.models.audit_log import AuditLog
+from app.models.department import Department
 from app.models.employee import Employee
 from app.models.password_reset_token import PasswordResetToken
 from app.models.shift_record import ShiftRecord
@@ -18,6 +19,7 @@ __all__ = [
     "User",
     "Employee",
     "Team",
+    "Department",
     "ShiftRecord",
     "TimeEntry",
     "VacationRequest",

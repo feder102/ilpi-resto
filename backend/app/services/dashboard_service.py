@@ -1,10 +1,11 @@
-"""T073: Dashboard service for aggregated stats."""
+"""T020: Dashboard service — department string → FK (Feature 014)."""
 
 import uuid
 from datetime import date, timedelta
 
 from sqlmodel import Session, func, select
 
+from app.models.department import Department
 from app.models.employee import Employee
 from app.models.time_entry import TimeEntry
 from app.models.vacation_request import VacationRequest
@@ -13,7 +14,6 @@ from app.models.vacation_request import VacationRequest
 def get_stats(tenant_id: uuid.UUID, session: Session) -> dict:
     today = date.today()
 
-    # Total active employees
     total_employees = session.exec(
         select(func.count()).select_from(
             select(Employee)
@@ -22,7 +22,6 @@ def get_stats(tenant_id: uuid.UUID, session: Session) -> dict:
         )
     ).one()
 
-    # Currently on shift today (distinct employees with a TimeEntry for today)
     on_shift = session.exec(
         select(func.count(func.distinct(TimeEntry.employee_id))).where(
             TimeEntry.tenant_id == tenant_id,
@@ -30,7 +29,6 @@ def get_stats(tenant_id: uuid.UUID, session: Session) -> dict:
         )
     ).one()
 
-    # On vacation (approved, covering today)
     on_vacation = session.exec(
         select(func.count()).select_from(
             select(VacationRequest)
@@ -44,7 +42,6 @@ def get_stats(tenant_id: uuid.UUID, session: Session) -> dict:
         )
     ).one()
 
-    # Pending vacation requests
     pending_requests = session.exec(
         select(func.count()).select_from(
             select(VacationRequest)
@@ -69,20 +66,8 @@ def get_hours_by_day(
     session: Session,
     date_from: date | None = None,
     date_to: date | None = None,
-    department: str | None = None,
+    department_id: uuid.UUID | None = None,
 ) -> list[dict]:
-    """Aggregate worked hours by day of week from TimeEntry (automatic time tracking).
-
-    Args:
-        tenant_id: Tenant scope.
-        session: DB session.
-        date_from: Start of range (inclusive). Defaults to 30 days before date_to.
-        date_to: End of range (inclusive). Defaults to today.
-        department: Optional department filter (for moderator-scoped reports).
-
-    Returns:
-        List of {"day": <weekday name>, "hours": <float>} for the 7 weekdays.
-    """
     if date_to is None:
         date_to = date.today()
     if date_from is None:
@@ -94,9 +79,9 @@ def get_hours_by_day(
         TimeEntry.shift_date <= date_to,
     )
 
-    if department is not None:
+    if department_id is not None:
         query = query.join(Employee, Employee.id == TimeEntry.employee_id).where(
-            Employee.department == department
+            Employee.department_id == department_id
         )
 
     entries = session.exec(query).all()
@@ -114,23 +99,23 @@ def get_hours_by_day(
 def get_department_distribution(
     tenant_id: uuid.UUID,
     session: Session,
-    department: str | None = None,
+    department_id: uuid.UUID | None = None,
 ) -> list[dict]:
-    """Active employee count by department.
-
-    Args:
-        tenant_id: Tenant scope.
-        session: DB session.
-        department: Optional filter to a single department (for moderator-scoped reports).
-    """
+    """Active employee count by department with department details."""
     query = (
-        select(Employee.department, func.count())
+        select(Employee.department_id, func.count())
         .where(Employee.tenant_id == tenant_id, Employee.is_active == True)  # noqa: E712
-        .group_by(Employee.department)
+        .group_by(Employee.department_id)
     )
-    if department is not None:
-        query = query.where(Employee.department == department)
+    if department_id is not None:
+        query = query.where(Employee.department_id == department_id)
 
     results = session.exec(query).all()
 
-    return [{"department": dept, "count": count} for dept, count in results]
+    output = []
+    for dept_id, count in results:
+        dept = session.get(Department, dept_id)
+        dept_name = dept.name if dept else "Desconocido"
+        output.append({"department": dept_name, "department_id": str(dept_id), "count": count})
+
+    return output

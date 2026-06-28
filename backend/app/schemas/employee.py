@@ -1,9 +1,11 @@
-"""T043: Employee Pydantic DTOs."""
+"""T013: Employee Pydantic DTOs — department string → FK (Feature 014)."""
 
 import uuid
 from datetime import date
 
 from pydantic import BaseModel, EmailStr, field_validator
+
+from app.schemas.department import DepartmentNestedResponse
 
 
 class EmployeeCreate(BaseModel):
@@ -17,7 +19,7 @@ class EmployeeCreate(BaseModel):
     marital_status: str | None = None
     gender: str | None = None
     role: str
-    department: str
+    department_id: uuid.UUID
     hire_date: date
     profile_image: str | None = None
     emergency_contact: str | None = None
@@ -34,7 +36,7 @@ class EmployeeUpdate(BaseModel):
     marital_status: str | None = None
     gender: str | None = None
     role: str | None = None
-    department: str | None = None
+    department_id: uuid.UUID | None = None
     status: str | None = None
     hire_date: date | None = None
     profile_image: str | None = None
@@ -61,7 +63,7 @@ class EmployeeResponse(BaseModel):
     marital_status: str | None
     gender: str | None
     role: str
-    department: str
+    department: DepartmentNestedResponse
     status: str
     hire_date: date
     profile_image: str | None

@@ -1,5 +1,6 @@
-"""T074+T075: Dashboard and reports router."""
+"""T020: Dashboard and reports router — department string → FK (Feature 014)."""
 
+import uuid
 from datetime import date
 
 from fastapi import APIRouter, Depends, Query
@@ -27,11 +28,11 @@ def get_hours_by_day(
     tenant_id: TenantId,
     date_from: date | None = Query(None, description="Inicio del rango (YYYY-MM-DD)"),
     date_to: date | None = Query(None, description="Fin del rango (YYYY-MM-DD)"),
-    department: str | None = Query(None, description="Filtrar por departamento"),
+    department_id: uuid.UUID | None = Query(None, description="Filtrar por departamento (UUID)"),
     _: dict = AdminOrMod,
 ):
     return dashboard_service.get_hours_by_day(
-        tenant_id, session, date_from=date_from, date_to=date_to, department=department
+        tenant_id, session, date_from=date_from, date_to=date_to, department_id=department_id
     )
 
 
@@ -39,7 +40,9 @@ def get_hours_by_day(
 def get_department_distribution(
     session: DbSession,
     tenant_id: TenantId,
-    department: str | None = Query(None, description="Filtrar por departamento"),
+    department_id: uuid.UUID | None = Query(None, description="Filtrar por departamento (UUID)"),
     _: dict = AdminOrMod,
 ):
-    return dashboard_service.get_department_distribution(tenant_id, session, department=department)
+    return dashboard_service.get_department_distribution(
+        tenant_id, session, department_id=department_id
+    )

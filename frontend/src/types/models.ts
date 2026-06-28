@@ -1,4 +1,4 @@
-// T005: Domain model types
+// T022: Domain model types — department string → FK (Feature 014)
 
 export const Role = {
   ADMIN: 'Admin',
@@ -7,13 +7,25 @@ export const Role = {
 } as const;
 export type Role = typeof Role[keyof typeof Role];
 
-export const Department = {
-  COCINA: 'Cocina',
-  ATENCION_AL_PUBLICO: 'Atención al Público',
-  BARRA: 'Barra',
-  DIRECCION: 'Dirección',
-} as const;
-export type Department = typeof Department[keyof typeof Department];
+export interface Department {
+  id: string;
+  name: string;
+  description?: string | null;
+  color: string;
+  icon: string;
+  isSystem: boolean;
+  isActive: boolean;
+  employeeCount?: number | null;
+  teamCount?: number | null;
+}
+
+export interface DepartmentNested {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+  isSystem: boolean;
+}
 
 export const StaffStatus = {
   ACTIVO: 'Activo',
@@ -59,7 +71,7 @@ export interface Employee {
   marital_status: MaritalStatus | null;
   gender: Gender | null;
   role: Role;
-  department: Department;
+  department: DepartmentNested;
   status: StaffStatus;
   hire_date: string;
   profile_image: string | null;
@@ -111,7 +123,7 @@ export interface ShiftRecord {
 export interface Team {
   id: string;
   name: string;
-  department: Department;
+  department: DepartmentNested;
   shift_type_id: string;
   shift_type: {
     id: string;
@@ -142,7 +154,7 @@ export interface VacationRequest {
   employee_id: string;
   employee_name: string;
   employee_image: string | null;
-  employee_department: Department;
+  employee_department: DepartmentNested;
   start_date: string;
   end_date: string;
   requested_days: number;
@@ -185,7 +197,7 @@ export interface RosterDay {
 export interface ModeratorRoster {
   year: number;
   month: number;
-  department: Department;
+  department: string;
   shifts: RosterDay[];
 }
 
@@ -213,7 +225,7 @@ export interface VacationSummaryRow {
  */
 export interface VacationSummaryReport {
   year: number;
-  department: Department;
+  department: string;
   summary: VacationSummaryRow[];
   department_total: {
     approved_days: number;
@@ -241,6 +253,6 @@ export interface AttendanceRecord {
 export interface AttendanceReport {
   date_from: string;
   date_to: string;
-  department: Department;
+  department: string;
   records: AttendanceRecord[];
 }

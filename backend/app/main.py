@@ -188,6 +188,7 @@ def _include_routers(app: FastAPI) -> None:
     from app.routers import (
         auth,
         dashboard,
+        departments,
         employees,
         moderator,
         password_reset_router,
@@ -203,6 +204,7 @@ def _include_routers(app: FastAPI) -> None:
     prefix = "/api/v1"
     app.include_router(auth.router, prefix=prefix)
     app.include_router(users.router, prefix=prefix)
+    app.include_router(departments.router, prefix=prefix)
     app.include_router(employees.router, prefix=prefix)
     app.include_router(shift_types.router, prefix=prefix)
     app.include_router(teams.router, prefix=prefix)

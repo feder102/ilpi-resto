@@ -1,10 +1,31 @@
-"""T021/T036/T045: Seed script for initial data."""
+"""T010: Seed script — department string → FK (Feature 014)."""
 
 from sqlmodel import Session, select
 
 from app.common.security import hash_password
 from app.database import engine
 from app.models.tenant import Tenant
+
+
+def _seed_departments(session: Session, tenant_id) -> dict:  # type: ignore[no-untyped-def]
+    """Create default department catalog per tenant. Returns name → Department mapping."""
+    from app.models.department import Department
+
+    defaults = [
+        {"name": "Sin asignar", "color": "#9ca3af", "icon": "CircleHelp", "is_system": True},
+        {"name": "Cocina", "color": "#ef4444", "icon": "ChefHat", "is_system": False},
+        {"name": "Atención al Público", "color": "#3b82f6", "icon": "Users", "is_system": False},
+        {"name": "Barra", "color": "#f59e0b", "icon": "Coffee", "is_system": False},
+        {"name": "Dirección", "color": "#8b5cf6", "icon": "Briefcase", "is_system": False},
+    ]
+
+    dept_map = {}
+    for d in defaults:
+        dept = Department(tenant_id=tenant_id, **d)
+        session.add(dept)
+        session.flush()
+        dept_map[d["name"]] = dept
+    return dept_map
 
 
 def seed() -> None:
@@ -16,7 +37,13 @@ def seed() -> None:
             return
 
         # Create default tenant
-        tenant = Tenant(name="ILPI", slug="ilpi", timezone="Europe/Madrid", locale="es", default_vacation_days=30)
+        tenant = Tenant(
+            name="ILPI",
+            slug="ilpi",
+            timezone="Europe/Madrid",
+            locale="es",
+            default_vacation_days=30,
+        )
         session.add(tenant)
         session.flush()
 
@@ -24,6 +51,9 @@ def seed() -> None:
         from app.models.employee import Employee
         from app.models.shift_type import ShiftType
         from app.models.user import User
+
+        # Create department catalog
+        dept_map = _seed_departments(session, tenant.id)
 
         # Create seed employee (admin's profile)
         employee = Employee(
@@ -34,7 +64,7 @@ def seed() -> None:
             phone="+34600000000",
             dni="12345678A",
             role="Admin",
-            department="Dirección",
+            department_id=dept_map["Dirección"].id,
             status="Activo",
             hire_date="2024-01-15",
         )
@@ -61,7 +91,7 @@ def seed() -> None:
             phone="+34633444555",
             dni="87654321C",
             role="Jefe de Cocina",
-            department="Cocina",
+            department_id=dept_map["Cocina"].id,
             status="Activo",
             hire_date="2023-01-15",
         )
@@ -89,7 +119,7 @@ def seed() -> None:
             phone="+34611222333",
             dni="98765432B",
             role="Cocinero",
-            department="Cocina",
+            department_id=dept_map["Cocina"].id,
             status="Activo",
             hire_date="2024-06-01",
         )
@@ -164,8 +194,14 @@ def seed() -> None:
         print("  Change them in production via the admin panel or directly in the database.")
         print("\n  Employees:")
         print(f"    {employee.first_name} {employee.last_name} ({employee.role})")
-        print(f"    {moderator_employee.first_name} {moderator_employee.last_name} ({moderator_employee.role})")
+        print(
+            f"    {moderator_employee.first_name} {moderator_employee.last_name}"
+            f" ({moderator_employee.role})"
+        )
         print(f"    {test_employee.first_name} {test_employee.last_name} ({test_employee.role})")
+        print(f"\n  Departamentos: {len(dept_map)} departamentos creados")
+        for name in dept_map:
+            print(f"    - {name}")
         print(f"\n  Shift Types: {len(shift_types)} tipos de turno creados")
         for st in shift_types:
             print(f"    - {st.name}: {st.expected_hours} horas")

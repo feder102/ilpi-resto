@@ -1,17 +1,17 @@
-// T029: Search input + department filter
 import { Search } from 'lucide-react';
-import { DEPARTMENTS } from '../config/constants';
+import type { Department } from '../types/models';
 
 interface SearchFilterProps {
   search: string;
   onSearchChange: (value: string) => void;
-  department: string;
-  onDepartmentChange: (value: string) => void;
+  departmentId: string;
+  onDepartmentIdChange: (id: string) => void;
+  departments: Department[];
   placeholder?: string;
 }
 
 export default function SearchFilter({
-  search, onSearchChange, department, onDepartmentChange, placeholder = 'Buscar...',
+  search, onSearchChange, departmentId, onDepartmentIdChange, departments, placeholder = 'Buscar...',
 }: SearchFilterProps) {
   return (
     <div className="flex gap-3 flex-wrap">
@@ -26,13 +26,13 @@ export default function SearchFilter({
         />
       </label>
       <select
-        value={department}
-        onChange={(e) => onDepartmentChange(e.target.value)}
+        value={departmentId}
+        onChange={(e) => onDepartmentIdChange(e.target.value)}
         className="select select-bordered"
       >
         <option value="">Todos los departamentos</option>
-        {DEPARTMENTS.map((d) => (
-          <option key={d} value={d}>{d}</option>
+        {departments.map((d) => (
+          <option key={d.id} value={d.id}>{d.name}</option>
         ))}
       </select>
     </div>

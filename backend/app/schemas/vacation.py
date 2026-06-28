@@ -5,6 +5,8 @@ from datetime import date
 
 from pydantic import BaseModel, field_validator
 
+from app.schemas.department import DepartmentNestedResponse
+
 
 class VacationRequestCreate(BaseModel):
     """Admin/Moderador request - requires specifying employee"""
@@ -44,7 +46,7 @@ class VacationRequestResponse(BaseModel):
     employee_id: uuid.UUID
     employee_name: str | None = None
     employee_image: str | None = None
-    employee_department: str | None = None
+    employee_department: DepartmentNestedResponse | None = None
     start_date: date
     end_date: date
     requested_days: int

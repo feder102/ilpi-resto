@@ -716,7 +716,7 @@ class TimeTrackingService:
         tenant_id: uuid.UUID,
         year: int | None = None,
         month: int | None = None,
-        department: str | None = None,
+        department_id: uuid.UUID | None = None,
         include_manual: bool = False,
     ) -> DepartmentStatisticsResponse:
         """Get aggregated statistics for a department.
@@ -749,8 +749,8 @@ class TimeTrackingService:
             TimeEntry.shift_date <= end_date,
         )
 
-        if department:
-            query = query.where(Employee.department == department)
+        if department_id:
+            query = query.where(Employee.department_id == department_id)
 
         # Include shift + extra hours; legacy MANUAL entries gated behind include_manual.
         if not include_manual:
@@ -762,7 +762,7 @@ class TimeTrackingService:
         unique_employees = len(set(r[0].employee_id for r in results))
 
         return DepartmentStatisticsResponse(
-            department=department or "all",
+            department=str(department_id) if department_id else "all",
             period=f"{year}-{month:02d}",
             total_hours=total_hours,
             unique_employees=unique_employees,
@@ -776,7 +776,7 @@ class TimeTrackingService:
         start_date: date_type | None = None,
         end_date: date_type | None = None,
         employee_id: uuid.UUID | None = None,
-        department: str | None = None,
+        department_id: uuid.UUID | None = None,
         source: str | None = None,
         limit: int = 100,
         offset: int = 0,
@@ -820,8 +820,8 @@ class TimeTrackingService:
             source_enum = TimeEntrySource[source.upper()]
             query = query.where(TimeEntry.source == source_enum)
 
-        if department:
-            query = query.where(Employee.department == department)
+        if department_id:
+            query = query.where(Employee.department_id == department_id)
 
         # Count total
         count_query = (
@@ -839,8 +839,8 @@ class TimeTrackingService:
             from app.models.time_entry import TimeEntrySource
             source_enum = TimeEntrySource[source.upper()]
             count_query = count_query.where(TimeEntry.source == source_enum)
-        if department:
-            count_query = count_query.where(Employee.department == department)
+        if department_id:
+            count_query = count_query.where(Employee.department_id == department_id)
         total = db.exec(count_query).one() or 0
 
         # Get paginated results

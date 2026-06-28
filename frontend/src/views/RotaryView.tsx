@@ -1,10 +1,10 @@
-// T035: Rotary view — Team management with member assignment
+// T035: Rotary view — Team management with member assignment (Feature 014: uses department_id)
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Users, X, User } from 'lucide-react';
 import { Button, Card, Modal, Alert } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
-import { DEPARTMENTS } from '../config/constants';
-import { Role, Department } from '../types/models';
+import { useDepartments } from '../hooks/useDepartments';
+import { Role } from '../types/models';
 import type { Team, Employee } from '../types/models';
 import type { ShiftTypeResponse } from '../types/shift-types';
 import {
@@ -19,8 +19,9 @@ import { getEmployees } from '../services/employeeService';
 export default function RotaryView() {
   const { hasRole } = useAuth();
   const isAdminOrMod = hasRole(Role.ADMIN, Role.MODERADOR);
+  const { departments } = useDepartments();
 
-  const [activeDept, setActiveDept] = useState<string>(Department.COCINA);
+  const [activeDeptId, setActiveDeptId] = useState<string>('');
   const [teams, setTeams] = useState<Team[]>([]);
   const [availableEmployees, setAvailableEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
@@ -35,13 +36,20 @@ export default function RotaryView() {
   const [addingToTeam, setAddingToTeam] = useState<string | null>(null);
   const [selectedEmpId, setSelectedEmpId] = useState('');
 
+  useEffect(() => {
+    if (departments.length > 0 && !activeDeptId) {
+      setActiveDeptId(departments[0].id);
+    }
+  }, [departments, activeDeptId]);
+
   const fetchData = useCallback(async () => {
+    if (!activeDeptId) return;
     setLoading(true);
     setError('');
     try {
       const [teamsData, empsData, shiftTypesData] = await Promise.all([
-        getTeams({ department: activeDept, size: 50 }),
-        getEmployees({ department: activeDept, size: 100 }),
+        getTeams({ department_id: activeDeptId, size: 50 }),
+        getEmployees({ department_id: activeDeptId, size: 100 }),
         getShiftTypesForTeams(),
       ]);
 
@@ -55,7 +63,7 @@ export default function RotaryView() {
     } finally {
       setLoading(false);
     }
-  }, [activeDept]);
+  }, [activeDeptId]);
 
   useEffect(() => {
     fetchData();
@@ -81,7 +89,7 @@ export default function RotaryView() {
     try {
       await createTeam({
         name: teamName,
-        department: activeDept,
+        department_id: activeDeptId,
         shift_type_id: selectedShiftTypeId,
       });
       setShowCreate(false);
@@ -94,10 +102,7 @@ export default function RotaryView() {
   };
 
   const handleAddMember = async (teamId: string) => {
-    if (!selectedEmpId) {
-      return;
-    }
-
+    if (!selectedEmpId) return;
     try {
       await addMember(teamId, selectedEmpId);
       setAddingToTeam(null);
@@ -118,6 +123,8 @@ export default function RotaryView() {
     }
   };
 
+  const activeDeptName = departments.find((d) => d.id === activeDeptId)?.name ?? '';
+
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
@@ -137,13 +144,13 @@ export default function RotaryView() {
       </div>
 
       <div className="tabs tabs-bordered mb-8">
-        {DEPARTMENTS.map((dept) => (
+        {departments.map((dept) => (
           <button
-            key={dept}
-            onClick={() => setActiveDept(dept)}
-            className={`tab ${activeDept === dept ? 'tab-active' : ''}`}
+            key={dept.id}
+            onClick={() => setActiveDeptId(dept.id)}
+            className={`tab ${activeDeptId === dept.id ? 'tab-active' : ''}`}
           >
-            {dept}
+            {dept.name}
           </button>
         ))}
       </div>
@@ -156,7 +163,7 @@ export default function RotaryView() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             {teams.length === 0 ? (
-              <p className="text-base-content/60">No hay equipos en {activeDept}</p>
+              <p className="text-base-content/60">No hay equipos en {activeDeptName}</p>
             ) : (
               <div className="space-y-4">
                 {teams.map((team) => (

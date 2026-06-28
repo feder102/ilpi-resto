@@ -6,11 +6,12 @@
 // Models - Enums and domain types
 export {
   Role,
-  Department,
   StaffStatus,
   MaritalStatus,
   Gender,
   VacationStatus,
+  type Department,
+  type DepartmentNested,
   type Employee,
   type ShiftRecord,
   type Team,

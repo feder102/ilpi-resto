@@ -20,7 +20,7 @@ def list_employees(
     tenant_id: TenantId,
     current_user: CurrentUser,
     search: str | None = Query(None),
-    department: str | None = Query(None),
+    department_id: uuid.UUID | None = Query(None),
     include_inactive: bool = Query(False),
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
@@ -34,7 +34,7 @@ def list_employees(
         return {"items": [], "total": 0, "page": 1, "size": 1, "pages": 1}
 
     return employee_service.list_employees(
-        tenant_id, session, search, department, include_inactive, page, size
+        tenant_id, session, search, department_id, include_inactive, page, size
     )
 
 

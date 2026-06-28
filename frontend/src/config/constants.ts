@@ -1,5 +1,5 @@
-// T008: Application constants
-import { Role, Department } from '../types';
+// T023: Application constants — department string → FK (Feature 014)
+import { Role } from '../types';
 
 // Feature 005: API configuration
 // In Docker: VITE_API_BASE=/api/v1 (proxy to backend)
@@ -8,7 +8,8 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE || import.meta.env.VIT
 
 export const ROLE_PERMISSIONS: Record<Role, string[]> = {
   [Role.ADMIN]: [
-    'dashboard', 'employees', 'teams', 'attendance', 'vacations', 'reports', 'shift-configuration', 'settings',
+    'dashboard', 'employees', 'teams', 'attendance', 'vacations', 'reports',
+    'shift-configuration', 'settings', 'departments',
   ],
   [Role.MODERADOR]: [
     'dashboard', 'employees', 'teams', 'attendance', 'vacations', 'reports',
@@ -18,11 +19,44 @@ export const ROLE_PERMISSIONS: Record<Role, string[]> = {
   ],
 };
 
-export const DEPARTMENTS: Department[] = [
-  Department.COCINA,
-  Department.ATENCION_AL_PUBLICO,
-  Department.BARRA,
-  Department.DIRECCION,
+export const DEPARTMENT_ICON_CATALOG: string[] = [
+  'Building2',
+  'ChefHat',
+  'Utensils',
+  'Coffee',
+  'Briefcase',
+  'Users',
+  'CircleHelp',
+  'Truck',
+  'Sparkles',
+  'Flame',
+  'Star',
+  'ShoppingCart',
+  'Package',
+  'Wrench',
+  'Music',
+  'Phone',
+  'Monitor',
+  'Car',
+  'Scissors',
+  'Globe',
+  'Home',
+  'Settings',
+];
+
+export const DEPARTMENT_COLOR_PALETTE: string[] = [
+  '#ef4444', // red
+  '#f59e0b', // amber
+  '#3b82f6', // blue
+  '#8b5cf6', // violet
+  '#10b981', // emerald
+  '#06b6d4', // cyan
+  '#ec4899', // pink
+  '#6b7280', // gray (default)
+  '#9ca3af', // cool gray
+  '#84cc16', // lime
+  '#f97316', // orange
+  '#14b8a6', // teal
 ];
 
 export const SHIFT_TYPES = ['Mañana', 'Tarde-Noche'] as const;
@@ -48,4 +82,6 @@ export const ROUTES = {
   MODERATOR_VACATIONS: '/moderator/vacations',
   MODERATOR_SHIFTS: '/moderator/shifts',
   MODERATOR_REPORTS: '/moderator/reports',
+  // Feature 014: Department ABM
+  DEPARTMENTS: '/admin/departments',
 } as const;

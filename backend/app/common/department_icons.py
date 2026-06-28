@@ -1,0 +1,26 @@
+"""T007: Department icon catalog — shared between backend schema validation and frontend."""
+
+ALLOWED_DEPARTMENT_ICONS: list[str] = [
+    "Building2",
+    "ChefHat",
+    "Utensils",
+    "Coffee",
+    "Briefcase",
+    "Users",
+    "CircleHelp",
+    "Truck",
+    "Sparkles",
+    "Flame",
+    "Star",
+    "ShoppingCart",
+    "Package",
+    "Wrench",
+    "Music",
+    "Phone",
+    "Monitor",
+    "Car",
+    "Scissors",
+    "Globe",
+    "Home",
+    "Settings",
+]

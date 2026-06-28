@@ -5,14 +5,14 @@ import type { PaginatedResponse } from '../types/api';
 import type { ShiftTypeResponse } from '../types/shift-types';
 
 export interface TeamListParams {
-  department?: string;
+  department_id?: string;
   page?: number;
   size?: number;
 }
 
 export interface TeamCreateData {
   name: string;
-  department: string;
+  department_id: string;
   shift_type_id: string;
 }
 

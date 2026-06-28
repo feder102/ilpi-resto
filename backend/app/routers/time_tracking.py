@@ -199,7 +199,7 @@ def get_employee_statistics(
 def get_department_statistics(
     year: int = Query(..., ge=2020, le=2100),
     month: int = Query(..., ge=1, le=12),
-    department: str | None = Query(None),
+    department_id: uuid.UUID | None = Query(None),
     include_manual: bool = Query(False),
     current_user: dict = Depends(require_admin_or_moderator),
     db: Session = Depends(get_db),
@@ -210,7 +210,7 @@ def get_department_statistics(
         tenant_id=uuid.UUID(current_user.get("tenant_id", "")),
         year=year,
         month=month,
-        department=department,
+        department_id=department_id,
         include_manual=include_manual,
     )
 
@@ -225,7 +225,7 @@ def get_time_entries(
     start_date: date_type = Query(...),
     end_date: date_type = Query(...),
     employee_id: str | None = Query(None),
-    department: str | None = Query(None),
+    department_id: uuid.UUID | None = Query(None),
     source: str = Query("shift", pattern="^(shift|manual|extra)$"),
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
@@ -241,7 +241,7 @@ def get_time_entries(
         start_date=start_date,
         end_date=end_date,
         employee_id=emp_id,
-        department=department,
+        department_id=department_id,
         source=source,
         limit=limit,
         offset=offset,

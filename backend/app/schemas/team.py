@@ -1,8 +1,10 @@
-"""T062: Team Pydantic DTOs with shift type integration."""
+"""T014: Team Pydantic DTOs — department string → FK (Feature 014)."""
 
 import uuid
 
 from pydantic import BaseModel
+
+from app.schemas.department import DepartmentNestedResponse
 
 
 class TimeWindowResponse(BaseModel):
@@ -29,7 +31,7 @@ class TeamCreate(BaseModel):
     """Create team with shift type reference."""
 
     name: str
-    department: str
+    department_id: uuid.UUID
     shift_type_id: uuid.UUID  # FK to ShiftType
 
 
@@ -37,7 +39,7 @@ class TeamUpdate(BaseModel):
     """Update team fields (shift_type_id optional for changes)."""
 
     name: str | None = None
-    department: str | None = None
+    department_id: uuid.UUID | None = None
     shift_type_id: uuid.UUID | None = None
 
 
@@ -53,7 +55,7 @@ class TeamResponse(BaseModel):
 
     id: uuid.UUID
     name: str
-    department: str
+    department: DepartmentNestedResponse
     shift_type_id: uuid.UUID
     # Shift type details
     shift_type: ShiftTypeDetail | None = None

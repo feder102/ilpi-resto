@@ -31,6 +31,8 @@ import EmployeeStatisticsView from './views/EmployeeStatisticsView';
 import PasswordReset from './views/PasswordReset';
 // Feature 008: Automatic Time Tracking Statistics
 import AdminStatistics from './views/AdminStatistics';
+// Feature 014: Department ABM
+import DepartmentListView from './views/DepartmentListView';
 import { ROUTES } from './config/constants';
 import { Role } from './types';
 
@@ -76,6 +78,8 @@ export default function App() {
         <Route path={ROUTES.SETTINGS} element={<ProtectedRoute allowedRoles={ADMIN_ONLY}><SettingsView /></ProtectedRoute>} />
         {/* Feature 008: Automatic Time Tracking Statistics - Admin Dashboard */}
         <Route path="/admin/statistics" element={<ProtectedRoute allowedRoles={ADMIN_MOD}><AdminStatistics /></ProtectedRoute>} />
+        {/* Feature 014: Department ABM */}
+        <Route path={ROUTES.DEPARTMENTS} element={<ProtectedRoute allowedRoles={ADMIN_ONLY}><DepartmentListView /></ProtectedRoute>} />
       </Route>
 
       {/* Feature 005: Employee Portal - CRITICAL SECURITY ROUTES */}

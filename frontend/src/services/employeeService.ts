@@ -14,7 +14,7 @@ export interface EmployeeCreateData {
   marital_status?: string | null;
   gender?: string | null;
   role: string;
-  department: string;
+  department_id: string;
   hire_date: string;
   profile_image?: string | null;
   emergency_contact?: string | null;
@@ -27,7 +27,7 @@ export type EmployeeUpdateData = Partial<EmployeeCreateData> & {
 
 export interface EmployeeListParams {
   search?: string;
-  department?: string;
+  department_id?: string;
   include_inactive?: boolean;
   page?: number;
   size?: number;
