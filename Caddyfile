@@ -9,6 +9,22 @@
 		reverse_proxy backend:8000
 	}
 
+	# Documentation site (issue #30) -> static docs SPA, ADMIN-ONLY.
+	# The backend validates the refresh_token cookie and requires role=Admin.
+	# - 2xx  -> serve the docs
+	# - 303  -> redirect to /login?next=/docum (not authenticated)
+	# - 403  -> access denied (authenticated but not Admin)
+	# Build the template-documentacion project with Vite `base: '/docum/'` and place
+	# its dist/ into ./docum-dist (mounted at /srv/docum, see docker-compose.prod.yml).
+	handle_path /docum* {
+		forward_auth backend:8000 {
+			uri /api/v1/docum/authorize
+		}
+		root * /srv/docum
+		try_files {path} /index.html
+		file_server
+	}
+
 	# Everything else -> static SPA (client-side routing handled by `serve -s`)
 	handle {
 		reverse_proxy frontend:5173

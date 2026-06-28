@@ -300,11 +300,57 @@ Example: `feat: add vacation request CRUD endpoint with RBAC`
 
 ---
 
+## 📄 Documentation Maintenance
+
+The architecture docs in `docs/architecture/` are the source of truth for the system design.
+They must be kept in sync with the code after every feature addition.
+
+### When to update docs
+
+| You changed…                                      | Update…                                      |
+|---------------------------------------------------|----------------------------------------------|
+| `backend/app/models/` or `alembic/versions/`      | `docs/architecture/db/README.md`             |
+| `backend/app/routers/`, `services/`, `schemas/`   | `docs/architecture/backend/README.md`        |
+| `frontend/src/`                                   | `docs/architecture/frontend/README.md`       |
+| Any of the above                                  | `docs/architecture/site/data.ts` (doc site)  |
+
+### How to update (automated)
+
+Run the `/update-docs` Claude Code command. Claude will:
+1. Detect which files changed (vs. `main`)
+2. Read the modified source files
+3. Update the relevant `docs/architecture/` markdown sections
+4. Refresh `docs/architecture/site/data.ts` for the doc site
+
+```
+/update-docs
+```
+
+### CI reminder
+
+The `.github/workflows/docs-check.yml` workflow posts a PR comment whenever source files
+change without a corresponding update to `docs/architecture/`. Minor refactors and bug
+fixes that don't change the public API can safely ignore it.
+
+### Doc site deployment
+
+After updating docs, rebuild and redeploy the template-documentacion site:
+```bash
+# In the template-documentacion project
+cp /ruta/a/ilpi-resto/docs/architecture/site/data.ts src/data.ts
+npm run build
+cp -r dist/* /ruta/a/ilpi-resto/docum-dist/
+docker compose -f docker-compose.prod.yml up -d
+```
+
+---
+
 ## 🔗 Key References
 
 - **API Docs**: http://localhost:8000/docs (when running)
 - **Spec Folder**: `specs/001-kitchen-staff-mgmt/` (all design decisions)
 - **Constitution**: `specs/001-kitchen-staff-mgmt/constitution.md` (5 principles)
+- **Architecture Docs**: `docs/architecture/` (db, frontend, backend)
 - **GitHub**: https://github.com/feder102/ilpi-resto
 
 ---
