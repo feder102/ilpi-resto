@@ -17,11 +17,12 @@ class Settings(BaseSettings):
     COOKIE_SAMESITE: str = "lax"
     COOKIE_SECURE: bool = False
 
-    # Brevo email API (production). Leave BREVO_API_KEY empty to fall back to
+    # Mailjet email API (production). Leave MAILJET_API_KEY empty to fall back to
     # SMTP (MailHog) for local development.
-    BREVO_API_KEY: str = ""
-    BREVO_SENDER_NAME: str = "ILPI"
-    BREVO_SENDER_EMAIL: str = ""
+    MAILJET_API_KEY: str = ""
+    MAILJET_SECRET_KEY: str = ""
+    MAILJET_SENDER_NAME: str = "ILPI"
+    MAILJET_SENDER_EMAIL: str = ""
 
     # SMTP fallback for local development (MailHog)
     SMTP_HOST: str = "mailhog"

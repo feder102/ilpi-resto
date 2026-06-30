@@ -1,6 +1,6 @@
 """Email Service for sending transactional emails.
 
-Production: Brevo HTTP API (when BREVO_API_KEY is set)
+Production: Mailjet HTTP API (when MAILJET_API_KEY is set)
 Development: MailHog SMTP (fallback when no API key)
 """
 
@@ -58,31 +58,33 @@ ILPI - Kitchen Staff Management
     return text, html
 
 
-def _send_via_brevo(email: str, text: str, html: str) -> None:
-    """Send email using Brevo (ex-Sendinblue) HTTP API."""
+def _send_via_mailjet(email: str, text: str, html: str) -> None:
+    """Send email using Mailjet Send API v3.1."""
     response = httpx.post(
-        "https://api.brevo.com/v3/smtp/email",
-        headers={
-            "api-key": settings.BREVO_API_KEY,
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        },
+        "https://api.mailjet.com/v3.1/send",
+        auth=(settings.MAILJET_API_KEY, settings.MAILJET_SECRET_KEY),
         json={
-            "sender": {
-                "name": settings.BREVO_SENDER_NAME,
-                "email": settings.BREVO_SENDER_EMAIL,
-            },
-            "to": [{"email": email}],
-            "subject": SUBJECT,
-            "htmlContent": html,
-            "textContent": text,
+            "Messages": [
+                {
+                    "From": {
+                        "Email": settings.MAILJET_SENDER_EMAIL,
+                        "Name": settings.MAILJET_SENDER_NAME,
+                    },
+                    "To": [{"Email": email}],
+                    "Subject": SUBJECT,
+                    "TextPart": text,
+                    "HTMLPart": html,
+                }
+            ]
         },
         timeout=30,
     )
     response.raise_for_status()
+    data = response.json()
+    status = data.get("Messages", [{}])[0].get("Status", "unknown")
     logger.info(
-        "Password reset email sent via Brevo",
-        extra={"to": email, "message_id": response.json().get("messageId")},
+        "Password reset email sent via Mailjet",
+        extra={"to": email, "status": status},
     )
 
 
@@ -105,12 +107,12 @@ def _send_via_smtp(email: str, text: str, html: str) -> None:
 
 
 def send_password_reset_email(email: str, reset_link: str) -> None:
-    """Send password reset email via Brevo (production) or SMTP (development)."""
+    """Send password reset email via Mailjet (production) or SMTP (development)."""
     try:
         text, html = _build_email_body(reset_link)
 
-        if settings.BREVO_API_KEY:
-            _send_via_brevo(email, text, html)
+        if settings.MAILJET_API_KEY:
+            _send_via_mailjet(email, text, html)
         else:
             _send_via_smtp(email, text, html)
 
