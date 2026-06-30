@@ -1,6 +1,6 @@
 """Email Service for sending transactional emails.
 
-Production: Resend HTTP API (when RESEND_API_KEY is set)
+Production: Brevo HTTP API (when BREVO_API_KEY is set)
 Development: MailHog SMTP (fallback when no API key)
 """
 
@@ -58,27 +58,31 @@ ILPI - Kitchen Staff Management
     return text, html
 
 
-def _send_via_resend(email: str, text: str, html: str) -> None:
-    """Send email using Resend HTTP API."""
+def _send_via_brevo(email: str, text: str, html: str) -> None:
+    """Send email using Brevo (ex-Sendinblue) HTTP API."""
     response = httpx.post(
-        "https://api.resend.com/emails",
+        "https://api.brevo.com/v3/smtp/email",
         headers={
-            "Authorization": f"Bearer {settings.RESEND_API_KEY}",
+            "api-key": settings.BREVO_API_KEY,
             "Content-Type": "application/json",
+            "Accept": "application/json",
         },
         json={
-            "from": settings.RESEND_FROM,
-            "to": [email],
+            "sender": {
+                "name": settings.BREVO_SENDER_NAME,
+                "email": settings.BREVO_SENDER_EMAIL,
+            },
+            "to": [{"email": email}],
             "subject": SUBJECT,
-            "html": html,
-            "text": text,
+            "htmlContent": html,
+            "textContent": text,
         },
         timeout=30,
     )
     response.raise_for_status()
     logger.info(
-        "Password reset email sent via Resend",
-        extra={"to": email, "resend_id": response.json().get("id")},
+        "Password reset email sent via Brevo",
+        extra={"to": email, "message_id": response.json().get("messageId")},
     )
 
 
@@ -101,12 +105,12 @@ def _send_via_smtp(email: str, text: str, html: str) -> None:
 
 
 def send_password_reset_email(email: str, reset_link: str) -> None:
-    """Send password reset email via Resend (production) or SMTP (development)."""
+    """Send password reset email via Brevo (production) or SMTP (development)."""
     try:
         text, html = _build_email_body(reset_link)
 
-        if settings.RESEND_API_KEY:
-            _send_via_resend(email, text, html)
+        if settings.BREVO_API_KEY:
+            _send_via_brevo(email, text, html)
         else:
             _send_via_smtp(email, text, html)
 

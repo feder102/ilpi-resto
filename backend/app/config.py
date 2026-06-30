@@ -17,10 +17,11 @@ class Settings(BaseSettings):
     COOKIE_SAMESITE: str = "lax"
     COOKIE_SECURE: bool = False
 
-    # Resend email API (production). Leave RESEND_API_KEY empty to fall back to
+    # Brevo email API (production). Leave BREVO_API_KEY empty to fall back to
     # SMTP (MailHog) for local development.
-    RESEND_API_KEY: str = ""
-    RESEND_FROM: str = "ILPI <onboarding@resend.dev>"
+    BREVO_API_KEY: str = ""
+    BREVO_SENDER_NAME: str = "ILPI"
+    BREVO_SENDER_EMAIL: str = ""
 
     # SMTP fallback for local development (MailHog)
     SMTP_HOST: str = "mailhog"
