@@ -1,15 +1,17 @@
 """Email Service for sending transactional emails.
 
 Development: Uses MailHog SMTP server (no credentials required)
-Production: Should use actual SMTP service with proper authentication
+Production: Uses Gmail SMTP or other provider with STARTTLS authentication
 """
 
 import hashlib
 import logging
-import os
 import smtplib
+import ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -20,25 +22,19 @@ def send_password_reset_email(email: str, reset_link: str) -> None:
     Args:
         email: Recipient email address
         reset_link: Full reset link to include in email body
-
-    Development: Sends via MailHog SMTP (localhost:1025)
-    Production: Sends via configured SMTP service
     """
     try:
-        # Get SMTP configuration from environment
-        smtp_host = os.getenv("SMTP_HOST", "mailhog")
-        smtp_port = int(os.getenv("SMTP_PORT", "1025"))
-        smtp_user = os.getenv("SMTP_USER", "")
-        smtp_password = os.getenv("SMTP_PASSWORD", "")
-        smtp_from = os.getenv("SMTP_FROM", "noreply@ilpi.local")
+        smtp_host = settings.SMTP_HOST
+        smtp_port = settings.SMTP_PORT
+        smtp_user = settings.SMTP_USER
+        smtp_password = settings.SMTP_PASSWORD
+        smtp_from = settings.SMTP_FROM
 
-        # Create email message
         msg = MIMEMultipart("alternative")
         msg["Subject"] = "Recupera tu contraseña - ILPI"
         msg["From"] = smtp_from
         msg["To"] = email
 
-        # Plain text version
         text = f"""\
 Recuperación de Contraseña
 
@@ -54,7 +50,6 @@ Este enlace expira en 24 horas.
 ILPI - Kitchen Staff Management
 """
 
-        # HTML version
         html = f"""\
         <html>
           <body style="font-family: Arial, sans-serif; color: #333;">
@@ -75,19 +70,25 @@ ILPI - Kitchen Staff Management
         </html>
         """
 
-        # Attach both versions
         part1 = MIMEText(text, "plain")
         part2 = MIMEText(html, "html")
         msg.attach(part1)
         msg.attach(part2)
 
-        # Send email via SMTP
         if smtp_user and smtp_password:
-            # Production: Use authentication
-            with smtplib.SMTP(smtp_host, smtp_port) as server:
-                server.starttls()
-                server.login(smtp_user, smtp_password)
-                server.send_message(msg)
+            # Production: STARTTLS (port 587) or SSL (port 465)
+            if smtp_port == 465:
+                context = ssl.create_default_context()
+                with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
+                    server.login(smtp_user, smtp_password)
+                    server.send_message(msg)
+            else:
+                with smtplib.SMTP(smtp_host, smtp_port, timeout=30) as server:
+                    server.ehlo()
+                    server.starttls(context=ssl.create_default_context())
+                    server.ehlo()
+                    server.login(smtp_user, smtp_password)
+                    server.send_message(msg)
         else:
             # Development: MailHog doesn't require authentication
             with smtplib.SMTP(smtp_host, smtp_port) as server:
@@ -101,17 +102,18 @@ ILPI - Kitchen Staff Management
                 "smtp_port": smtp_port,
             },
         )
-        # Log only opaque identifier (token hash prefix) for security
-        # Never log the plaintext reset_link or token
-        token_hash_prefix = hashlib.sha256(reset_link.split('token=')[-1].encode()).hexdigest()[:8]
-        print(f"\n{'='*80}")
-        print("📧 PASSWORD RESET EMAIL SENT")
-        print(f"{'='*80}")
-        print(f"To: {email}")
-        print("Subject: Recupera tu contraseña - ILPI")
-        print(f"SMTP Server: {smtp_host}:{smtp_port}")
-        print(f"Token Hash Prefix: {token_hash_prefix}")
-        print(f"{'='*80}\n")
+        token_hash_prefix = hashlib.sha256(
+            reset_link.split("token=")[-1].encode()
+        ).hexdigest()[:8]
+        logger.info(
+            "Email delivery details",
+            extra={
+                "to": email,
+                "subject": "Recupera tu contraseña - ILPI",
+                "smtp_server": f"{smtp_host}:{smtp_port}",
+                "token_hash_prefix": token_hash_prefix,
+            },
+        )
 
     except Exception as e:
         logger.error(
@@ -119,12 +121,7 @@ ILPI - Kitchen Staff Management
             extra={
                 "to": email,
                 "error": str(e),
+                "smtp_host": settings.SMTP_HOST,
+                "smtp_port": settings.SMTP_PORT,
             },
         )
-        print(f"\n{'='*80}")
-        print("❌ EMAIL SENDING FAILED")
-        print(f"{'='*80}")
-        print(f"To: {email}")
-        print(f"Error: {str(e)}")
-        # Never log plaintext reset_link
-        print(f"{'='*80}\n")
