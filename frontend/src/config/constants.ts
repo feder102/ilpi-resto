@@ -59,6 +59,9 @@ export const DEPARTMENT_COLOR_PALETTE: string[] = [
   '#14b8a6', // teal
 ];
 
+export const DEFAULT_PROFILE_IMAGE =
+  'https://static.vecteezy.com/system/resources/previews/020/911/732/large_2x/profile-icon-avatar-icon-user-icon-person-icon-free-png.png';
+
 export const SHIFT_TYPES = ['Mañana', 'Tarde-Noche'] as const;
 
 export const ROUTES = {

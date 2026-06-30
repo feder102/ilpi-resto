@@ -1,6 +1,6 @@
 // T036: Vacation view with request cards and balance - refactored to use UI components
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Check, X, Ban, User } from 'lucide-react';
+import { Plus, Check, X, Ban } from 'lucide-react';
 import { Button, Card, Modal, Alert, Badge } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { Role, VacationStatus } from '../types/models';
@@ -16,6 +16,7 @@ import {
 } from '../services/vacationService';
 import { getEmployees } from '../services/employeeService';
 import type { Employee } from '../types/models';
+import { DEFAULT_PROFILE_IMAGE } from '../config/constants';
 
 // Status to Badge variant mapping
 function getVacationStatusVariant(status: string): 'success' | 'warning' | 'error' | 'info' | 'neutral' {
@@ -196,9 +197,7 @@ export default function VacationView() {
               <Card key={req.id} className="flex flex-col">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-full bg-base-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {req.employee_image
-                      ? <img src={req.employee_image} alt={req.employee_name} className="w-full h-full object-cover" />
-                      : <User size={20} className="text-base-content/40" />}
+                    <img src={req.employee_image || DEFAULT_PROFILE_IMAGE} alt={req.employee_name} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-base-content">{req.employee_name || 'Empleado'}</h3>

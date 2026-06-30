@@ -1,6 +1,6 @@
 // T035: Rotary view — Team management with member assignment (Feature 014: uses department_id)
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Users, X, User } from 'lucide-react';
+import { Plus, Users, X } from 'lucide-react';
 import { Button, Card, Modal, Alert } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { useDepartments } from '../hooks/useDepartments';
@@ -15,6 +15,7 @@ import {
   getShiftTypesForTeams,
 } from '../services/teamService';
 import { getEmployees } from '../services/employeeService';
+import { DEFAULT_PROFILE_IMAGE } from '../config/constants';
 
 export default function RotaryView() {
   const { hasRole } = useAuth();
@@ -231,15 +232,11 @@ export default function RotaryView() {
                             className="flex items-center gap-2 px-3 py-1.5 bg-base-200 rounded-full text-xs"
                           >
                             <div className="w-7 h-7 rounded-full bg-base-300 flex items-center justify-center overflow-hidden">
-                              {m.profile_image ? (
-                                <img
-                                  src={m.profile_image}
-                                  alt={m.first_name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <User size={14} className="text-base-content/40" />
-                              )}
+                              <img
+                                src={m.profile_image || DEFAULT_PROFILE_IMAGE}
+                                alt={m.first_name}
+                                className="w-full h-full object-cover"
+                              />
                             </div>
                             <span>
                               {m.first_name} {m.last_name}
@@ -274,15 +271,11 @@ export default function RotaryView() {
                     className="flex items-center gap-2 pb-2 border-b border-base-200 last:border-0"
                   >
                     <div className="w-8 h-8 rounded-full bg-base-200 flex items-center justify-center overflow-hidden flex-shrink-0">
-                      {emp.profile_image ? (
-                        <img
-                          src={emp.profile_image}
-                          alt={emp.first_name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <User size={16} className="text-base-content/40" />
-                      )}
+                      <img
+                        src={emp.profile_image || DEFAULT_PROFILE_IMAGE}
+                        alt={emp.first_name}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <span className="text-xs font-medium text-base-content/80">
                       {emp.first_name} {emp.last_name}

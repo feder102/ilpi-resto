@@ -1,6 +1,6 @@
 // T036: Employee list view — department field migrated to department_id (Feature 014)
 import { useState, useEffect, useCallback } from 'react';
-import { UserPlus, Edit2, Trash2, User, RotateCcw } from 'lucide-react';
+import { UserPlus, Edit2, Trash2, RotateCcw } from 'lucide-react';
 import { Button, Card, Modal, Alert, Badge } from '../components/ui';
 import SearchFilter from '../components/SearchFilter';
 import { useAuth } from '../hooks/useAuth';
@@ -17,6 +17,7 @@ import {
   type EmployeeCreateData,
   type EmployeeUpdateData,
 } from '../services/employeeService';
+import { DEFAULT_PROFILE_IMAGE } from '../config/constants';
 
 function getStatusVariant(status: string): 'success' | 'warning' | 'error' | 'info' | 'neutral' {
   switch (status) {
@@ -281,11 +282,7 @@ export default function EmployeeListView() {
               <Card key={emp.id} className="flex flex-col">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-12 h-12 rounded-full bg-base-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {emp.profile_image ? (
-                      <img src={emp.profile_image} alt={emp.first_name} className="w-full h-full object-cover" />
-                    ) : (
-                      <User size={24} className="text-base-content/40" />
-                    )}
+                    <img src={emp.profile_image || DEFAULT_PROFILE_IMAGE} alt={emp.first_name} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-base-content">
