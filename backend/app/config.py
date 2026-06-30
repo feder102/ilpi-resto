@@ -17,12 +17,14 @@ class Settings(BaseSettings):
     COOKIE_SAMESITE: str = "lax"
     COOKIE_SECURE: bool = False
 
-    # SMTP configuration for transactional emails (password reset, etc.)
+    # Resend email API (production). Leave RESEND_API_KEY empty to fall back to
+    # SMTP (MailHog) for local development.
+    RESEND_API_KEY: str = ""
+    RESEND_FROM: str = "ILPI <onboarding@resend.dev>"
+
+    # SMTP fallback for local development (MailHog)
     SMTP_HOST: str = "mailhog"
     SMTP_PORT: int = 1025
-    SMTP_USER: str = ""
-    SMTP_PASSWORD: str = ""
-    SMTP_FROM: str = "noreply@ilpi.local"
 
     # Frontend URL for building links in emails (password reset, etc.)
     APP_URL: str = "http://localhost:5173"
