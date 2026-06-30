@@ -78,7 +78,7 @@ jobs:
             printf "Abre Claude Code en este repo y ejecuta:\n"
             printf "\`\`\`\n/update-docs\n\`\`\`\n"
             printf "Claude leerá los cambios de esta PR y actualizará los markdown y el \`data.ts\` automáticamente.\n\n"
-            printf "> Si los cambios son menores (refactors internos, bugfixes sin cambios de API pública), puedes ignorar este recordatorio."
+            printf "> Si los cambios son menores (refactors internos, bugfixes sin cambios de API pública), puedes ignorar este recordatorio.\n"
             echo '__EOF__'
           } >> "$GITHUB_OUTPUT"
 
