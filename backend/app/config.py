@@ -28,9 +28,6 @@ class Settings(BaseSettings):
     SMTP_HOST: str = "mailhog"
     SMTP_PORT: int = 1025
 
-    # Frontend URL for building links in emails (password reset, etc.)
-    APP_URL: str = "http://localhost:5173"
-
     # Disable the background APScheduler (Feature 008 nightly batch). Must be true
     # on serverless platforms (e.g. Vercel) where long-running threads don't persist.
     DISABLE_SCHEDULER: bool = False

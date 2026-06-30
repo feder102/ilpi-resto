@@ -126,7 +126,8 @@ class PasswordResetService:
         self.db.add(user)
 
         # Step 7: Send email asynchronously
-        reset_link = f"{settings.APP_URL}/password-reset?token={plaintext_token}"
+        frontend_url = settings.cors_origins_list[0]
+        reset_link = f"{frontend_url}/password-reset?token={plaintext_token}"
         self._send_reset_email(email, reset_link)
 
         # Step 8: Commit database changes
