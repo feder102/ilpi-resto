@@ -10,7 +10,6 @@ This service handles all password reset operations including:
 
 import hashlib
 import logging
-import os
 import re
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
@@ -25,6 +24,7 @@ from app.common.exceptions import (
     RateLimitExceededError,
     TokenExpiredError,
 )
+from app.config import settings
 from app.models.password_reset_token import PasswordResetToken
 from app.models.user import User
 
@@ -126,7 +126,8 @@ class PasswordResetService:
         self.db.add(user)
 
         # Step 7: Send email asynchronously
-        reset_link = f"{os.getenv('APP_URL', 'https://app.local')}/password-reset?token={plaintext_token}"
+        frontend_url = settings.cors_origins_list[0]
+        reset_link = f"{frontend_url}/password-reset?token={plaintext_token}"
         self._send_reset_email(email, reset_link)
 
         # Step 8: Commit database changes

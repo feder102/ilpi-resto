@@ -11,9 +11,9 @@ import type {
   PasswordResetVerifyRequest,
   TokenValidityResponse,
 } from '../types';
+import { API_BASE_URL } from '../config/constants';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-const PASSWORD_RESET_API_BASE = `${API_BASE}/auth/password-reset`;
+const PASSWORD_RESET_API_BASE = `${API_BASE_URL}/auth/password-reset`;
 
 export const passwordResetService = {
   /**

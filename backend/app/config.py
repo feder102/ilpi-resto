@@ -17,6 +17,17 @@ class Settings(BaseSettings):
     COOKIE_SAMESITE: str = "lax"
     COOKIE_SECURE: bool = False
 
+    # Mailjet email API (production). Leave MAILJET_API_KEY empty to fall back to
+    # SMTP (MailHog) for local development.
+    MAILJET_API_KEY: str = ""
+    MAILJET_SECRET_KEY: str = ""
+    MAILJET_SENDER_NAME: str = "ILPI"
+    MAILJET_SENDER_EMAIL: str = ""
+
+    # SMTP fallback for local development (MailHog)
+    SMTP_HOST: str = "mailhog"
+    SMTP_PORT: int = 1025
+
     # Disable the background APScheduler (Feature 008 nightly batch). Must be true
     # on serverless platforms (e.g. Vercel) where long-running threads don't persist.
     DISABLE_SCHEDULER: bool = False
