@@ -2,7 +2,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { LoginResponse } from '../types';
-import { setAccessToken, getAccessToken } from '../services/apiClient';
+import { setAccessToken, setOnTokenRefreshed } from '../services/apiClient';
 import { API_BASE_URL } from '../config/constants';
 import axios from 'axios';
 
@@ -57,7 +57,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  // Silent refresh on mount
+  // Propagate user updates from silent 401 refreshes in apiClient
+  useEffect(() => {
+    setOnTokenRefreshed((refreshedUser: unknown) => {
+      setUser(refreshedUser as AuthUser);
+    });
+    return () => setOnTokenRefreshed(null);
+  }, []);
+
+  // Silent refresh on mount — always refresh to get the latest role from DB
   useEffect(() => {
     const tryRefresh = async () => {
       try {
@@ -75,11 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    if (!getAccessToken()) {
-      tryRefresh();
-    } else {
-      setIsLoading(false);
-    }
+    tryRefresh();
   }, []);
 
   return (

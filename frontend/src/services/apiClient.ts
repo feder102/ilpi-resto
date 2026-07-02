@@ -11,6 +11,7 @@ const apiClient = axios.create({
 });
 
 let accessToken: string | null = null;
+let onTokenRefreshed: ((user: unknown) => void) | null = null;
 
 export function setAccessToken(token: string | null) {
   console.log('[API Client] Setting access token:', token ? 'Token set' : 'Token cleared');
@@ -19,6 +20,10 @@ export function setAccessToken(token: string | null) {
 
 export function getAccessToken(): string | null {
   return accessToken;
+}
+
+export function setOnTokenRefreshed(cb: ((user: unknown) => void) | null) {
+  onTokenRefreshed = cb;
 }
 
 // Request interceptor: attach JWT
@@ -51,6 +56,9 @@ apiClient.interceptors.response.use(
         );
         console.log('[API Client] Token refresh successful');
         setAccessToken(data.access_token);
+        if (data.user && onTokenRefreshed) {
+          onTokenRefreshed(data.user);
+        }
         originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
