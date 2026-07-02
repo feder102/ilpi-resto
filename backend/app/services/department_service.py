@@ -88,19 +88,29 @@ def _assert_unique_name(
 
 
 def _get_counts(
-    dept_id: uuid.UUID, session: Session
+    dept_id: uuid.UUID, tenant_id: uuid.UUID, session: Session
 ) -> tuple[int, int]:
     from app.models.employee import Employee
     from app.models.team import Team
 
     emp_count = session.exec(
         select(func.count()).select_from(
-            select(Employee).where(Employee.department_id == dept_id).subquery()
+            select(Employee)
+            .where(
+                Employee.department_id == dept_id,
+                Employee.tenant_id == tenant_id,
+            )
+            .subquery()
         )
     ).one()
     team_count = session.exec(
         select(func.count()).select_from(
-            select(Team).where(Team.department_id == dept_id).subquery()
+            select(Team)
+            .where(
+                Team.department_id == dept_id,
+                Team.tenant_id == tenant_id,
+            )
+            .subquery()
         )
     ).one()
     return int(emp_count), int(team_count)
@@ -152,7 +162,7 @@ def list_departments(
 
     items: list[DepartmentResponse] = []
     for dept in departments:
-        emp_count, team_count = _get_counts(dept.id, session) if is_admin else (None, None)
+        emp_count, team_count = _get_counts(dept.id, tenant_id, session) if is_admin else (None, None)
         items.append(_to_response(dept, emp_count, team_count))
 
     return DepartmentListResponse(items=items, total=total)
@@ -172,7 +182,7 @@ def get_by_id(
     ).first()
     if not dept:
         raise NotFoundError("Departamento no encontrado")
-    emp_count, team_count = _get_counts(dept.id, session) if is_admin else (None, None)
+    emp_count, team_count = _get_counts(dept.id, tenant_id, session) if is_admin else (None, None)
     return _to_response(dept, emp_count, team_count)
 
 
@@ -198,7 +208,7 @@ def create(
         "department.created",
         extra={"department_id": str(dept.id), "name": dept.name, "tenant_id": str(tenant_id)},
     )
-    emp_count, team_count = _get_counts(dept.id, session)
+    emp_count, team_count = _get_counts(dept.id, tenant_id, session)
     return _to_response(dept, emp_count, team_count)
 
 
@@ -254,7 +264,7 @@ def update(
             },
         )
 
-    emp_count, team_count = _get_counts(dept.id, session)
+    emp_count, team_count = _get_counts(dept.id, tenant_id, session)
     return _to_response(dept, emp_count, team_count)
 
 
@@ -277,7 +287,7 @@ def get_delete_preview(
     target = ensure_system_department(tenant_id, session)
     session.commit()
     session.refresh(target)
-    emp_count, team_count = _get_counts(dept.id, session)
+    emp_count, team_count = _get_counts(dept.id, tenant_id, session)
 
     return DepartmentDeletePreview(
         department=_to_nested(dept),
@@ -310,7 +320,10 @@ def delete_with_reassign(
 
     # Reassign employees
     employees = session.exec(
-        select(Employee).where(Employee.department_id == department_id)
+        select(Employee).where(
+            Employee.department_id == department_id,
+            Employee.tenant_id == tenant_id,
+        )
     ).all()
     for emp in employees:
         emp.department_id = target.id
@@ -318,7 +331,10 @@ def delete_with_reassign(
 
     # Reassign teams
     teams = session.exec(
-        select(Team).where(Team.department_id == department_id)
+        select(Team).where(
+            Team.department_id == department_id,
+            Team.tenant_id == tenant_id,
+        )
     ).all()
     for team in teams:
         team.department_id = target.id
