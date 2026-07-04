@@ -259,6 +259,15 @@ def update(
         setattr(employee, key, value)
     employee.updated_at = datetime.now(UTC)
 
+    # Sync role change to the associated User record (JWT reads from User.role)
+    if "role" in update_data:
+        linked_user = session.exec(
+            select(User).where(User.employee_id == employee.id)
+        ).first()
+        if linked_user and linked_user.role != update_data["role"]:
+            linked_user.role = update_data["role"]
+            session.add(linked_user)
+
     session.add(employee)
     session.commit()
     session.refresh(employee)
