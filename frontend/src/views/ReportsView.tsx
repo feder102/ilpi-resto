@@ -28,7 +28,11 @@ import {
 
 function toNum(value: number | string | null | undefined): number {
   if (value === null || value === undefined) return 0;
-  return typeof value === 'string' ? parseFloat(value) : value;
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+  return value;
 }
 
 function isoDaysAgo(days: number): string {
@@ -50,7 +54,6 @@ export default function ReportsView() {
   const [error, setError] = useState<string | null>(null);
   const [dateFrom, setDateFrom] = useState(isoDaysAgo(30));
   const [dateTo, setDateTo] = useState(today());
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -115,10 +118,7 @@ export default function ReportsView() {
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => {
-              load();
-              setRefreshKey((k) => k + 1);
-            }}
+            onClick={load}
             disabled={loading}
           >
             Actualizar
@@ -182,7 +182,7 @@ export default function ReportsView() {
 
           {/* Feature 015: Admin-only personnel metrics */}
           {isAdmin && (
-            <PersonnelMetrics dateFrom={dateFrom} dateTo={dateTo} refreshKey={refreshKey} />
+            <PersonnelMetrics dateFrom={dateFrom} dateTo={dateTo} />
           )}
         </>
       )}
@@ -202,10 +202,9 @@ function EmptyChart({ message }: { message: string }) {
 interface PersonnelMetricsProps {
   dateFrom: string;
   dateTo: string;
-  refreshKey: number;
 }
 
-function PersonnelMetrics({ dateFrom, dateTo, refreshKey }: PersonnelMetricsProps) {
+function PersonnelMetrics({ dateFrom, dateTo }: PersonnelMetricsProps) {
   const [ratio, setRatio] = useState<OvertimeRatio | null>(null);
   const [ranking, setRanking] = useState<OvertimeRanking | null>(null);
   const [absenteeism, setAbsenteeism] = useState<Absenteeism | null>(null);
@@ -242,7 +241,7 @@ function PersonnelMetrics({ dateFrom, dateTo, refreshKey }: PersonnelMetricsProp
 
   useEffect(() => {
     load();
-  }, [load, refreshKey]);
+  }, [load]);
 
   const ratioPct = ratio?.ratio_pct;
   const absRate = absenteeism ? toNum(absenteeism.rate_pct) : 0;
@@ -322,10 +321,10 @@ function PersonnelMetrics({ dateFrom, dateTo, refreshKey }: PersonnelMetricsProp
                 <div>
                   <p className="text-sm font-medium text-base-content/60">Pasivo de Vacaciones</p>
                   <p className="text-3xl font-bold text-secondary mt-1">
-                    {liability?.total_liability ?? 0} días
+                    {toNum(liability?.total_liability)} días
                   </p>
                   <p className="text-xs text-base-content/60 mt-1">
-                    Devengados {liability?.total_accrued ?? 0} · usados {liability?.total_used ?? 0}
+                    Devengados {toNum(liability?.total_accrued)} · usados {toNum(liability?.total_used)}
                   </p>
                 </div>
                 <CalendarClock className="w-8 h-8 text-secondary/60" />
@@ -392,15 +391,15 @@ function PersonnelMetrics({ dateFrom, dateTo, refreshKey }: PersonnelMetricsProp
                     {liability.items.map((item) => (
                       <Table.Row key={item.employee_id}>
                         <Table.Cell>{item.employee_name}</Table.Cell>
-                        <Table.Cell className="text-right">{item.annual_days}</Table.Cell>
-                        <Table.Cell className="text-right">{item.accrued_days}</Table.Cell>
-                        <Table.Cell className="text-right">{item.used_days}</Table.Cell>
+                        <Table.Cell className="text-right">{toNum(item.annual_days)}</Table.Cell>
+                        <Table.Cell className="text-right">{toNum(item.accrued_days)}</Table.Cell>
+                        <Table.Cell className="text-right">{toNum(item.used_days)}</Table.Cell>
                         <Table.Cell
                           className={`text-right font-semibold ${
-                            item.liability_days < 0 ? 'text-error' : 'text-base-content'
+                            toNum(item.liability_days) < 0 ? 'text-error' : 'text-base-content'
                           }`}
                         >
-                          {item.liability_days}
+                          {toNum(item.liability_days)}
                         </Table.Cell>
                       </Table.Row>
                     ))}
