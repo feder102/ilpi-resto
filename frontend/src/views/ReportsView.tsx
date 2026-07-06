@@ -6,7 +6,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar,
 } from 'recharts';
-import { BarChart3, TrendingUp, AlertTriangle, CalendarClock } from 'lucide-react';
+import { BarChart3, TrendingUp, AlertTriangle, CalendarClock, Info } from 'lucide-react';
 import { Card, Button, Alert, Spinner, Table } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import type {
@@ -184,19 +184,6 @@ export default function ReportsView() {
           {isAdmin && (
             <PersonnelMetrics dateFrom={dateFrom} dateTo={dateTo} refreshKey={refreshKey} />
           )}
-
-          {/* Export placeholder */}
-          <Card>
-            <h3 className="text-base sm:text-lg font-semibold text-base-content mb-4">Exportar</h3>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button disabled variant="secondary" title="Disponible en futuras versiones">
-                Exportar PDF — Próximamente
-              </Button>
-              <Button disabled variant="secondary" title="Disponible en futuras versiones">
-                Exportar Excel — Próximamente
-              </Button>
-            </div>
-          </Card>
         </>
       )}
     </div>
@@ -424,8 +411,62 @@ function PersonnelMetrics({ dateFrom, dateTo, refreshKey }: PersonnelMetricsProp
               )}
             </Card>
           </div>
+
+          <MetricsGlossary />
         </>
       )}
     </div>
+  );
+}
+
+const GLOSSARY_ITEMS = [
+  {
+    term: 'Ratio de Horas Extras vs. Ordinarias',
+    purpose:
+      'Control de costos: avisa si se está gastando de más en recargos y si conviene contratar personal nuevo para abaratar costos.',
+    formula: '(horas extra ÷ horas ordinarias) × 100, sobre el período del filtro de fechas.',
+  },
+  {
+    term: 'Tasa de Absentismo',
+    purpose:
+      'Alerta operativa y de clima: mide el % de tiempo perdido. Si supera el 5%, señala posibles problemas de salud, motivación o conflicto interno.',
+    formula:
+      '(total de ausencias ÷ turnos planificados) × 100. Incluye justificadas e injustificadas; se desglosan por separado.',
+  },
+  {
+    term: 'Ranking de Horas Extras',
+    purpose:
+      'Prevención de burnout: identifica con nombre y apellido a los empleados más sobrecargados para redistribuir tareas antes de que se quemen o cometan errores.',
+    formula:
+      'Suma de horas con origen "extra" por empleado en el período, ordenadas de mayor a menor (top 10).',
+  },
+  {
+    term: 'Pasivo de Vacaciones (Devengamiento)',
+    purpose:
+      'Control de deuda y descanso: muestra cuántos días le debe la empresa a cada empleado, para obligar a rotar los descansos y evitar que se acumule una deuda económica grande.',
+    formula:
+      'Devengado = días anuales × (meses trabajados en el año ÷ 12). Pasivo = devengado − días ya usados (puede ser negativo si tomó un adelanto).',
+  },
+];
+
+function MetricsGlossary() {
+  return (
+    <Card className="bg-info/10 border-2 border-info/30">
+      <h3 className="font-semibold text-info mb-4 flex items-center gap-2">
+        <Info className="w-5 h-5" />
+        Glosario de Métricas de Personal
+      </h3>
+      <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+        {GLOSSARY_ITEMS.map((item) => (
+          <div key={item.term}>
+            <dt className="font-semibold text-base-content text-sm">{item.term}</dt>
+            <dd className="text-sm text-base-content/70 mt-1">{item.purpose}</dd>
+            <dd className="text-xs text-base-content/60 mt-1">
+              <span className="font-medium">Cálculo:</span> {item.formula}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </Card>
   );
 }
