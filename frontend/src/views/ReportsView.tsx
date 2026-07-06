@@ -6,7 +6,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar,
 } from 'recharts';
-import { BarChart3, TrendingUp, AlertTriangle, CalendarClock, Info } from 'lucide-react';
+import { BarChart3, TrendingUp, AlertTriangle, CalendarClock, CalendarRange, Info } from 'lucide-react';
 import { Card, Button, Alert, Spinner, Table } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import type {
@@ -43,6 +43,16 @@ function isoDaysAgo(days: number): string {
 
 function today(): string {
   return new Date().toISOString().split('T')[0];
+}
+
+/** Format an ISO date (YYYY-MM-DD) for display, parsing as local time to avoid TZ drift. */
+function formatDisplayDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('es-ES', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
 export default function ReportsView() {
@@ -267,77 +277,71 @@ function PersonnelMetrics({ dateFrom, dateTo }: PersonnelMetricsProps) {
         </div>
       ) : (
         <>
-          {/* KPI cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <Card className="bg-primary/10 border-2 border-primary/30">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-base-content/60">Ratio Horas Extras</p>
-                  <p className="text-3xl font-bold text-primary mt-1">
-                    {ratioPct === null || ratioPct === undefined
-                      ? 'N/D'
-                      : `${toNum(ratioPct).toFixed(1)}%`}
-                  </p>
-                  <p className="text-xs text-base-content/60 mt-1">
-                    {toNum(ratio?.extra_hours).toFixed(1)}h extra ·{' '}
-                    {toNum(ratio?.ordinary_hours).toFixed(1)}h ordinarias
-                  </p>
-                </div>
-                <TrendingUp className="w-8 h-8 text-primary/60" />
-              </div>
-            </Card>
+          {/* ─── Bloque 1: métricas del período (reaccionan al filtro de fechas) ─── */}
+          <section className="mb-8">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <h3 className="text-lg font-semibold text-base-content">Actividad del Período</h3>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-base-200 px-3 py-1 text-xs font-medium text-base-content/70">
+                <CalendarRange className="w-3.5 h-3.5" />
+                {formatDisplayDate(dateFrom)} — {formatDisplayDate(dateTo)}
+              </span>
+            </div>
 
-            <Card
-              className={
-                absenteeism?.alert
-                  ? 'bg-error/10 border-2 border-error/40'
-                  : 'bg-success/10 border-2 border-success/30'
-              }
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-base-content/60">Tasa de Absentismo</p>
-                  <p
-                    className={`text-3xl font-bold mt-1 ${
-                      absenteeism?.alert ? 'text-error' : 'text-success'
-                    }`}
-                  >
-                    {absRate.toFixed(1)}%
-                  </p>
-                  <p className="text-xs text-base-content/60 mt-1">
-                    {absenteeism?.total_absences ?? 0} ausencias (
-                    {absenteeism?.justified_absences ?? 0} just. /{' '}
-                    {absenteeism?.unjustified_absences ?? 0} injust.)
-                  </p>
+            {/* KPI cards del período */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+              <Card className="bg-primary/10 border-2 border-primary/30">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-base-content/60">Ratio Horas Extras</p>
+                    <p className="text-3xl font-bold text-primary mt-1">
+                      {ratioPct === null || ratioPct === undefined
+                        ? 'N/D'
+                        : `${toNum(ratioPct).toFixed(1)}%`}
+                    </p>
+                    <p className="text-xs text-base-content/60 mt-1">
+                      {toNum(ratio?.extra_hours).toFixed(1)}h extra ·{' '}
+                      {toNum(ratio?.ordinary_hours).toFixed(1)}h ordinarias
+                    </p>
+                  </div>
+                  <TrendingUp className="w-8 h-8 text-primary/60" />
                 </div>
-                <AlertTriangle
-                  className={`w-8 h-8 ${absenteeism?.alert ? 'text-error/70' : 'text-success/60'}`}
-                />
-              </div>
-            </Card>
+              </Card>
 
-            <Card className="bg-secondary/10 border-2 border-secondary/30">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-base-content/60">Pasivo de Vacaciones</p>
-                  <p className="text-3xl font-bold text-secondary mt-1">
-                    {toNum(liability?.total_liability)} días
-                  </p>
-                  <p className="text-xs text-base-content/60 mt-1">
-                    Devengados {toNum(liability?.total_accrued)} · usados {toNum(liability?.total_used)}
-                  </p>
+              <Card
+                className={
+                  absenteeism?.alert
+                    ? 'bg-error/10 border-2 border-error/40'
+                    : 'bg-success/10 border-2 border-success/30'
+                }
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-base-content/60">Tasa de Absentismo</p>
+                    <p
+                      className={`text-3xl font-bold mt-1 ${
+                        absenteeism?.alert ? 'text-error' : 'text-success'
+                      }`}
+                    >
+                      {absRate.toFixed(1)}%
+                    </p>
+                    <p className="text-xs text-base-content/60 mt-1">
+                      {absenteeism?.total_absences ?? 0} ausencias (
+                      {absenteeism?.justified_absences ?? 0} just. /{' '}
+                      {absenteeism?.unjustified_absences ?? 0} injust.)
+                    </p>
+                  </div>
+                  <AlertTriangle
+                    className={`w-8 h-8 ${absenteeism?.alert ? 'text-error/70' : 'text-success/60'}`}
+                  />
                 </div>
-                <CalendarClock className="w-8 h-8 text-secondary/60" />
-              </div>
-            </Card>
-          </div>
+              </Card>
+            </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
             {/* Overtime ranking */}
             <Card>
-              <h3 className="text-base sm:text-lg font-semibold text-base-content mb-4">
+              <h4 className="text-base sm:text-lg font-semibold text-base-content mb-4">
                 Ranking de Horas Extras
-              </h3>
+              </h4>
               {hasRanking ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={rankingData} layout="vertical" margin={{ left: 20 }}>
@@ -370,46 +374,78 @@ function PersonnelMetrics({ dateFrom, dateTo }: PersonnelMetricsProps) {
                 <EmptyChart message="No hay horas extra registradas en el período seleccionado." />
               )}
             </Card>
+          </section>
 
-            {/* Vacation liability table */}
-            <Card>
-              <h3 className="text-base sm:text-lg font-semibold text-base-content mb-4">
-                Pasivo de Vacaciones por Empleado
-              </h3>
-              {liability && liability.items.length > 0 ? (
-                <Table>
-                  <thead>
-                    <tr>
-                      <Table.Head>Empleado</Table.Head>
-                      <Table.Head className="text-right">Anual</Table.Head>
-                      <Table.Head className="text-right">Devengado</Table.Head>
-                      <Table.Head className="text-right">Usados</Table.Head>
-                      <Table.Head className="text-right">Pasivo</Table.Head>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {liability.items.map((item) => (
-                      <Table.Row key={item.employee_id}>
-                        <Table.Cell>{item.employee_name}</Table.Cell>
-                        <Table.Cell className="text-right">{toNum(item.annual_days)}</Table.Cell>
-                        <Table.Cell className="text-right">{toNum(item.accrued_days)}</Table.Cell>
-                        <Table.Cell className="text-right">{toNum(item.used_days)}</Table.Cell>
-                        <Table.Cell
-                          className={`text-right font-semibold ${
-                            toNum(item.liability_days) < 0 ? 'text-error' : 'text-base-content'
-                          }`}
-                        >
-                          {toNum(item.liability_days)}
-                        </Table.Cell>
-                      </Table.Row>
-                    ))}
-                  </tbody>
-                </Table>
-              ) : (
-                <EmptyChart message="No hay empleados activos para calcular el pasivo." />
-              )}
-            </Card>
-          </div>
+          {/* ─── Bloque 2: pasivo de vacaciones (año en curso, NO usa el filtro de fechas) ─── */}
+          <section className="mb-6 border-t border-base-300 pt-6">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+              <h3 className="text-lg font-semibold text-base-content">Pasivo de Vacaciones</h3>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-base-200 px-3 py-1 text-xs font-medium text-base-content/70">
+                <CalendarClock className="w-3.5 h-3.5" />
+                Año {liability?.year ?? new Date().getFullYear()}
+              </span>
+            </div>
+            <p className="text-xs text-base-content/60 mb-4">
+              Se calcula sobre el año en curso y no depende del filtro de fechas de arriba.
+            </p>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+              {/* Pasivo total */}
+              <Card className="bg-secondary/10 border-2 border-secondary/30 self-start">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-base-content/60">Pasivo Total</p>
+                    <p className="text-3xl font-bold text-secondary mt-1">
+                      {toNum(liability?.total_liability)} días
+                    </p>
+                    <p className="text-xs text-base-content/60 mt-1">
+                      Devengados {toNum(liability?.total_accrued)} · usados {toNum(liability?.total_used)}
+                    </p>
+                  </div>
+                  <CalendarClock className="w-8 h-8 text-secondary/60" />
+                </div>
+              </Card>
+
+              {/* Vacation liability table */}
+              <Card className="lg:col-span-2">
+                <h4 className="text-base sm:text-lg font-semibold text-base-content mb-4">
+                  Pasivo por Empleado
+                </h4>
+                {liability && liability.items.length > 0 ? (
+                  <Table>
+                    <thead>
+                      <tr>
+                        <Table.Head>Empleado</Table.Head>
+                        <Table.Head className="text-right">Anual</Table.Head>
+                        <Table.Head className="text-right">Devengado</Table.Head>
+                        <Table.Head className="text-right">Usados</Table.Head>
+                        <Table.Head className="text-right">Pasivo</Table.Head>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {liability.items.map((item) => (
+                        <Table.Row key={item.employee_id}>
+                          <Table.Cell>{item.employee_name}</Table.Cell>
+                          <Table.Cell className="text-right">{toNum(item.annual_days)}</Table.Cell>
+                          <Table.Cell className="text-right">{toNum(item.accrued_days)}</Table.Cell>
+                          <Table.Cell className="text-right">{toNum(item.used_days)}</Table.Cell>
+                          <Table.Cell
+                            className={`text-right font-semibold ${
+                              toNum(item.liability_days) < 0 ? 'text-error' : 'text-base-content'
+                            }`}
+                          >
+                            {toNum(item.liability_days)}
+                          </Table.Cell>
+                        </Table.Row>
+                      ))}
+                    </tbody>
+                  </Table>
+                ) : (
+                  <EmptyChart message="No hay empleados activos para calcular el pasivo." />
+                )}
+              </Card>
+            </div>
+          </section>
 
           <MetricsGlossary />
         </>
