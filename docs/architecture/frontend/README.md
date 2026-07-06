@@ -113,7 +113,7 @@ Definidas en `src/App.tsx`. Tres áreas:
 | `/shift-roster` | `ShiftRosterCalendar` | Todos |
 | `/shift-configuration` | `ShiftConfiguration` | Admin |
 | `/vacations` | `VacationView` | Todos |
-| `/reports` | `ReportsView` | Admin, Moderador |
+| `/reports` | `ReportsView` | Admin, Moderador (sección "Métricas de Personal" solo Admin) |
 | `/settings` | `SettingsView` | Admin |
 | `/admin/statistics` | `AdminStatistics` | Admin, Moderador |
 | `/admin/departments` | `DepartmentListView` | Admin |
@@ -209,6 +209,14 @@ Servicios por dominio: `authService`, `employeeService`, `departmentService`,
 `teamService`, `shiftService`, `shiftTypesApi`, `vacationService`,
 `moderatorService`, `dashboardService`, `statisticsService`, `settingsService`,
 `passwordResetService`.
+
+`dashboardService` incluye, además de los informes base, las llamadas de la
+sección **Métricas de Personal** (Feature 015, solo Admin): `getOvertimeRatio`,
+`getOvertimeRanking`, `getAbsenteeism` y `getVacationLiability`
+(`GET /reports/*`). En `ReportsView` la sección se renderiza condicionada a
+`hasRole('Admin')` y comparte el filtro de fechas: KPI-cards (ratio de horas
+extra, tasa de absentismo con alerta >5%, pasivo total de vacaciones), un
+`BarChart` del ranking de horas extra y una tabla de pasivo por empleado.
 
 ---
 

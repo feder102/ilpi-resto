@@ -453,4 +453,40 @@ if (error.response?.status === 401 && !originalRequest._retry) {
       },
     ],
   },
+  {
+    id: 'be-metricas-personal',
+    title: 'Métricas de personal (Informes)',
+    category: 'backend',
+    summary:
+      'Agregaciones de solo lectura para la sección "Métricas de Personal" de Informes: ratio de horas extra, absentismo, ranking y pasivo de vacaciones. Solo Admin.',
+    iconName: 'TrendingUp',
+    tags: ['reports', 'metrics', 'rbac', 'read-only'],
+    difficulty: 'intermediate',
+    lastUpdated: '2026-07-06',
+    author: 'ILPI Docs',
+    sections: [
+      {
+        type: 'paragraph',
+        title: 'Endpoints (routers/metrics.py, prefijo /api/v1)',
+        content:
+          'Cuatro endpoints GET Admin-only bajo /reports/*, respaldados por metrics_service.py sobre datos ya persistidos (sin modelos ni migraciones nuevas). Todo se filtra por tenant_id.',
+      },
+      {
+        type: 'list',
+        title: 'Indicadores y fórmulas',
+        content: [
+          'GET /reports/overtime-ratio — Σ horas(source=EXTRA) / Σ horas(source=SHIFT) × 100; ratio_pct null si no hay ordinarias',
+          'GET /reports/absenteeism — count(Absence) / count(ShiftRecord) × 100 en el periodo; desglose justificada/injustificada; alert cuando supera 5%',
+          'GET /reports/overtime-ranking — top N (default 10, limit 1–50) empleados por horas extra, descendente',
+          'GET /reports/vacation-liability — por empleado activo: accrued = round(anual × meses_trabajados / 12); liability = accrued − used_days (puede ser negativo); más totales del plantel',
+        ],
+      },
+      {
+        type: 'info-box',
+        badge: 'RBAC doble capa',
+        content:
+          'Autorización enforced en el router (require_role("Admin")) y de nuevo en el service (_require_admin), según el Principio V de la constitución. Reutiliza AbsenceService y vacation_service._get_or_create_balance. Endpoints read-only; casos borde devuelven valores neutros.',
+      },
+    ],
+  },
 ];

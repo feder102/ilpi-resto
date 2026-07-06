@@ -191,6 +191,7 @@ def _include_routers(app: FastAPI) -> None:
         departments,
         docs_access,
         employees,
+        metrics,
         moderator,
         password_reset_router,
         settings,
@@ -213,6 +214,7 @@ def _include_routers(app: FastAPI) -> None:
     app.include_router(vacations.router, prefix=prefix)
     app.include_router(moderator.router, prefix=prefix)
     app.include_router(dashboard.router, prefix=prefix)
+    app.include_router(metrics.router, prefix=prefix)
     app.include_router(time_tracking.router, prefix=prefix)
     # T020: Register password reset router for password recovery endpoints
     app.include_router(password_reset_router.router, prefix=prefix)
