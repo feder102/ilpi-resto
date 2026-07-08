@@ -255,6 +255,33 @@ class TestVacationLiability:
         assert res.items == []
         assert res.total_liability == 0
 
+    def test_includes_departed_employees_for_past_year(self, session, tenant):
+        """Issue #46: a past-year report must not silently drop ex-employees."""
+        past_year = date.today().year - 1
+        emp = _make_employee(
+            session, tenant.id, first="Renunciado", hire=date(past_year - 1, 1, 1), active=False
+        )
+        self._set_balance(session, tenant.id, emp.id, past_year, total=30, used=10)
+
+        res = metrics_service.get_vacation_liability(session, tenant.id, ADMIN, year=past_year)
+        assert len(res.items) == 1
+        assert res.items[0].employee_name == "Renunciado Ruiz"
+
+    def test_excludes_employees_hired_after_past_year(self, session, tenant):
+        past_year = date.today().year - 1
+        _make_employee(session, tenant.id, first="Futuro", hire=date(past_year + 1, 1, 1))
+
+        res = metrics_service.get_vacation_liability(session, tenant.id, ADMIN, year=past_year)
+        assert res.items == []
+
+    def test_current_year_still_excludes_inactive(self, session, tenant):
+        """Current-year behavior is unchanged: only currently-active employees count."""
+        year = date.today().year
+        _make_employee(session, tenant.id, first="Ghost", hire=date(year - 2, 1, 1), active=False)
+
+        res = metrics_service.get_vacation_liability(session, tenant.id, ADMIN, year=year)
+        assert res.items == []
+
     def test_non_admin_forbidden(self, session, tenant):
         with pytest.raises(ForbiddenError):
             metrics_service.get_vacation_liability(session, tenant.id, {"role": "Empleado"})

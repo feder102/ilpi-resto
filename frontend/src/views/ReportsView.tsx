@@ -64,6 +64,9 @@ export default function ReportsView() {
   const [error, setError] = useState<string | null>(null);
   const [dateFrom, setDateFrom] = useState(isoDaysAgo(30));
   const [dateTo, setDateTo] = useState(today());
+  // Bumped by the "Actualizar" button so PersonnelMetrics refetches even when
+  // dateFrom/dateTo haven't changed (see issue #45 — do not remove).
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -128,7 +131,10 @@ export default function ReportsView() {
           <Button
             variant="secondary"
             size="sm"
-            onClick={load}
+            onClick={() => {
+              load();
+              setRefreshKey((k) => k + 1);
+            }}
             disabled={loading}
           >
             Actualizar
@@ -192,7 +198,7 @@ export default function ReportsView() {
 
           {/* Feature 015: Admin-only personnel metrics */}
           {isAdmin && (
-            <PersonnelMetrics dateFrom={dateFrom} dateTo={dateTo} />
+            <PersonnelMetrics dateFrom={dateFrom} dateTo={dateTo} refreshKey={refreshKey} />
           )}
         </>
       )}
@@ -212,9 +218,11 @@ function EmptyChart({ message }: { message: string }) {
 interface PersonnelMetricsProps {
   dateFrom: string;
   dateTo: string;
+  /** Bumped by the parent's "Actualizar" button to force a refetch (issue #45). */
+  refreshKey: number;
 }
 
-function PersonnelMetrics({ dateFrom, dateTo }: PersonnelMetricsProps) {
+function PersonnelMetrics({ dateFrom, dateTo, refreshKey }: PersonnelMetricsProps) {
   const [ratio, setRatio] = useState<OvertimeRatio | null>(null);
   const [ranking, setRanking] = useState<OvertimeRanking | null>(null);
   const [absenteeism, setAbsenteeism] = useState<Absenteeism | null>(null);
@@ -251,7 +259,9 @@ function PersonnelMetrics({ dateFrom, dateTo }: PersonnelMetricsProps) {
 
   useEffect(() => {
     load();
-  }, [load]);
+    // refreshKey deliberately included: forces a refetch when "Actualizar" is
+    // clicked without the date range changing (see issue #45).
+  }, [load, refreshKey]);
 
   const ratioPct = ratio?.ratio_pct;
   const absRate = absenteeism ? toNum(absenteeism.rate_pct) : 0;

@@ -212,22 +212,38 @@ def get_vacation_liability(
     current_user: dict,
     year: int | None = None,
 ) -> VacationLiabilityResponse:
-    """Accrued vacation liability per active employee plus staff totals.
+    """Accrued vacation liability per employee plus staff totals.
 
     ``accrued = round(annual_days * months_worked / 12)`` and
     ``liability = accrued - used_days``. Reuses the canonical balance resolver
     so ``annual_days`` respects per-employee and tenant defaults.
+
+    For the current year, only currently-active employees are included. For
+    past years, employees are included based on ``hire_date`` regardless of
+    their current ``is_active`` status, since a departed employee's vacation
+    liability for a year they worked is still a real historical figure.
     """
     _require_admin(current_user)
     today = date.today()
     resolved_year = year if year is not None else today.year
 
-    employees = session.exec(
-        select(Employee).where(
-            Employee.tenant_id == tenant_id,
-            Employee.is_active == True,  # noqa: E712
-        )
-    ).all()
+    if resolved_year < today.year:
+        # Historical report: `is_active` reflects today, not `resolved_year`,
+        # so include anyone who had already been hired by the end of that
+        # year even if they've since left (issue #46).
+        employees = session.exec(
+            select(Employee).where(
+                Employee.tenant_id == tenant_id,
+                Employee.hire_date <= date(resolved_year, 12, 31),
+            )
+        ).all()
+    else:
+        employees = session.exec(
+            select(Employee).where(
+                Employee.tenant_id == tenant_id,
+                Employee.is_active == True,  # noqa: E712
+            )
+        ).all()
 
     items: list[VacationLiabilityItem] = []
     total_accrued = 0
