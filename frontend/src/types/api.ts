@@ -50,3 +50,54 @@ export interface DepartmentDistItem {
   department: string;
   count: number;
 }
+
+// Feature 015: Personnel metrics (Admin-only reports). Decimal values may be
+// serialized as strings by the backend, hence `number | string`.
+export interface OvertimeRatio {
+  date_from: string;
+  date_to: string;
+  ordinary_hours: number | string;
+  extra_hours: number | string;
+  ratio_pct: number | string | null;
+}
+
+export interface OvertimeRankingItem {
+  employee_id: string;
+  employee_name: string;
+  extra_hours: number | string;
+}
+
+export interface OvertimeRanking {
+  date_from: string;
+  date_to: string;
+  items: OvertimeRankingItem[];
+}
+
+export interface Absenteeism {
+  date_from: string;
+  date_to: string;
+  total_absences: number;
+  justified_absences: number;
+  unjustified_absences: number;
+  planned_shifts: number;
+  rate_pct: number | string;
+  alert: boolean;
+}
+
+export interface VacationLiabilityItem {
+  employee_id: string;
+  employee_name: string;
+  annual_days: number;
+  months_worked: number;
+  accrued_days: number;
+  used_days: number;
+  liability_days: number;
+}
+
+export interface VacationLiability {
+  year: number;
+  items: VacationLiabilityItem[];
+  total_accrued: number;
+  total_used: number;
+  total_liability: number;
+}

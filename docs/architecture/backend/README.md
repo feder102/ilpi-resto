@@ -99,6 +99,7 @@ PostgreSQL
 | Mis vacaciones (`/employee/vacation-*`) | ❌ | ❌ | ✅ (+active) |
 | Portal moderador (`/moderator/*`) | ❌ | ✅ (+active) | ❌ |
 | Dashboard / Informes | ✅ | ✅ | ❌ |
+| Métricas de personal (`/reports/{overtime-ratio,overtime-ranking,absenteeism,vacation-liability}`) | ✅ | ❌ | ❌ |
 | Configuración (`/settings`) | ✅ | parcial | ❌ |
 | Horas extra / ausencias | ✅ | ✅ | ❌ |
 
@@ -162,6 +163,17 @@ PostgreSQL
 
 ### Dashboard (`routers/dashboard.py`) — Admin/Mod
 `GET /dashboard/stats`, `GET /reports/hours-by-day`, `GET /reports/department-distribution`.
+
+### Personnel metrics (`routers/metrics.py`) — **Admin** (Feature 015)
+Agregaciones de solo lectura para la sección "Métricas de Personal" de Informes.
+RBAC en doble capa: `require_role("Admin")` en el router + check explícito en
+`services/metrics_service.py`. Todo filtrado por `tenant_id`.
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/reports/overtime-ratio` | Ratio horas extra vs. ordinarias del periodo (`ratio_pct` null sin ordinarias) |
+| GET | `/reports/overtime-ranking` | Top N empleados por horas extra (`limit` 1–50, default 10) |
+| GET | `/reports/absenteeism` | Tasa de absentismo (ausencias/turnos planificados) con desglose y `alert` >5% |
+| GET | `/reports/vacation-liability` | Pasivo de vacaciones devengado por empleado activo + totales (`year` opcional) |
 
 ### Time tracking (`routers/time_tracking.py`) — prefijo `/employee/time-tracking`
 `GET /statistics` (Empleado + active) y endpoints de horas extra/estadísticas
