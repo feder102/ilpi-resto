@@ -9,6 +9,7 @@ export interface EmployeeCreateData {
   email: string;
   phone?: string | null;
   dni: string;
+  passport?: string | null;
   address?: string | null;
   birth_date?: string | null;
   marital_status?: string | null;
