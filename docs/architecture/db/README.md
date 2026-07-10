@@ -124,7 +124,8 @@ Ficha completa del empleado.
 | `first_name` / `last_name` | varchar(100) | |
 | `email` | varchar(255) | Único por tenant (`uq_employee_tenant_email`) |
 | `phone` | varchar(20) \| null | |
-| `dni` | varchar(20) | Único por tenant (`uq_employee_tenant_dni`) |
+| `dni` | varchar(20) | Documento de identidad. Único por tenant (`uq_employee_tenant_dni`) |
+| `passport` | varchar(20) \| null | Número de pasaporte (opcional, solo si el empleado indica que posee uno) |
 | `address` | varchar(500) \| null | |
 | `birth_date` | date \| null | |
 | `marital_status` / `gender` | str \| null | |
@@ -355,6 +356,7 @@ Cadena de migraciones en orden de aplicación (`backend/alembic/versions/`):
 | 13 | `20260616_add_absence` | Añade tabla `absence` |
 | 14 | `20260625_vacation_config` | Config de vacaciones (`tenant.default_vacation_days`, `employee.custom_vacation_days`) + tabla `audit_log` |
 | 15 | `20260626_departments` | Añade tabla `department` y migra `employee`/`team` de string a FK |
+| 16 | `20260709_passport` | Añade columna nullable `passport` a `employee` |
 
 > **Nota**: el `head` actual de la cadena es `20260626_departments`.
 
