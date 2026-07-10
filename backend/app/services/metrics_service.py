@@ -28,7 +28,7 @@ from app.schemas.metrics import (
     VacationLiabilityItem,
     VacationLiabilityResponse,
 )
-from app.services.vacation_service import _get_or_create_balance
+from app.services.vacation_service import get_or_create_balances_bulk
 
 #: Absenteeism rate (percentage) above which the UI raises a visual alert.
 ABSENTEEISM_ALERT_THRESHOLD: float = 5.0
@@ -245,13 +245,17 @@ def get_vacation_liability(
             )
         ).all()
 
+    balances_by_employee = get_or_create_balances_bulk(
+        list(employees), resolved_year, tenant_id, session
+    )
+
     items: list[VacationLiabilityItem] = []
     total_accrued = 0
     total_used = 0
     total_liability = 0
 
     for emp in employees:
-        balance = _get_or_create_balance(emp.id, resolved_year, tenant_id, session)
+        balance = balances_by_employee[emp.id]
         annual = balance.total_days
         used = balance.used_days
         months = _months_worked(emp.hire_date, resolved_year, today)

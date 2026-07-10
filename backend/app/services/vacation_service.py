@@ -87,6 +87,58 @@ def _get_or_create_balance(
     return balance
 
 
+def get_or_create_balances_bulk(
+    employees: list[Employee], year: int, tenant_id: uuid.UUID, session: Session
+) -> dict[uuid.UUID, VacationBalance]:
+    """Bulk variant of ``_get_or_create_balance`` for many employees at once.
+
+    Fetches all existing balances for ``employees``/``year`` in a single query
+    and creates the missing ones in a single flush, instead of one SELECT (and
+    potential INSERT/UPDATE) per employee.
+    """
+    if not employees:
+        return {}
+
+    employee_ids = [emp.id for emp in employees]
+    existing = session.exec(
+        select(VacationBalance).where(
+            VacationBalance.tenant_id == tenant_id,
+            VacationBalance.employee_id.in_(employee_ids),  # type: ignore[attr-defined]
+            VacationBalance.year == year,
+        )
+    ).all()
+    balances_by_employee = {b.employee_id: b for b in existing}
+
+    tenant = session.get(Tenant, tenant_id)
+    tenant_default = tenant.default_vacation_days if tenant is not None else 30
+
+    dirty = False
+    for emp in employees:
+        effective_total = (
+            emp.custom_vacation_days if emp.custom_vacation_days is not None else tenant_default
+        )
+        balance = balances_by_employee.get(emp.id)
+        if balance is None:
+            balance = VacationBalance(
+                tenant_id=tenant_id,
+                employee_id=emp.id,
+                year=year,
+                total_days=effective_total,
+            )
+            session.add(balance)
+            balances_by_employee[emp.id] = balance
+            dirty = True
+        elif balance.total_days != effective_total:
+            balance.total_days = effective_total
+            session.add(balance)
+            dirty = True
+
+    if dirty:
+        session.flush()
+
+    return balances_by_employee
+
+
 def create_request(
     employee_id: uuid.UUID,
     start_date: date,
