@@ -463,7 +463,7 @@ if (error.response?.status === 401 && !originalRequest._retry) {
     iconName: 'TrendingUp',
     tags: ['reports', 'metrics', 'rbac', 'read-only'],
     difficulty: 'intermediate',
-    lastUpdated: '2026-07-06',
+    lastUpdated: '2026-07-10',
     author: 'ILPI Docs',
     sections: [
       {
@@ -486,7 +486,7 @@ if (error.response?.status === 401 && !originalRequest._retry) {
         type: 'info-box',
         badge: 'RBAC doble capa',
         content:
-          'Autorización enforced en el router (require_role("Admin")) y de nuevo en el service (_require_admin), según el Principio V de la constitución. Reutiliza AbsenceService y vacation_service._get_or_create_balance. Endpoints read-only; casos borde devuelven valores neutros.',
+          'Autorización enforced en el router (require_role("Admin")) y de nuevo en el service (_require_admin), según el Principio V de la constitución. Reutiliza AbsenceService y vacation_service.get_or_create_balances_bulk (optimización N+1: resolve todos los balances en una query). Endpoints read-only; casos borde devuelven valores neutros.',
       },
     ],
   },

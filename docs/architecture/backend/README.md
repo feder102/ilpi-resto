@@ -1,7 +1,7 @@
 # Documentación del Backend — ILPI Kitchen Staff Management
 
 > **Fuente**: `backend/app/` (excluye `backend/alembic/`, documentado en `../db/`)
-> **Última actualización**: 2026-06-28
+> **Última actualización**: 2026-07-10
 
 API REST construida con **FastAPI + SQLModel** siguiendo **Clean Architecture**:
 las dependencias apuntan hacia adentro `Routers → Services → Models`.
@@ -379,7 +379,11 @@ sequenceDiagram
 ### 5.11 `vacation_service`
 **Funciones**: `create_request`, `approve`, `reject`, `cancel`, `get_balance`,
 `list_requests`, `get_request_by_id`, `get_department_pending_requests`,
-`get_vacation_request_details`.
+`get_vacation_request_details`, `get_or_create_balances_bulk`.
+
+**Funciones auxiliares**:
+- `_get_or_create_balance(employee_id, year, tenant_id, session)` — obtiene o crea el balance de un empleado.
+- `get_or_create_balances_bulk(employees, year, tenant_id, session)` — versión optimizada que resuelve balances de múltiples empleados en una sola query en lugar de N queries (elimina patrón N+1).
 
 **Restricciones**:
 - `start_date <= end_date`.
@@ -460,6 +464,14 @@ Gestiona `tenant.default_vacation_days`. 404 si no existe el tenant.
 ### 5.16 `audit_service`
 **Función**: `log(...)` — inserta registros en `audit_log` (append-only) para eventos
 relevantes (p. ej. cambios de `custom_vacation_days`, acciones de configuración).
+
+### 5.17 `metrics_service`
+**Funciones**: `get_vacation_liability`, `get_overtime_ratio`, `get_overtime_ranking`, `get_absenteeism`.
+
+**Restricciones**:
+- Acceso solo **Admin** (doble capa: `require_role("Admin")` + check explícito en servicio).
+- Todas las agregaciones son **filtradas por tenant** (multi-tenant safe).
+- `get_vacation_liability`: calcula pasivo devengado por empleado activo. Utiliza `vacation_service.get_or_create_balances_bulk()` para resolver balances de todos los empleados en una sola query (optimización N+1).
 
 ---
 
