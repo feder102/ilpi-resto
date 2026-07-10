@@ -14,6 +14,7 @@ class EmployeeCreate(BaseModel):
     email: EmailStr
     phone: str | None = None
     dni: str
+    passport: str | None = None
     address: str | None = None
     birth_date: date | None = None
     marital_status: str | None = None
@@ -31,6 +32,7 @@ class EmployeeUpdate(BaseModel):
     email: EmailStr | None = None
     phone: str | None = None
     dni: str | None = None
+    passport: str | None = None
     address: str | None = None
     birth_date: date | None = None
     marital_status: str | None = None
@@ -58,6 +60,7 @@ class EmployeeResponse(BaseModel):
     email: str
     phone: str | None
     dni: str
+    passport: str | None
     address: str | None
     birth_date: date | None
     marital_status: str | None

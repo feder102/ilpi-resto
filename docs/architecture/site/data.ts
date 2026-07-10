@@ -81,7 +81,7 @@ export const INITIAL_ARTICLES: DocArticle[] = [
         type: 'info-box',
         badge: 'Invariante',
         content:
-          'DNI y email son únicos por tenant. El borrado de empleados es soft-delete (is_active=false / status=Inactivo) para preservar históricos.',
+          'DNI y email son únicos por tenant. El borrado de empleados es soft-delete (is_active=false / status=Inactivo) para preservar históricos. El pasaporte (employee.passport) es un dato opcional y sin restricción de unicidad: se captura solo cuando el empleado indica que posee uno.',
       },
     ],
   },
@@ -144,11 +144,11 @@ export const INITIAL_ARTICLES: DocArticle[] = [
     title: 'Migraciones Alembic',
     category: 'db',
     summary:
-      'Cadena de 15 migraciones desde la inicial hasta la introducción del ABM de departamentos.',
+      'Cadena de 16 migraciones desde la inicial hasta la incorporación del pasaporte en el legajo de empleados.',
     iconName: 'GitCommit',
     tags: ['alembic', 'migrations'],
     difficulty: 'intermediate',
-    lastUpdated: '2026-06-28',
+    lastUpdated: '2026-07-09',
     author: 'ILPI Docs',
     sections: [
       {
@@ -162,7 +162,8 @@ export const INITIAL_ARTICLES: DocArticle[] = [
           '79ad9726ce5e / 20260605_extra_hours — time_entries y horas extra',
           '20260616_add_absence — tabla absence',
           '20260625_vacation_config — config de vacaciones + audit_log',
-          '20260626_departments (HEAD) — tabla department + migración a FK',
+          '20260626_departments — tabla department + migración a FK',
+          '20260709_passport (HEAD) — columna nullable employee.passport',
         ],
       },
       {

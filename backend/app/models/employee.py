@@ -26,6 +26,7 @@ class Employee(SQLModel, table=True):
     email: str = Field(max_length=255)
     phone: str | None = Field(default=None, max_length=20)
     dni: str = Field(max_length=20)
+    passport: str | None = Field(default=None, max_length=20)
     address: str | None = Field(default=None, max_length=500)
     birth_date: date | None = Field(default=None)
     marital_status: str | None = Field(default=None)
