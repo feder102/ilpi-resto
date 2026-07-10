@@ -41,6 +41,7 @@ def _to_response(emp: Employee, session: Session) -> EmployeeResponse:
         email=emp.email,
         phone=emp.phone,
         dni=emp.dni,
+        passport=emp.passport,
         address=emp.address,
         birth_date=emp.birth_date,
         marital_status=emp.marital_status,

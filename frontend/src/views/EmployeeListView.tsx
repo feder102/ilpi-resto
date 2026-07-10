@@ -35,6 +35,7 @@ const INITIAL_FORM: EmployeeCreateData = {
   email: '',
   phone: '',
   dni: '',
+  passport: '',
   address: '',
   birth_date: '',
   marital_status: '',
@@ -64,6 +65,7 @@ export default function EmployeeListView() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<EmployeeCreateData>(INITIAL_FORM);
+  const [hasPassport, setHasPassport] = useState(false);
   const [customVacationDays, setCustomVacationDays] = useState<string>('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -116,6 +118,7 @@ export default function EmployeeListView() {
   const openCreate = () => {
     setEditingId(null);
     setForm({ ...INITIAL_FORM, department_id: departments[0]?.id ?? '' });
+    setHasPassport(false);
     setCustomVacationDays('');
     setFormErrors({});
     setModalOpen(true);
@@ -129,6 +132,7 @@ export default function EmployeeListView() {
       email: emp.email,
       phone: emp.phone || '',
       dni: emp.dni,
+      passport: emp.passport || '',
       address: emp.address || '',
       birth_date: emp.birth_date || '',
       marital_status: emp.marital_status || '',
@@ -139,6 +143,7 @@ export default function EmployeeListView() {
       profile_image: emp.profile_image || '',
       emergency_contact: emp.emergency_contact || '',
     });
+    setHasPassport(!!emp.passport);
     setCustomVacationDays(emp.custom_vacation_days != null ? String(emp.custom_vacation_days) : '');
     setFormErrors({});
     setModalOpen(true);
@@ -150,6 +155,7 @@ export default function EmployeeListView() {
     if (!form.last_name.trim()) errs.last_name = 'Requerido';
     if (!form.email.trim()) errs.email = 'Requerido';
     if (!form.dni.trim()) errs.dni = 'Requerido';
+    if (hasPassport && !form.passport?.trim()) errs.passport = 'Requerido';
     if (!form.department_id) errs.department_id = 'Requerido';
     if (!form.role) errs.role = 'Requerido';
     if (!form.hire_date) errs.hire_date = 'Requerido';
@@ -171,6 +177,7 @@ export default function EmployeeListView() {
       const payload = {
         ...form,
         phone: form.phone || null,
+        passport: hasPassport ? (form.passport || null) : null,
         address: form.address || null,
         birth_date: form.birth_date || null,
         marital_status: form.marital_status || null,
@@ -294,7 +301,7 @@ export default function EmployeeListView() {
                 </div>
 
                 <div className="text-sm text-base-content/80 space-y-1 mb-3">
-                  <p>DNI: {emp.dni}</p>
+                  <p>Documento: {emp.dni}</p>
                   <p>{emp.email}</p>
                 </div>
 
@@ -407,9 +414,37 @@ export default function EmployeeListView() {
             <input className="input input-bordered w-full" value={form.phone || ''} onChange={(e) => updateField('phone', e.target.value)} />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-base-content">DNI {formErrors.dni && <span className="text-error">*</span>}</label>
+            <label className="text-sm font-medium text-base-content">Documento de identidad {formErrors.dni && <span className="text-error">*</span>}</label>
             <input className="input input-bordered w-full" value={form.dni} onChange={(e) => updateField('dni', e.target.value)} />
             {formErrors.dni && <p className="mt-1 text-xs text-error">{formErrors.dni}</p>}
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">¿Tiene pasaporte?</label>
+            <select
+              className="select select-bordered w-full"
+              value={hasPassport ? 'si' : 'no'}
+              onChange={(e) => {
+                const value = e.target.value === 'si';
+                setHasPassport(value);
+                if (!value) {
+                  updateField('passport', '');
+                  setFormErrors((prev) => ({ ...prev, passport: '' }));
+                }
+              }}
+            >
+              <option value="no">No</option>
+              <option value="si">Sí</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-base-content">Número de pasaporte {formErrors.passport && <span className="text-error">*</span>}</label>
+            <input
+              className="input input-bordered w-full"
+              disabled={!hasPassport}
+              value={form.passport || ''}
+              onChange={(e) => updateField('passport', e.target.value)}
+            />
+            {formErrors.passport && <p className="mt-1 text-xs text-error">{formErrors.passport}</p>}
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-base-content">Fecha de nacimiento</label>

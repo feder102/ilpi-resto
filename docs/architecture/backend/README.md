@@ -255,6 +255,7 @@ sequenceDiagram
 **Restricciones**:
 - Departamento debe existir, pertenecer al tenant y estar activo.
 - DNI y email únicos por tenant (en `employee` **y** email único en `user`).
+- `passport` es opcional (sin restricción de unicidad); se persiste solo si el empleado indica que posee pasaporte.
 - Al crear, se genera un `User` asociado con `is_active=false` (pendiente de setup).
 - **Soft delete** solo Admin (`ForbiddenError` si no): marca `Inactivo`, desactiva el
   user asociado y **auto-rechaza** solicitudes de vacaciones pendientes.
