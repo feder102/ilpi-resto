@@ -11,7 +11,7 @@ project constitution (Principle V): every public function calls
 
 import uuid
 from datetime import date, timedelta
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from sqlmodel import Session, func, select
 
@@ -137,7 +137,7 @@ def get_overtime_ranking(
             TimeEntry.shift_date <= date_to,
         )
         .group_by(Employee.id, Employee.first_name, Employee.last_name)
-        .order_by(total_extra.desc())
+        .order_by(total_extra.desc(), Employee.id)
         .limit(limit)
     ).all()
 
@@ -182,13 +182,17 @@ def get_absenteeism(
             Absence.justified == True,  # noqa: E712
         )
     ).one()
+    # A caller may request a date_to in the future (e.g. to preview a
+    # planned roster); cap it at today so future shifts don't inflate the
+    # denominator and dilute the absenteeism rate (issue #49).
+    shifts_date_to = min(date_to, date.today())
     planned_shifts = session.exec(
         select(func.count())
         .select_from(ShiftRecord)
         .where(
             ShiftRecord.tenant_id == tenant_id,
             ShiftRecord.date >= date_from,
-            ShiftRecord.date <= date_to,
+            ShiftRecord.date <= shifts_date_to,
         )
     ).one()
 
@@ -259,7 +263,14 @@ def get_vacation_liability(
         annual = balance.total_days
         used = balance.used_days
         months = _months_worked(emp.hire_date, resolved_year, today)
-        accrued = round(annual * months / 12)
+        # Python's round() uses round-half-to-even, which rounds .5 ties down
+        # (e.g. round(10.5) == 10). Vacation accrual is an accounting figure,
+        # so ties must round up (issue #48).
+        accrued = int(
+            (Decimal(annual * months) / Decimal(12)).quantize(
+                Decimal("1"), rounding=ROUND_HALF_UP
+            )
+        )
         liability = accrued - used
 
         items.append(
