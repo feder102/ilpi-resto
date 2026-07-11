@@ -59,7 +59,7 @@ def _assert_not_system(dept: Department) -> None:
     if dept.is_system:
         security_logger.warning(
             "department.system_protected_attempt",
-            extra={"department_id": str(dept.id), "name": dept.name},
+            extra={"department_id": str(dept.id), "department_name": dept.name},
         )
         raise ForbiddenError(
             "El departamento del sistema no puede ser modificado ni eliminado"
@@ -82,7 +82,7 @@ def _assert_unique_name(
     if existing:
         security_logger.warning(
             "department.name_conflict",
-            extra={"tenant_id": str(tenant_id), "name": name},
+            extra={"tenant_id": str(tenant_id), "department_name": name},
         )
         raise ConflictError("Ya existe un departamento con ese nombre en este tenant")
 
@@ -206,7 +206,7 @@ def create(
 
     security_logger.info(
         "department.created",
-        extra={"department_id": str(dept.id), "name": dept.name, "tenant_id": str(tenant_id)},
+        extra={"department_id": str(dept.id), "department_name": dept.name, "tenant_id": str(tenant_id)},
     )
     emp_count, team_count = _get_counts(dept.id, tenant_id, session)
     return _to_response(dept, emp_count, team_count)
@@ -227,9 +227,16 @@ def update(
     if not dept:
         raise NotFoundError("Departamento no encontrado")
 
-    _assert_not_system(dept)
-
     update_data = payload.model_dump(exclude_unset=True)
+
+    if "name" in update_data and dept.is_system:
+        security_logger.warning(
+            "department.system_protected_attempt",
+            extra={"department_id": str(dept.id), "department_name": dept.name},
+        )
+        raise ForbiddenError(
+            "No se puede cambiar el nombre de un departamento del sistema"
+        )
 
     if "name" in update_data and update_data["name"] is not None:
         _assert_unique_name(update_data["name"], tenant_id, session, exclude_id=department_id)
@@ -354,7 +361,7 @@ def delete_with_reassign(
         "department.deleted",
         extra={
             "department_id": str(department_id),
-            "name": dept.name,
+            "department_name": dept.name,
             "employees_reassigned": emp_count,
             "teams_reassigned": team_count,
             "target_department_id": str(target.id),

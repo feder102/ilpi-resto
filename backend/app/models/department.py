@@ -18,10 +18,10 @@ class Department(SQLModel, table=True):
         # Case-insensitive unique name per tenant — functional index created in migration
         sa.Index("ix_department_tenant_active", "tenant_id", "is_active"),
         sa.Index("ix_department_tenant_system", "tenant_id", "is_system"),
-        sa.CheckConstraint(
-            r"color ~ '^#[0-9a-fA-F]{6}$'",
-            name="ck_department_color_hex",
-        ),
+        # Note: no CheckConstraint declared here — the "~" regex operator is
+        # PostgreSQL-only and breaks SQLite-backed test metadata.create_all().
+        # The equivalent ck_department_color_hex constraint is created by the
+        # Alembic migration (20260626_add_departments_table) for real databases.
     )
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
