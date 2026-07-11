@@ -4,6 +4,7 @@ import { createContext, useState, useEffect, useCallback, type ReactNode } from 
 import type { LoginResponse } from '../types';
 import { setAccessToken, setOnTokenRefreshed } from '../services/apiClient';
 import { API_BASE_URL } from '../config/constants';
+import { setSentryUser } from '../observability';
 import axios from 'axios';
 
 export interface AuthUser {
@@ -56,6 +57,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccessToken(null);
     setUser(null);
   }, []);
+
+  // Issue #58: keep Sentry's user/tenant context in sync with the session.
+  useEffect(() => {
+    setSentryUser(user ? { id: user.id, tenant_id: user.tenant_id, role: user.role } : null);
+  }, [user]);
 
   // Propagate user updates from silent 401 refreshes in apiClient
   useEffect(() => {
