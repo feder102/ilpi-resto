@@ -36,6 +36,14 @@ class Settings(BaseSettings):
     BATCH_TIME_TRACKING_HOUR: int = 1  # Hour of day (0-23) for batch job (default: 01:00 AM)
     BATCH_TIME_TRACKING_MINUTE: int = 0  # Minute of hour (0-59) for batch job
 
+    # Sentry error monitoring (Issue #58). Opt-in: leave SENTRY_DSN empty to
+    # disable. When set, unhandled exceptions are reported with an environment
+    # tag and per-request tenant_id/user_id context (no sensitive data).
+    SENTRY_DSN: str = ""
+    SENTRY_ENVIRONMENT: str = "development"
+    SENTRY_RELEASE: str = ""
+    SENTRY_TRACES_SAMPLE_RATE: float = 0.0
+
     model_config = {"env_file": ".env", "extra": "ignore"}
 
     @property

@@ -23,6 +23,7 @@ from app.common.exceptions import (
     ValidationError,
 )
 from app.config import settings
+from app.observability import init_sentry, set_request_context
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,10 @@ EXCEPTION_STATUS_MAP: dict[type[DomainError], int] = {
 
 
 def create_app() -> FastAPI:
+    # Issue #58: initialise Sentry before the app so early errors are captured.
+    # No-op when SENTRY_DSN is not configured (opt-in).
+    init_sentry()
+
     app = FastAPI(title="ILPI Kitchen Staff Management", version="1.0.0")
 
     @app.get("/health", tags=["health"])
@@ -87,6 +92,24 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Issue #58: enrich Sentry events with tenant/user context (no-op if Sentry
+    # is disabled). Decodes the bearer token best-effort; never blocks the request.
+    @app.middleware("http")
+    async def sentry_context(request: Request, call_next):  # type: ignore[no-untyped-def]
+        if settings.SENTRY_DSN:
+            auth = request.headers.get("authorization")
+            if auth and auth.startswith("Bearer "):
+                from app.common.security import verify_token
+
+                payload = verify_token(auth.split(" ", 1)[1])
+                if payload:
+                    set_request_context(
+                        tenant_id=payload.get("tenant_id"),
+                        user_id=payload.get("sub"),
+                        role=payload.get("role"),
+                    )
+        return await call_next(request)
 
     # Security headers middleware
     @app.middleware("http")
