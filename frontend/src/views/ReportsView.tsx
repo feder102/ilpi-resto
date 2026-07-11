@@ -312,6 +312,13 @@ function PersonnelMetrics({ dateFrom, dateTo, refreshKey }: PersonnelMetricsProp
                       {toNum(ratio?.extra_hours).toFixed(1)}h extra ·{' '}
                       {toNum(ratio?.ordinary_hours).toFixed(1)}h ordinarias
                     </p>
+                    {absenteeism?.alert && (
+                      <p className="text-xs text-warning mt-1.5 flex items-start gap-1">
+                        <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
+                        Puede estar inflado por el alto absentismo del período: menos horas
+                        ordinarias registradas reduce el denominador del ratio.
+                      </p>
+                    )}
                   </div>
                   <TrendingUp className="w-8 h-8 text-primary/60" />
                 </div>
@@ -469,7 +476,10 @@ const GLOSSARY_ITEMS = [
     term: 'Ratio de Horas Extras vs. Ordinarias',
     purpose:
       'Control de costos: avisa si se está gastando de más en recargos y si conviene contratar personal nuevo para abaratar costos.',
-    formula: '(horas extra ÷ horas ordinarias) × 100, sobre el período del filtro de fechas.',
+    formula:
+      '(horas extra ÷ horas ordinarias) × 100, sobre el período del filtro de fechas. ' +
+      'Un absentismo alto en el mismo período reduce las horas ordinarias y puede inflar ' +
+      'este ratio sin que haya más horas extra reales.',
   },
   {
     term: 'Tasa de Absentismo',

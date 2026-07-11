@@ -141,6 +141,22 @@ class TestOvertimeRanking:
         with pytest.raises(ForbiddenError):
             metrics_service.get_overtime_ranking(session, tenant.id, {"role": "Empleado"})
 
+    def test_deterministic_tiebreak_on_equal_hours(self, session, tenant):
+        """Issue #53: employees tied on total extra hours must always sort the
+        same way (by employee_id) instead of relying on undefined SQL order."""
+        today = date.today()
+        e1 = _make_employee(session, tenant.id, first="Ana")
+        e2 = _make_employee(session, tenant.id, first="Luis")
+        e3 = _make_employee(session, tenant.id, first="Marta")
+        for emp in (e1, e2, e3):
+            _add_hours(session, tenant.id, emp.id, today, 10, TimeEntrySource.EXTRA)
+
+        expected_order = sorted([e1.id, e2.id, e3.id])
+
+        for _ in range(3):
+            res = metrics_service.get_overtime_ranking(session, tenant.id, ADMIN, limit=2)
+            assert [i.employee_id for i in res.items] == expected_order[:2]
+
 
 class TestAbsenteeism:
     def _add_absence(self, session, tenant_id, employee_id, day, justified):
@@ -193,6 +209,25 @@ class TestAbsenteeism:
     def test_non_admin_forbidden(self, session, tenant):
         with pytest.raises(ForbiddenError):
             metrics_service.get_absenteeism(session, tenant.id, {"role": "Moderador"})
+
+    def test_future_date_to_does_not_dilute_rate(self, session, tenant):
+        """Issue #49: shifts planned beyond today must not inflate the
+        denominator and dilute the absenteeism rate."""
+        emp = _make_employee(session, tenant.id)
+        today = date.today()
+        # 10 past shifts, all absent -> 100% if future shifts are excluded.
+        for i in range(10):
+            self._add_shift(session, tenant.id, emp.id, today - timedelta(days=i))
+            self._add_absence(session, tenant.id, emp.id, today - timedelta(days=i), justified=False)
+        # Future planned shifts (no absences possible yet) must be ignored.
+        for i in range(1, 91):
+            self._add_shift(session, tenant.id, emp.id, today + timedelta(days=i))
+
+        res = metrics_service.get_absenteeism(
+            session, tenant.id, ADMIN, date_from=today - timedelta(days=30), date_to=today + timedelta(days=90)
+        )
+        assert res.planned_shifts == 10
+        assert res.rate_pct == 100.0
 
 
 class TestVacationLiability:
@@ -285,3 +320,30 @@ class TestVacationLiability:
     def test_non_admin_forbidden(self, session, tenant):
         with pytest.raises(ForbiddenError):
             metrics_service.get_vacation_liability(session, tenant.id, {"role": "Empleado"})
+
+    def test_half_day_tie_rounds_up(self, session, tenant, monkeypatch):
+        """Issue #48: round(10.5) with Python's native banker's rounding gives
+        10, not 11. Accrual must round half-day ties up. 18 annual days,
+        hired the prior year, 7 months worked this year -> 18*7/12 = 10.5,
+        must accrue 11, not 10."""
+
+        class FrozenDate(date):
+            @classmethod
+            def today(cls):
+                return date(2026, 7, 15)
+
+        monkeypatch.setattr(metrics_service, "date", FrozenDate)
+
+        year = 2026
+        emp = _make_employee(session, tenant.id, hire=date(year - 1, 1, 1))
+        # custom_vacation_days must match the balance's total_days: otherwise
+        # get_or_create_balances_bulk "self-heals" total_days back to the
+        # tenant/employee default on every read, silently discarding it.
+        emp.custom_vacation_days = 18
+        session.add(emp)
+        session.commit()
+        self._set_balance(session, tenant.id, emp.id, year, total=18, used=0)
+
+        res = metrics_service.get_vacation_liability(session, tenant.id, ADMIN, year=year)
+        assert res.items[0].months_worked == 7
+        assert res.items[0].accrued_days == 11
