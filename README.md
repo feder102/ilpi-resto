@@ -551,11 +551,68 @@ lsof -ti:5173 | xargs kill -9
    - Ejecuta las migraciones: `alembic upgrade head`
    - Ejecuta el seed solo una vez: `python -c "from app.seed import seed; seed()"`
 
+## 📈 Monitoreo de Errores y Uptime
+
+El sistema integra **Sentry** para capturar errores en runtime (backend y frontend) y
+soporta un chequeo de **uptime externo** contra el endpoint `/health`.
+
+### Sentry (opt-in)
+
+La integración es **opcional**: si no se configura el DSN, la aplicación funciona
+exactamente igual y **no se envía ningún dato**. Para activarla:
+
+1. Crea un proyecto en [Sentry](https://sentry.io) (o una instancia self-hosted de
+   [GlitchTip](https://glitchtip.com), compatible con el mismo SDK). Necesitas dos
+   proyectos: uno **Python** (backend) y uno **React** (frontend).
+2. **Backend** — en `backend/.env`:
+   ```bash
+   SENTRY_DSN=https://...@sentry.io/1234567     # DSN del proyecto Python
+   SENTRY_ENVIRONMENT=production                 # dev / staging / production
+   SENTRY_RELEASE=                               # opcional (ej. git SHA)
+   SENTRY_TRACES_SAMPLE_RATE=0.0                 # 0 = solo errores, sin performance
+   ```
+3. **Frontend** — en `frontend/.env`:
+   ```bash
+   VITE_SENTRY_DSN=https://...@sentry.io/7654321 # DSN del proyecto React
+   VITE_SENTRY_ENVIRONMENT=production
+   VITE_SENTRY_RELEASE=
+   VITE_SENTRY_TRACES_SAMPLE_RATE=0
+   ```
+
+**Qué se captura:**
+- **Backend:** toda excepción no manejada, etiquetada con `environment` y con contexto
+  `tenant_id` / `user_id` / `role` por request. **No** se envían datos sensibles
+  (contraseñas, tokens ni cookies quedan excluidos).
+- **Frontend:** errores de render capturados por el `ErrorBoundary` (evita la pantalla
+  en blanco y muestra una pantalla de recuperación) más excepciones de runtime,
+  asociados al usuario/tenant autenticado.
+
+### Cómo ver los errores
+
+1. Ingresa a tu dashboard de Sentry: **https://sentry.io/organizations/&lt;tu-org&gt;/issues/**
+   (o la URL de tu instancia GlitchTip).
+2. Filtra por proyecto (`backend` / `frontend`) y por `environment` (ej. `production`).
+3. Cada issue muestra el stack trace, el request, las tags (`tenant_id`, `role`) y el
+   usuario afectado. Configura alertas por email en **Settings → Alerts** para recibir
+   una notificación cuando aparezca un error nuevo.
+
+### Chequeo de Uptime
+
+El backend expone `GET /health` → `{"status": "ok"}` (sin autenticación), pensado para
+monitoreo externo. Para configurar el chequeo contra el entorno productivo:
+
+1. Crea una cuenta en [UptimeRobot](https://uptimerobot.com) o
+   [BetterStack](https://betterstack.com) (ambos con plan gratuito).
+2. Agrega un monitor **HTTP(s)** apuntando a `https://<tu-dominio-api>/health`.
+3. Intervalo recomendado: **5 minutos**; keyword opcional: `ok`.
+4. Configura una **alerta por email** para recibir aviso ante caídas.
+
 ## 📚 Documentación
 
 - **API Endpoints:** Ver `/docs` cuando el backend esté corriendo
 - **Especificaciones:** Ver carpeta `specs/001-kitchen-staff-mgmt/`
 - **Contratos API:** `specs/001-kitchen-staff-mgmt/contracts/`
+- **Monitoreo (Sentry/uptime):** Ver sección "📈 Monitoreo de Errores y Uptime" arriba
 
 ## 🤝 Contribuir
 
