@@ -15,6 +15,9 @@ docs/architecture/
 ├── backend/
 │   └── README.md        ← Paso 3: backend (routers, servicios, modelos, diagramas
 │                           de secuencia y restricciones)
+├── infra/
+│   └── README.md        ← producción: VPS + Coolify (ilpi.vila.ar), deploy,
+│                           operación, backups y troubleshooting
 └── site/                ← Paso 4: documentación consolidada en el estilo del
     ├── types.ts            template-documentacion (categorías + artículos)
     ├── data.ts

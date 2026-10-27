@@ -312,6 +312,7 @@ They must be kept in sync with the code after every feature addition.
 | `backend/app/models/` or `alembic/versions/`      | `docs/architecture/db/README.md`             |
 | `backend/app/routers/`, `services/`, `schemas/`   | `docs/architecture/backend/README.md`        |
 | `frontend/src/`                                   | `docs/architecture/frontend/README.md`       |
+| `docker-compose.coolify.yml`, `gateway/`, infra   | `docs/architecture/infra/README.md`          |
 | Any of the above                                  | `docs/architecture/site/data.ts` (doc site)  |
 
 ### How to update (automated)
@@ -334,14 +335,11 @@ fixes that don't change the public API can safely ignore it.
 
 ### Doc site deployment
 
-After updating docs, rebuild and redeploy the template-documentacion site:
+After updating docs, publish the admin-only site at `https://ilpi.vila.ar/docum`:
 ```bash
-# In the template-documentacion project
-cp /ruta/a/ilpi-resto/docs/architecture/site/data.ts src/data.ts
-npm run build
-cp -r dist/* /ruta/a/ilpi-resto/docum-dist/
-docker compose -f docker-compose.prod.yml up -d
+scripts/build-docum.sh   # builds template-documentacion with site/data.ts and rsyncs to the VPS
 ```
+See `docs/architecture/infra/README.md` for details.
 
 ---
 

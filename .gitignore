@@ -44,3 +44,6 @@ backend/*.db
 .pids
 init
 .claude/settings.local.json
+
+# Built /docum site (scripts/build-docum.sh --no-upload)
+docum-dist/

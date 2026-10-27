@@ -7,7 +7,7 @@
  * directamente dentro de ese proyecto separado (carpeta `src/`).
  */
 
-export type Category = 'db' | 'frontend' | 'backend';
+export type Category = 'db' | 'frontend' | 'backend' | 'infra';
 
 export interface CodeSnippet {
   language: string;
