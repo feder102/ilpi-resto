@@ -127,6 +127,9 @@ docker compose -f docker-compose.prod.yml exec db pg_dump -U ilpi ilpi > backup_
 
 ## C. VPS con Coolify (producción actual: https://ilpi.vila.ar)
 
+> Documentación completa de cómo funciona en el VPS (operación, backups,
+> troubleshooting): [`docs/architecture/infra/README.md`](docs/architecture/infra/README.md).
+
 Un único recurso **Docker Compose** en Coolify usando `docker-compose.coolify.yml`:
 
 ```

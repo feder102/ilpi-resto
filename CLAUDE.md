@@ -312,6 +312,7 @@ They must be kept in sync with the code after every feature addition.
 | `backend/app/models/` or `alembic/versions/`      | `docs/architecture/db/README.md`             |
 | `backend/app/routers/`, `services/`, `schemas/`   | `docs/architecture/backend/README.md`        |
 | `frontend/src/`                                   | `docs/architecture/frontend/README.md`       |
+| `docker-compose.coolify.yml`, `gateway/`, infra   | `docs/architecture/infra/README.md`          |
 | Any of the above                                  | `docs/architecture/site/data.ts` (doc site)  |
 
 ### How to update (automated)
