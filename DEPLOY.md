@@ -132,7 +132,7 @@ Un único recurso **Docker Compose** en Coolify usando `docker-compose.coolify.y
 ```
 Internet ──> Traefik de Coolify (80/443, Let's Encrypt)
                └── gateway (Caddy :80, gateway/Caddyfile)
-                     ├── /api/*, /health, /docs ──> backend ──> db (Postgres 16, volumen ilpi-pgdata)
+                     ├── /api/*, /health, /docs ──> backend ──> db (Postgres 18, volumen ilpi-pgdata18)
                      ├── /docum*                ──> sitio de docs (solo Admin)
                      └── /*                     ──> frontend (SPA)
 ```

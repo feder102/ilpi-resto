@@ -18,14 +18,16 @@
 
 services:
   db:
-    image: postgres:16
+    # Same major version as the previous Railway database (dump/restore).
+    image: postgres:18
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-ilpi}
       POSTGRES_PASSWORD: ${SERVICE_PASSWORD_POSTGRES}
       POSTGRES_DB: ${POSTGRES_DB:-ilpi}
     volumes:
-      - ilpi-pgdata:/var/lib/postgresql/data
+      # postgres:18+ keeps PGDATA under /var/lib/postgresql/<major>/docker.
+      - ilpi-pgdata18:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ilpi} -d ${POSTGRES_DB:-ilpi}"]
       interval: 10s
@@ -89,5 +91,5 @@ services:
       - frontend
 
 volumes:
-  ilpi-pgdata:
+  ilpi-pgdata18:
   ilpi-caddy-data:
