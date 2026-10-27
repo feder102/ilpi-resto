@@ -1,0 +1,35 @@
+# Internal gateway for the Coolify deployment (see ../docker-compose.coolify.yml).
+# Plain HTTP on :80 — Coolify's Traefik proxy terminates TLS in front of it.
+{
+	auto_https off
+	servers {
+		# Keep the visitor IP that Traefik puts in X-Forwarded-For.
+		trusted_proxies static private_ranges
+	}
+}
+
+:80 {
+	encode zstd gzip
+
+	# API + docs -> FastAPI backend
+	@api path /api/* /health /docs /docs/* /openapi.json
+	handle @api {
+		reverse_proxy backend:8000
+	}
+
+	# Documentation site (issue #30) -> static docs SPA, ADMIN-ONLY.
+	# The backend validates the refresh_token cookie and requires role=Admin.
+	handle_path /docum* {
+		forward_auth backend:8000 {
+			uri /api/v1/docum/authorize
+		}
+		root * /srv/docum
+		try_files {path} /index.html
+		file_server
+	}
+
+	# Everything else -> static SPA (client-side routing handled by `serve -s`)
+	handle {
+		reverse_proxy frontend:5173
+	}
+}
