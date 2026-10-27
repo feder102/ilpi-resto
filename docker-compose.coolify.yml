@@ -75,12 +75,11 @@ services:
       - backend
 
   gateway:
-    image: caddy:2-alpine
+    build: ./gateway
     restart: unless-stopped
     expose:
       - "80"
     volumes:
-      - ./Caddyfile.coolify:/etc/caddy/Caddyfile:ro
       - ilpi-caddy-data:/data
       # Admin-only documentation site (issue #30): copy the template-documentacion
       # dist/ into ./docum-dist on the server (Coolify app directory).

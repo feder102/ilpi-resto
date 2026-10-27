@@ -1,4 +1,4 @@
-# Internal gateway for the Coolify deployment (see docker-compose.coolify.yml).
+# Internal gateway for the Coolify deployment (see ../docker-compose.coolify.yml).
 # Plain HTTP on :80 — Coolify's Traefik proxy terminates TLS in front of it.
 {
 	auto_https off
