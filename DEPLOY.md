@@ -125,6 +125,37 @@ docker compose -f docker-compose.prod.yml exec db pg_dump -U ilpi ilpi > backup_
 
 ---
 
+## C. VPS con Coolify (producción actual: https://ilpi.vila.ar)
+
+Un único recurso **Docker Compose** en Coolify usando `docker-compose.coolify.yml`:
+
+```
+Internet ──> Traefik de Coolify (80/443, Let's Encrypt)
+               └── gateway (Caddy :80, Caddyfile.coolify)
+                     ├── /api/*, /health, /docs ──> backend ──> db (Postgres 16, volumen ilpi-pgdata)
+                     ├── /docum*                ──> sitio de docs (solo Admin)
+                     └── /*                     ──> frontend (SPA)
+```
+
+### Alta en Coolify
+1. DNS: registro **A** `ilpi.vila.ar` → `62.238.61.134` (Hetzner DNS).
+2. Coolify → proyecto → *+ New* → *Private Repository (with GitHub App)* → `feder102/ilpi-resto`, rama `main`.
+3. Build pack **Docker Compose**, *Docker Compose Location* = `/docker-compose.coolify.yml`.
+4. Dominio del servicio **gateway**: `https://ilpi.vila.ar:80` (los demás servicios sin dominio).
+5. Variables de entorno: `DOMAIN=ilpi.vila.ar`, `POSTGRES_PASSWORD`, `SECRET_KEY` (`openssl rand -hex 32`) y, si se usa email, `MAILJET_*`.
+6. *Deploy*. Las migraciones corren solas (`alembic upgrade head`) en cada arranque del backend.
+7. Base nueva: ejecutar `python -m app.seed` en la terminal del servicio backend y cambiar la contraseña del admin.
+
+### Restaurar un dump (p. ej. desde Railway)
+```bash
+# En el VPS: contenedor db del recurso (docker ps | grep db-)
+docker exec -i <db-container> psql -U ilpi -d ilpi -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+docker exec -i <db-container> pg_restore -U ilpi -d ilpi --no-owner --no-privileges < dump.backup
+# Reiniciar el backend desde Coolify para aplicar migraciones pendientes
+```
+
+---
+
 ## Escalado (ambas opciones)
 - **Vertical** (instancia más grande): trivial y suficiente para este volumen por mucho tiempo.
 - **Horizontal** (varias réplicas): requeriría mover el blacklist de tokens y el rate limiter (hoy en memoria) a **Redis** y correr el scheduler en una sola instancia.
