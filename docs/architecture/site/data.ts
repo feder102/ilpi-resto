@@ -6,7 +6,7 @@
  * template-documentacion, reemplazando su `data.ts`. La app renderizará estas
  * categorías y artículos con el estilo (tema "Sunset") del template.
  *
- * Origen del contenido: docs/architecture/{db,frontend,backend}/README.md
+ * Origen del contenido: docs/architecture/{db,frontend,backend,infra}/README.md
  */
 
 import type { CategoryInfo, DocArticle } from './types';
@@ -38,6 +38,15 @@ export const CATEGORIES: CategoryInfo[] = [
     iconName: 'Server',
     colorClass: 'from-indigo-500 to-violet-600',
     badgeColor: 'badge-primary',
+  },
+  {
+    id: 'infra',
+    title: 'Infraestructura',
+    description:
+      'Producción en el VPS con Coolify: topología, despliegue, secretos, operación, backups y troubleshooting.',
+    iconName: 'Cloud',
+    colorClass: 'from-emerald-500 to-teal-600',
+    badgeColor: 'badge-success',
   },
 ];
 
@@ -487,6 +496,183 @@ if (error.response?.status === 401 && !originalRequest._retry) {
         badge: 'RBAC doble capa',
         content:
           'Autorización enforced en el router (require_role("Admin")) y de nuevo en el service (_require_admin), según el Principio V de la constitución. Reutiliza AbsenceService y vacation_service.get_or_create_balances_bulk (optimización N+1: resolve todos los balances en una query). Endpoints read-only; casos borde devuelven valores neutros.',
+      },
+    ],
+  },
+
+  // ─────────────────────────── INFRA ────────────────────────────
+  {
+    id: 'infra-topologia-coolify',
+    title: 'Producción: VPS + Coolify',
+    category: 'infra',
+    summary:
+      'Cómo corre https://ilpi.vila.ar: un stack Docker Compose en Coolify detrás de Traefik, con un gateway Caddy que reparte /api, /docum y la SPA bajo un solo dominio.',
+    iconName: 'Cloud',
+    tags: ['coolify', 'docker', 'traefik', 'caddy', 'vps'],
+    difficulty: 'intermediate',
+    lastUpdated: '2026-10-27',
+    author: 'ILPI Docs',
+    sections: [
+      {
+        type: 'list',
+        title: 'Datos clave',
+        content: [
+          'URL: https://ilpi.vila.ar — DNS en Hetzner (registro A → 62.238.61.134)',
+          'VPS: Ubuntu 24.04, 4 vCPU, 7.6 GB RAM; acceso ssh root@62.238.61.134',
+          'Panel: https://panel.vila.ar (Coolify 4.4.6) → proyecto ILPI / production',
+          'Recurso: ilpi-resto, uuid 9poetcpgivmo9yhrf4ldd765, rama main, build pack Docker Compose',
+          'TLS: Let\'s Encrypt emitido y renovado por el Traefik de Coolify',
+          'En el mismo VPS hay apps de otros proyectos: no tocarlas',
+        ],
+      },
+      {
+        type: 'code',
+        title: 'Recorrido de un request',
+        content: 'Traefik termina TLS y entrega al gateway, que enruta por path.',
+        snippet: {
+          language: 'mermaid',
+          filename: 'topologia.mmd',
+          code: `flowchart LR
+    U[Navegador] -->|HTTPS| T[coolify-proxy / Traefik]
+    T -->|HTTP :80| G[gateway / Caddy]
+    G -->|/api, /health, /docs| B[backend FastAPI :8000]
+    G -->|/docum + forward_auth| B
+    G -->|/docum autorizado| S[(docum-dist)]
+    G -->|resto| F[frontend serve -s :5173]
+    B --> D[(db Postgres 18)]`,
+        },
+      },
+      {
+        type: 'architecture-step',
+        badge: 'Servicios',
+        title: 'docker-compose.coolify.yml',
+        content:
+          'db (postgres:18, volumen ilpi-pgdata18, sin puertos públicos) → backend (alembic upgrade head + uvicorn --proxy-headers) → frontend (SPA, VITE_API_URL=/api/v1) → gateway (Caddy con el Caddyfile horneado en la imagen; único servicio con dominio en Coolify).',
+      },
+      {
+        type: 'info-box',
+        badge: 'Mismo origen',
+        content:
+          'Front, API y docs comparten dominio: no hay CORS ni cookies cross-site (COOKIE_SAMESITE=lax, COOKIE_SECURE=true). Caddy confía en X-Forwarded-For de redes privadas y uvicorn usa --proxy-headers, así el rate limiting y la auditoría ven la IP real del visitante.',
+      },
+    ],
+  },
+  {
+    id: 'infra-deploy-secretos',
+    title: 'Despliegue y secretos',
+    category: 'infra',
+    summary:
+      'Flujo de deploy en Coolify, variables de entorno, secretos generados por Coolify y cuidados con migraciones y rollback.',
+    iconName: 'Rocket',
+    tags: ['coolify', 'deploy', 'secrets', 'alembic'],
+    difficulty: 'intermediate',
+    lastUpdated: '2026-10-27',
+    author: 'ILPI Docs',
+    sections: [
+      {
+        type: 'code',
+        title: 'Flujo de deploy',
+        content: 'Merge a main → Coolify construye y recrea el stack (~1–1,5 min).',
+        snippet: {
+          language: 'mermaid',
+          filename: 'deploy.mmd',
+          code: `sequenceDiagram
+    participant Dev
+    participant GH as GitHub (main)
+    participant C as Coolify
+    participant H as Docker host
+    Dev->>GH: merge a main
+    GH-->>C: webhook (auto-deploy) o botón Deploy
+    C->>H: docker compose build
+    C->>H: recrea contenedores
+    H->>H: db healthy → backend migra → uvicorn
+    C->>C: deploy finished / failed`,
+        },
+      },
+      {
+        type: 'list',
+        title: 'Variables (Coolify → Environment Variables)',
+        content: [
+          'DOMAIN=ilpi.vila.ar (manual) → CORS_ORIGINS',
+          'SERVICE_PASSWORD_POSTGRES (generada por Coolify) → contraseña de Postgres y DATABASE_URL',
+          'SERVICE_PASSWORD_64_SECRETKEY (generada por Coolify) → SECRET_KEY de los JWT',
+          'MAILJET_* (opcionales) → envío de emails',
+        ],
+      },
+      {
+        type: 'info-box',
+        badge: 'Cuidado',
+        content:
+          'Cambiar SERVICE_PASSWORD_64_SECRETKEY invalida todas las sesiones. No cambiar SERVICE_PASSWORD_POSTGRES desde el panel: Postgres solo la lee al crear el volumen (primero ALTER USER). Si cambia docker-compose.coolify.yml, apretar "Reload Compose" antes del deploy. Durante el deploy el dominio puede dar 503 unos segundos. Un rollback de Coolify no revierte migraciones ya aplicadas.',
+      },
+      {
+        type: 'info-box',
+        badge: 'Bind-mounts',
+        content:
+          'Coolify no deja el checkout del repo en el host: montar un archivo del repo termina en un directorio vacío y el contenedor no arranca. Por eso el Caddyfile va dentro de la imagen (gateway/Dockerfile).',
+      },
+    ],
+  },
+  {
+    id: 'infra-operacion',
+    title: 'Operación, backups y troubleshooting',
+    category: 'infra',
+    summary:
+      'Comandos del día a día en el VPS, backup/restore de la base, publicación de /docum y solución de problemas frecuentes.',
+    iconName: 'Wrench',
+    tags: ['operations', 'backup', 'postgres', 'troubleshooting'],
+    difficulty: 'advanced',
+    lastUpdated: '2026-10-27',
+    author: 'ILPI Docs',
+    sections: [
+      {
+        type: 'code',
+        title: 'Atajos en el VPS',
+        content: 'Los nombres de contenedor cambian en cada deploy; resolverlos por filtro.',
+        snippet: {
+          language: 'bash',
+          filename: 'vps.sh',
+          code: `APP=9poetcpgivmo9yhrf4ldd765
+DB=$(docker ps -q --filter name=db-$APP)
+BE=$(docker ps -q --filter name=backend-$APP)
+
+docker ps --filter name=$APP              # estado
+docker logs -f --tail 100 $BE             # logs backend (JSON)
+docker exec -it $DB psql -U ilpi -d ilpi  # consola SQL
+
+# Backup manual (formato custom)
+docker exec $DB pg_dump -U ilpi -d ilpi -Fc > /root/ilpi-backups/ilpi-$(date +%F).dump
+
+# Restore
+docker stop $BE
+docker exec $DB psql -U ilpi -d ilpi -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+docker exec -i $DB pg_restore -U ilpi -d ilpi --no-owner --no-privileges < archivo.dump
+docker start $BE`,
+        },
+      },
+      {
+        type: 'info-box',
+        badge: 'Sin backups automáticos',
+        content:
+          'Los backups programados de Coolify no cubren la base de un recurso Docker Compose. Hasta automatizarlo (cron o Scheduled Task + copia fuera del VPS), el backup es manual.',
+      },
+      {
+        type: 'architecture-step',
+        badge: '/docum',
+        title: 'Publicar este sitio',
+        content:
+          'Desde el repo: scripts/build-docum.sh clona template-documentacion, copia docs/architecture/site/{types,data}.ts, compila con base /docum/ y sincroniza dist/ a /data/coolify/applications/<uuid>/docum-dist/ en el VPS. No requiere redeploy: Caddy sirve los archivos montados.',
+      },
+      {
+        type: 'list',
+        title: 'Problemas frecuentes',
+        content: [
+          '503 "no available server": deploy en curso o gateway caído → esperar / docker ps',
+          'El dominio no abre en una sola máquina: caché DNS negativa → flush DNS, reiniciar router o usar 1.1.1.1',
+          'Backend reinicia en loop: falla de migración → docker logs $BE',
+          'Todos reciben 429 en login: el backend ve una sola IP → revisar --proxy-headers y trusted_proxies',
+          '/docum muestra contenido viejo: el sitio cachea artículos en localStorage → borrar datos del sitio en el navegador',
+        ],
       },
     ],
   },

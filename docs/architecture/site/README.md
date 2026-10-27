@@ -10,7 +10,7 @@ publicarse como un sitio separado y oculto en `DOMAIN=ilpi.tudominio.com/docum`.
 | Archivo | Descripción |
 |---------|-------------|
 | `types.ts` | Espejo de los tipos del template (`Category`, `DocArticle`, `DocSection`, `CategoryInfo`). |
-| `data.ts` | Contenido consolidado: `CATEGORIES` (db/frontend/backend) + `INITIAL_ARTICLES` (9 artículos). |
+| `data.ts` | Contenido consolidado: `CATEGORIES` (db/frontend/backend/infra) + `INITIAL_ARTICLES` (13 artículos). |
 
 El contenido respeta el estilo del template: categorías con icono/colores del tema
 **Sunset**, y artículos con secciones de tipo `paragraph`, `code`, `list`, `info-box`
@@ -54,7 +54,16 @@ el JWT de la propia app. El gating ya está implementado en este repositorio:
   endpoint; solo si responde 2xx sirve los estáticos.
 - **Compose** (`docker-compose.prod.yml`): monta `./docum-dist` en `/srv/docum` (ro).
 
-### Pasos para publicarlo
+### Publicarlo en producción (Coolify)
+
+```bash
+scripts/build-docum.sh
+```
+
+Compila el template con este contenido y lo sube al VPS. Detalle en
+[`../infra/README.md`](../infra/README.md#publicar-el-sitio-de-documentación-docum).
+
+### Pasos para publicarlo (stack `docker-compose.prod.yml` con Caddy propio)
 
 1. **Base path de Vite** — en el proyecto del template, configurar `base: '/docum/'`
    en `vite.config.ts` (los assets se resuelven bajo el subpath; Caddy hace
@@ -83,5 +92,5 @@ el JWT de la propia app. El gating ya está implementado en este repositorio:
 ## Mantenimiento
 
 Cuando cambie el código fuente, actualizar primero los markdown en
-`docs/architecture/{db,frontend,backend}/README.md` y luego reflejar los cambios
+`docs/architecture/{db,frontend,backend,infra}/README.md` y luego reflejar los cambios
 relevantes en `data.ts` (son la fuente de verdad del sitio).

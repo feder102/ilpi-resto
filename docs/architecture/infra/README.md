@@ -77,16 +77,15 @@ El timestamp cambia en cada deploy.
 |---|---|
 | `ilpi-pgdata18` | **Datos de producción** (Postgres 18). No borrar. |
 | `ilpi-caddy-data` | Estado interno de Caddy (sin certificados: TLS lo maneja Traefik) |
-| `ilpi-pgdata` | Residuo del primer deploy con Postgres 16, **vacío**. Se puede borrar. |
 
 **Directorio de la app en el host:** `/data/coolify/applications/9poetcpgivmo9yhrf4ldd765/`
-(`docker-compose.yaml` generado por Coolify, `.env`, `docum-dist/`).
+(`docker-compose.yaml` generado por Coolify, `.env`, `docum-dist/` con el sitio de `/docum`).
 
 > ⚠️ **Coolify no deja el checkout del repo en el host.** Un bind-mount de un archivo del
 > repo (`./algo.conf:/ruta`) termina como un **directorio vacío** y el contenedor no arranca.
 > Por eso el Caddyfile se copia dentro de la imagen (`gateway/Dockerfile`). Los
-> bind-mounts de directorios (`./docum-dist`) sí funcionan, pero quedan vacíos hasta que
-> alguien copie archivos en el host.
+> bind-mounts de directorios (`./docum-dist`) sí funcionan: Coolify crea el directorio
+> vacío en el host y su contenido **se mantiene entre deploys**.
 
 ---
 
@@ -201,6 +200,26 @@ docker start $BE        # al arrancar aplica las migraciones que falten
 
 El dump debe salir de un `pg_dump` con versión **igual o menor** a 18.
 
+### Publicar el sitio de documentación (`/docum`)
+
+El contenido sale de `docs/architecture/site/{types,data}.ts` y se renderiza con el
+proyecto [template-documentacion](https://github.com/feder102/template-documentacion).
+Desde la raíz del repo, en una máquina con Node y SSH al VPS:
+
+```bash
+scripts/build-docum.sh              # build + rsync al VPS
+scripts/build-docum.sh --no-upload  # solo build, en ./docum-dist (ignorado por git)
+```
+
+El script clona el template en un directorio temporal (`TEMPLATE_REF`, por defecto
+`main`), copia los dos archivos, compila con `vite build --base=/docum/` y sincroniza
+`dist/` en `/data/coolify/applications/9poetcpgivmo9yhrf4ldd765/docum-dist/`
+con `rsync --delete`. **No hace falta redeploy**: Caddy sirve el directorio montado.
+
+> El template guarda los artículos en el `localStorage` del navegador
+> (`sunset_docs_articles`). Quien ya abrió `/docum` va a seguir viendo la versión
+> anterior hasta que borre los datos del sitio.
+
 ---
 
 ## 7. Solución de problemas
@@ -213,7 +232,8 @@ El dump debe salir de un `pg_dump` con versión **igual o menor** a 18.
 | El backend reinicia en loop | Falla una migración o la base no responde | Revisar `docker logs $BE`: la primera línea con error suele ser de alembic |
 | Login OK pero se pierde la sesión a los 30 min | Cookie `refresh_token` no aceptada | Confirmar que se entra por `https://ilpi.vila.ar` (mismo origen) y que `COOKIE_SECURE=true` |
 | Todos los usuarios reciben 429 en el login | El backend ve una sola IP para todos | Confirmar `--proxy-headers` en el comando del backend y `trusted_proxies` en el Caddyfile |
-| `/docum` muestra un error o una página vacía siendo Admin | `docum-dist/` vacío en el host | Construir template-documentacion y copiar su `dist/` a `/data/coolify/applications/$APP/docum-dist/` |
+| `/docum` muestra un error o una página vacía siendo Admin | `docum-dist/` vacío en el host | `scripts/build-docum.sh` |
+| `/docum` no muestra artículos nuevos | El template cachea los artículos en `localStorage` | Borrar los datos del sitio en el navegador |
 
 ---
 
@@ -235,12 +255,11 @@ El dump debe salir de un `pg_dump` con versión **igual o menor** a 18.
 | Fecha | Cambio |
 |---|---|
 | 2026-10-27 | Migración desde **Railway** (proyecto `registro-empleados-ilpi`, Postgres 18): `pg_dump` desde el VPS, restauración en `ilpi-pgdata18` y conteos verificados tabla por tabla (14 tablas). Respaldo del dump original en `/root/ilpi-migration/railway-2026-10-27.dump`. |
-| 2026-10-27 | Primer deploy en Coolify (PR #81). El stack pasó de Postgres 16 a 18 para igualar la versión de Railway. |
+| 2026-10-27 | Primer deploy en Coolify (PR #81). El stack pasó de Postgres 16 a 18 para igualar la versión de Railway; se borró el volumen residual de PG16 (`ilpi-pgdata`). |
+| 2026-10-27 | `/docum` publicado con `scripts/build-docum.sh`, incluida la nueva categoría **Infraestructura**. |
 
 ### Pendientes conocidos
 - [ ] Backups automáticos de la base, fuera del VPS.
 - [ ] Verificar que el auto-deploy por webhook funciona.
-- [ ] Publicar `docum-dist/` en el host.
-- [ ] Borrar el volumen residual `9poetcpgivmo9yhrf4ldd765_ilpi-pgdata`.
 - [ ] Apagar o eliminar Postgres en Railway y rotar su contraseña.
 - [ ] Revisar el firewall del VPS.
