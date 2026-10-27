@@ -142,7 +142,7 @@ Internet ──> Traefik de Coolify (80/443, Let's Encrypt)
 2. Coolify → proyecto → *+ New* → *Private Repository (with GitHub App)* → `feder102/ilpi-resto`, rama `main`.
 3. Build pack **Docker Compose**, *Docker Compose Location* = `/docker-compose.coolify.yml`.
 4. Dominio del servicio **gateway**: `https://ilpi.vila.ar:80` (los demás servicios sin dominio).
-5. Variables de entorno: `DOMAIN=ilpi.vila.ar`, `POSTGRES_PASSWORD`, `SECRET_KEY` (`openssl rand -hex 32`) y, si se usa email, `MAILJET_*`.
+5. Variables de entorno: `DOMAIN=ilpi.vila.ar` y, si se usa email, `MAILJET_*`. La contraseña de Postgres (`SERVICE_PASSWORD_POSTGRES`) y `SECRET_KEY` (`SERVICE_PASSWORD_64_SECRETKEY`) las genera Coolify.
 6. *Deploy*. Las migraciones corren solas (`alembic upgrade head`) en cada arranque del backend.
 7. Base nueva: ejecutar `python -m app.seed` en la terminal del servicio backend y cambiar la contraseña del admin.
 
